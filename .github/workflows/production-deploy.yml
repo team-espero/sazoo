@@ -1,0 +1,38 @@
+﻿name: Production Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        env:
+          BUILD_OUT_DIR: dist
+        run: npm run build
+
+      - name: Trigger Production Deploy
+        if: ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK != '' }}
+        run: |
+          curl -sS -X POST "$PRODUCTION_DEPLOY_WEBHOOK"
+        env:
+          PRODUCTION_DEPLOY_WEBHOOK: ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK }}
+
+      - name: Production Deploy Not Configured
+        if: ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK == '' }}
+        run: echo "PRODUCTION_DEPLOY_WEBHOOK is not configured. Skipping deploy trigger."

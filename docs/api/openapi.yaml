@@ -1,0 +1,154 @@
+﻿openapi: 3.0.3
+info:
+  title: Sazoo Fortune API
+  version: 1.0.0
+  description: Backend relay API for chat and daily insights.
+servers:
+  - url: https://api.example.com/api/v1
+  - url: http://localhost:8787/api/v1
+paths:
+  /fortune/chat:
+    post:
+      summary: Chat with Sazoo AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponseEnvelope'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /fortune/daily-insights:
+    post:
+      summary: Generate daily home insights
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DailyInsightsRequest'
+      responses:
+        '200':
+          description: Insights response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyInsightsResponseEnvelope'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitedError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required: [message, language]
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1500
+        language:
+          type: string
+          enum: [en, ko, ja]
+        profile:
+          type: object
+          additionalProperties: true
+        saju:
+          type: object
+          additionalProperties: true
+        isInitialAnalysis:
+          type: boolean
+    ChatResponseEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          required: [reply]
+          properties:
+            reply:
+              type: string
+    DailyInsightsRequest:
+      type: object
+      required: [language]
+      properties:
+        language:
+          type: string
+          enum: [en, ko, ja]
+        date:
+          type: string
+        profile:
+          type: object
+          additionalProperties: true
+        saju:
+          type: object
+          additionalProperties: true
+    DailyInsightsResponseEnvelope:
+      type: object
+      properties:
+        data:
+          type: object
+          required: [luckyItems, sajuTip, elementTip, energyTip, cycleTip]
+          properties:
+            luckyItems:
+              type: array
+              items:
+                type: object
+                required: [emoji, name, type]
+                properties:
+                  emoji:
+                    type: string
+                  name:
+                    type: string
+                  type:
+                    type: string
+            sajuTip:
+              type: string
+            elementTip:
+              type: string
+            energyTip:
+              type: string
+            cycleTip:
+              type: string
+    ErrorEnvelope:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+  responses:
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimitedError:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'

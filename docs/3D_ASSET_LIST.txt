@@ -1,0 +1,56 @@
+﻿3D ASSET LIST
+Generated: 2026-03-10 05:45:48
+Project Root: C:\Users\user\Desktop\바탕화면 모음\codex\sazoo-v2.1-forest
+Total: 50 files, 327.99 MB
+
+- format: path | ext | size_mb | modified
+- 3d asset\opt\Five Elements_earth_element_web_opt_web_opt.glb | .glb | 6.99 | 2026-03-10 03:18:52
+- 3d asset\opt\Five Elements_fire_element_web_opt_web_opt.glb | .glb | 8.06 | 2026-03-10 03:18:55
+- 3d asset\opt\Five Elements_metal_element_web_opt_web_opt.glb | .glb | 9.29 | 2026-03-10 03:18:58
+- 3d asset\opt\Five Elements_water_element_web_opt_web_opt.glb | .glb | 6.5 | 2026-03-10 03:19:01
+- 3d asset\opt\Five Elements_wood_element_web_opt_web_opt.glb | .glb | 10.98 | 2026-03-10 03:19:04
+- 3d asset\opt\sazoo_cheomseongdae_observatory_web_opt.glb | .glb | 4.22 | 2026-01-11 05:49:14
+- 3d asset\opt\sazoo_cyber_bokjumeoni_web_opt.glb | .glb | 6.44 | 2026-01-11 05:48:55
+- 3d asset\opt\sazoo_fox_web_opt.glb | .glb | 6.9 | 2026-01-11 05:49:05
+- 3d asset\opt\sazoo_hanok_web_opt.glb | .glb | 8.82 | 2026-01-11 05:29:16
+- 3d asset\opt\sazoo_magpie_web_opt.glb | .glb | 5.58 | 2026-01-11 05:49:00
+- 3d asset\opt\sazoo_moon_rabbit_badge_web_opt.glb | .glb | 5.92 | 2026-01-11 05:48:43
+- 3d asset\opt\sazoo_woman_character_web_opt.glb | .glb | 7.45 | 2026-01-11 05:48:57
+- 3d asset\opt\sazoo_yeopjeon_currency_stack_web_opt.glb | .glb | 5.44 | 2026-01-11 05:49:12
+- 3d asset\opt\twelve_zodiac_signs_dog_web_opt.glb | .glb | 5.94 | 2026-03-10 00:41:17
+- 3d asset\opt\twelve_zodiac_signs_dragon_web_opt.glb | .glb | 6.44 | 2026-03-10 00:41:36
+- 3d asset\opt\twelve_zodiac_signs_horse_web_opt.glb | .glb | 6.06 | 2026-03-10 00:41:25
+- 3d asset\opt\twelve_zodiac_signs_monkey_web_opt.glb | .glb | 5.58 | 2026-03-10 00:41:39
+- 3d asset\opt\twelve_zodiac_signs_ox_web_opt_web_opt.glb | .glb | 7.45 | 2026-03-10 03:19:07
+- 3d asset\opt\twelve_zodiac_signs_pig_web_opt_web_opt.glb | .glb | 4.92 | 2026-03-10 03:19:10
+- 3d asset\opt\twelve_zodiac_signs_rabbit_web_opt.glb | .glb | 5.78 | 2026-03-10 00:41:44
+- 3d asset\opt\twelve_zodiac_signs_rat_web_opt_web_opt.glb | .glb | 5.85 | 2026-03-10 03:19:13
+- 3d asset\opt\twelve_zodiac_signs_rooster_web_opt_web_opt.glb | .glb | 4.93 | 2026-03-10 03:19:15
+- 3d asset\opt\twelve_zodiac_signs_sheep_web_opt.glb | .glb | 4.35 | 2026-03-10 00:41:33
+- 3d asset\opt\twelve_zodiac_signs_snake_web_opt.glb | .glb | 5.62 | 2026-03-10 00:41:28
+- 3d asset\opt\twelve_zodiac_signs_tiger_web_opt.glb | .glb | 8.49 | 2026-03-10 00:41:47
+- public\Five Elements_earth_element_web_opt_web_opt.glb | .glb | 6.99 | 2026-03-10 03:18:52
+- public\Five Elements_fire_element_web_opt_web_opt.glb | .glb | 8.06 | 2026-03-10 03:18:55
+- public\Five Elements_metal_element_web_opt_web_opt.glb | .glb | 9.29 | 2026-03-10 03:18:58
+- public\Five Elements_water_element_web_opt_web_opt.glb | .glb | 6.5 | 2026-03-10 03:19:01
+- public\Five Elements_wood_element_web_opt_web_opt.glb | .glb | 10.98 | 2026-03-10 03:19:04
+- public\sazoo_cheomseongdae_observatory_web_opt.glb | .glb | 4.22 | 2026-01-11 05:49:14
+- public\sazoo_cyber_bokjumeoni_web_opt.glb | .glb | 6.44 | 2026-01-11 05:48:55
+- public\sazoo_fox_web_opt.glb | .glb | 6.9 | 2026-01-11 05:49:05
+- public\sazoo_hanok_web_opt.glb | .glb | 8.82 | 2026-01-11 05:29:16
+- public\sazoo_magpie_web_opt.glb | .glb | 5.58 | 2026-01-11 05:49:00
+- public\sazoo_moon_rabbit_badge_web_opt.glb | .glb | 5.92 | 2026-01-11 05:48:43
+- public\sazoo_woman_character_web_opt.glb | .glb | 7.45 | 2026-01-11 05:48:57
+- public\sazoo_yeopjeon_currency_stack_web_opt.glb | .glb | 5.44 | 2026-01-11 05:49:12
+- public\twelve_zodiac_signs_dog_web_opt.glb | .glb | 5.94 | 2026-03-10 00:41:17
+- public\twelve_zodiac_signs_dragon_web_opt.glb | .glb | 6.44 | 2026-03-10 00:41:36
+- public\twelve_zodiac_signs_horse_web_opt.glb | .glb | 6.06 | 2026-03-10 00:41:25
+- public\twelve_zodiac_signs_monkey_web_opt.glb | .glb | 5.58 | 2026-03-10 00:41:39
+- public\twelve_zodiac_signs_ox_web_opt_web_opt.glb | .glb | 7.45 | 2026-03-10 03:19:07
+- public\twelve_zodiac_signs_pig_web_opt_web_opt.glb | .glb | 4.92 | 2026-03-10 03:19:10
+- public\twelve_zodiac_signs_rabbit_web_opt.glb | .glb | 5.78 | 2026-03-10 00:41:44
+- public\twelve_zodiac_signs_rat_web_opt_web_opt.glb | .glb | 5.85 | 2026-03-10 03:19:13
+- public\twelve_zodiac_signs_rooster_web_opt_web_opt.glb | .glb | 4.93 | 2026-03-10 03:19:15
+- public\twelve_zodiac_signs_sheep_web_opt.glb | .glb | 4.35 | 2026-03-10 00:41:33
+- public\twelve_zodiac_signs_snake_web_opt.glb | .glb | 5.62 | 2026-03-10 00:41:28
+- public\twelve_zodiac_signs_tiger_web_opt.glb | .glb | 8.49 | 2026-03-10 00:41:47

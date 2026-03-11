@@ -1,0 +1,730 @@
+{
+  "capturedAt": "2026-03-10T13:31:32.797Z",
+  "root": "C:\\Users\\user\\Desktop\\바탕화면 모음\\codex\\sazoo-v2.1-forest",
+  "directories": {
+    "public": {
+      "fileCount": 52,
+      "totalBytes": 265634117,
+      "files": [
+        {
+          "path": "public/12. Cyber-Bokjumeoni.png",
+          "size": 704777,
+          "modifiedAt": "2026-03-09T22:19:59.756Z",
+          "sha256": "3e5e8af074711bf1e7f351c9f08537c8d24ac125405a3cc4c64c0d7cf5017268"
+        },
+        {
+          "path": "public/basis/basis_transcoder.js",
+          "size": 57529,
+          "modifiedAt": "2026-01-08T17:01:42.335Z",
+          "sha256": "8478b5b6d6b74e7d3082b89f6417321d8d1dc0307f2b30d4484bb11b441696a1"
+        },
+        {
+          "path": "public/basis/basis_transcoder.wasm",
+          "size": 527333,
+          "modifiedAt": "2026-01-08T17:01:44.366Z",
+          "sha256": "6cf17dc889352c42e9acf8897107978d127005fe3386c36a0e3845e27967630a"
+        },
+        {
+          "path": "public/basis/README.md",
+          "size": 1448,
+          "modifiedAt": "2026-01-08T17:01:44.354Z",
+          "sha256": "930b11bbbb742b2525491b0964f0462d63d8b21383c0623ec4c98c43d53723c6"
+        },
+        {
+          "path": "public/checking_saju.mp4",
+          "size": 11316236,
+          "modifiedAt": "2026-01-10T18:15:40.080Z",
+          "sha256": "5b72350700ed2f9ff00b69818f10ca27a7fcdd24ad70ed603d901ccc66e10469"
+        },
+        {
+          "path": "public/destiny_check.png",
+          "size": 143365,
+          "modifiedAt": "2026-03-09T21:52:04.534Z",
+          "sha256": "4637b2e2ce44ec3fd58d79f8d0ba0600a30a83e2ce6c70e9dfd5b9a90c2ccb0a"
+        },
+        {
+          "path": "public/draco/draco_decoder.js",
+          "size": 719410,
+          "modifiedAt": "2026-01-08T17:01:42.812Z",
+          "sha256": "30e4d486fa020737af10e3c56197693e5b904bdc05b8bfa5d7b06751dec6da04"
+        },
+        {
+          "path": "public/draco/draco_decoder.wasm",
+          "size": 285747,
+          "modifiedAt": "2026-01-08T17:01:44.371Z",
+          "sha256": "c55a594e8ffd18426d36b27fea9618af3df5e173640a3e56d46f09d76f0574f2"
+        },
+        {
+          "path": "public/draco/draco_encoder.js",
+          "size": 928718,
+          "modifiedAt": "2026-01-08T17:01:42.836Z",
+          "sha256": "d5c653caf242556ddff9370e86979b8b5c6131bc196be388698a85dc2e1bb59b"
+        },
+        {
+          "path": "public/draco/draco_wasm_wrapper.js",
+          "size": 58763,
+          "modifiedAt": "2026-01-08T17:01:42.845Z",
+          "sha256": "e8049906ef3f8f75d3456c22a3f31bfdfe5b5b5bd09ccdec613b9e9a49d554d8"
+        },
+        {
+          "path": "public/draco/gltf/draco_decoder.js",
+          "size": 512465,
+          "modifiedAt": "2026-01-08T17:01:42.827Z",
+          "sha256": "8625489da79a805f4f2a7d511c3e52d8b4085608a9d2a4d5f4f9de5db0aea04f"
+        },
+        {
+          "path": "public/draco/gltf/draco_decoder.wasm",
+          "size": 192420,
+          "modifiedAt": "2026-01-08T17:01:44.373Z",
+          "sha256": "a680d927bed9cb864ddbd63521868891af2bfbe755092761b4837487618df8ac"
+        },
+        {
+          "path": "public/draco/gltf/draco_encoder.js",
+          "size": 954360,
+          "modifiedAt": "2026-01-08T17:01:42.843Z",
+          "sha256": "6d4132d7b68d26d20a43a1ed59ff4b4a694fbaad41b339158db050dbd0e68f56"
+        },
+        {
+          "path": "public/draco/gltf/draco_wasm_wrapper.js",
+          "size": 58456,
+          "modifiedAt": "2026-01-08T17:01:42.848Z",
+          "sha256": "8bb2952d2ba7d67e1414f8df819410cb0434a666be53f671fff75f68843d76f6"
+        },
+        {
+          "path": "public/draco/README.md",
+          "size": 1489,
+          "modifiedAt": "2026-01-08T17:01:44.355Z",
+          "sha256": "8b9d277bf5743f4ce8d85d63c16690071b53f81796e877d4d395af943bde02a0"
+        },
+        {
+          "path": "public/Five Elements_earth_element_web_opt_web_opt.glb",
+          "size": 7332844,
+          "modifiedAt": "2026-03-09T18:18:52.606Z",
+          "sha256": "abef3b273d3d42802a2ea51c7135464930abecf8ac3a9362c3566d5c13f268d4"
+        },
+        {
+          "path": "public/Five Elements_fire_element_web_opt_web_opt.glb",
+          "size": 8453372,
+          "modifiedAt": "2026-03-09T18:18:55.494Z",
+          "sha256": "f5fab75b79b2a1a8f8647504d8f13ade089b9348b1363809558adc64a872cf2c"
+        },
+        {
+          "path": "public/Five Elements_metal_element_web_opt_web_opt.glb",
+          "size": 9739540,
+          "modifiedAt": "2026-03-09T18:18:58.867Z",
+          "sha256": "97569e47a3243aa7424be01b30cfb8890f548e08b20bd99d0af1ffabb78022d5"
+        },
+        {
+          "path": "public/Five Elements_water_element_web_opt_web_opt.glb",
+          "size": 6818840,
+          "modifiedAt": "2026-03-09T18:19:01.768Z",
+          "sha256": "098c6793f94511c4525a3e9a54b8d79a33637f6abe22ec290388b7b7bfcbd272"
+        },
+        {
+          "path": "public/Five Elements_wood_element_web_opt_web_opt.glb",
+          "size": 11510488,
+          "modifiedAt": "2026-03-09T18:19:04.313Z",
+          "sha256": "84aa75d2156fee100bb1498d5b024f903aeb6dfe75ad74948e87775a8cc732eb"
+        },
+        {
+          "path": "public/intro-video.mp4",
+          "size": 10114773,
+          "modifiedAt": "2026-01-08T14:51:12.150Z",
+          "sha256": "dac6e030434bcb6820229c2a96275c8b4656b56b931ceea7aee4d69c092a8fcb"
+        },
+        {
+          "path": "public/login_video.mp4",
+          "size": 4219358,
+          "modifiedAt": "2026-01-08T21:42:31.990Z",
+          "sha256": "338af15940c479a69adf578b68afde1355538985f1bda7428305a64e624e6d7a"
+        },
+        {
+          "path": "public/playstore.png",
+          "size": 235407,
+          "modifiedAt": "2026-03-10T07:54:12.554Z",
+          "sha256": "c53260a060c8c1a2de720198c27119850e92faf4b73170c4a31fca194b9cf8ca"
+        },
+        {
+          "path": "public/sazoo_cheomseongdae_observatory_web_opt.glb",
+          "size": 4425328,
+          "modifiedAt": "2026-01-10T20:49:14.806Z",
+          "sha256": "b382f9d5cb725435607c38e1a607a58cb6ae7bb11fdfb2f001b2124de4e13f33"
+        },
+        {
+          "path": "public/sazoo_cyber_bokjumeoni_web_opt.glb",
+          "size": 6756032,
+          "modifiedAt": "2026-01-10T20:48:55.123Z",
+          "sha256": "33ebf39320deabdac654d7e0c765426098aff7ecccc1b815549ca3cd2dc5b571"
+        },
+        {
+          "path": "public/sazoo_fox_web_opt.glb",
+          "size": 7236192,
+          "modifiedAt": "2026-01-10T20:49:05.996Z",
+          "sha256": "80bb5e0b5e0df3f4a62694219282fa3beb9ce55de95a9a37b543cbe6317bdb7e"
+        },
+        {
+          "path": "public/sazoo_hanok_web_home_1024.glb",
+          "size": 5107056,
+          "modifiedAt": "2026-03-10T12:10:21.886Z",
+          "sha256": "eeed1d6dd43bc01a887c9a557a238aa75c5571528fc7589092659a96f56bd516"
+        },
+        {
+          "path": "public/sazoo_hanok_web_home.glb",
+          "size": 5545428,
+          "modifiedAt": "2026-03-10T12:09:48.671Z",
+          "sha256": "fdef51cb92d8bbd1a374306a33398c429c7078a1992073e48d74acf739349719"
+        },
+        {
+          "path": "public/sazoo_hanok_web_opt.glb",
+          "size": 9243976,
+          "modifiedAt": "2026-01-10T20:29:16.467Z",
+          "sha256": "33d3c9f7c6eb85e63b5f38f55a33e7e27e6a88f861dfbcbfcffb143b3ccd03e0"
+        },
+        {
+          "path": "public/sazoo_hanok_web_opt.optimized.glb",
+          "size": 8327448,
+          "modifiedAt": "2026-03-10T12:08:09.430Z",
+          "sha256": "38873b4fb52584192866636f899252ccf405e258a6b2533ad624268a11d25c18"
+        },
+        {
+          "path": "public/sazoo_magpie_web_opt.glb",
+          "size": 5847452,
+          "modifiedAt": "2026-01-10T20:49:00.638Z",
+          "sha256": "b69bbc7f7f311dda1441c21ddc57aff86308c6cba1fced5ae8f273dd66483e2e"
+        },
+        {
+          "path": "public/sazoo_moon_rabbit_badge_web_opt.glb",
+          "size": 6209820,
+          "modifiedAt": "2026-01-10T20:48:43.837Z",
+          "sha256": "443781c630e20b7346a394cd3640bff3f9e7c7c14cb56b02d0358e0c7ea8d9d8"
+        },
+        {
+          "path": "public/sazoo_woman_character_web_opt.glb",
+          "size": 7813944,
+          "modifiedAt": "2026-01-10T20:48:57.878Z",
+          "sha256": "7cec0b592523ef6bcfcca3abfe49e37abce72376afbbcdcdbc5167af46f7be8c"
+        },
+        {
+          "path": "public/sazoo_yeopjeon_currency_stack_web_opt.glb",
+          "size": 5705628,
+          "modifiedAt": "2026-01-10T20:49:12.165Z",
+          "sha256": "242fb3364c268e9056c3b78289fc20581caf21f4d5d86e7dd91717017abff57a"
+        },
+        {
+          "path": "public/static_scholar_woman.png",
+          "size": 283788,
+          "modifiedAt": "2026-03-09T22:19:10.331Z",
+          "sha256": "b8b24e86fddd339a96c0b80164e006fab612656f2f09e292cae30ef359c6bf76"
+        },
+        {
+          "path": "public/static_scholar-man.png",
+          "size": 196306,
+          "modifiedAt": "2026-03-09T22:19:10.347Z",
+          "sha256": "5da6424bdfbbfddb82e35bf2b4978a7dd14d3217838299bd18d951470b38a19b"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_dog_web_opt.glb",
+          "size": 6230252,
+          "modifiedAt": "2026-03-09T15:41:17.108Z",
+          "sha256": "aa30897254e0c0c811d157fa6f974e2e60b37adaa19af46322f8ef6d29b7f040"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_dragon_web_opt.glb",
+          "size": 6747856,
+          "modifiedAt": "2026-03-09T15:41:36.587Z",
+          "sha256": "19c63818af7017f78d46d96d1f0ef0eeb1c2e8a7d17f23fe1491248331a3244b"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_horse_web_opt.glb",
+          "size": 6358988,
+          "modifiedAt": "2026-03-09T15:41:25.698Z",
+          "sha256": "65c2698eeea0d55a5faeacca64d2e8475846a67545112eac25ac9003483d1781"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_monkey_web_opt.glb",
+          "size": 5853720,
+          "modifiedAt": "2026-03-09T15:41:39.484Z",
+          "sha256": "50c4744722c1677f12c492a5f98145bca2658f09938d1c8cbec52078450d62d1"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_ox_web_opt_web_opt.glb",
+          "size": 7809720,
+          "modifiedAt": "2026-03-09T18:19:07.320Z",
+          "sha256": "af0f3360cd5001a57e5b857e2a2f3feaaa8834143eac14f2266ffb391b0dde84"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_pig_web_opt_web_opt.glb",
+          "size": 5162272,
+          "modifiedAt": "2026-03-09T18:19:10.117Z",
+          "sha256": "31a5a5a40832c036472bff55e83dcbfd524f52e3c65a2266dfb01848d9710119"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_rabbit_web_opt.glb",
+          "size": 6055576,
+          "modifiedAt": "2026-03-09T15:41:44.915Z",
+          "sha256": "f1b89cb373b2da3ed42412baf5d75f88fbbf11bfcd4592fa575725e9ac515b2a"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_rat_web_opt_web_opt.glb",
+          "size": 6134664,
+          "modifiedAt": "2026-03-09T18:19:13.039Z",
+          "sha256": "217460e8255528bc9e745e4b2dd4bcfd1227fd153203848ce7b09a135544f2b6"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_rooster_web_opt_web_opt.glb",
+          "size": 5165424,
+          "modifiedAt": "2026-03-09T18:19:15.810Z",
+          "sha256": "3a757e65c72b5795ed3b6cbee034a7ad3639af35058fd83c4981166e6712a561"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_sheep_web_opt.glb",
+          "size": 4556176,
+          "modifiedAt": "2026-03-09T15:41:33.799Z",
+          "sha256": "103513ed6b98e70c97a052b05c91f97e560e6eb510006ef8f4f5f1da11040d49"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_snake_web_opt.glb",
+          "size": 5887860,
+          "modifiedAt": "2026-03-09T15:41:28.423Z",
+          "sha256": "bd048891a8d2f04f5debaf8d87cf6ef8a54e945aee1ff34ab2a1dd7bce8a2f9b"
+        },
+        {
+          "path": "public/twelve_zodiac_signs_tiger_web_opt.glb",
+          "size": 8902812,
+          "modifiedAt": "2026-03-09T15:41:47.981Z",
+          "sha256": "e68a6dc509a31f8d3ee5cf6ad6afd0ef5246413b9ea5f8ed586510cd557d3092"
+        },
+        {
+          "path": "public/webp/greeting2.webp",
+          "size": 14730458,
+          "modifiedAt": "2026-01-10T17:28:42.413Z",
+          "sha256": "f2fc71aa7573de0011a214b0d0d4ec511757d85aa3e9df16e8121490d8f87bfb"
+        },
+        {
+          "path": "public/webp/idle motion.webp",
+          "size": 14799840,
+          "modifiedAt": "2026-01-10T19:00:40.432Z",
+          "sha256": "a14e882c5d67c387e488eec31bc98c23f7ff5491d748319a4b1f6bbc5fa106ec"
+        },
+        {
+          "path": "public/webp/reading_saju_pink.webp",
+          "size": 13342504,
+          "modifiedAt": "2026-01-10T16:20:08.878Z",
+          "sha256": "bbdac482c464f87b01e6e7d2b020eee3cff8ce157dc7bdad132957a903779857"
+        },
+        {
+          "path": "public/yeopjeon.png",
+          "size": 310459,
+          "modifiedAt": "2026-03-09T22:19:10.331Z",
+          "sha256": "3b42f641c356c1fc0cee4ab429ccf34ba7151bd5630f27da76488e830960f93d"
+        }
+      ]
+    },
+    "assets": {
+      "fileCount": 35,
+      "totalBytes": 45331710,
+      "files": [
+        {
+          "path": "assets/archive/image asset/1. 홈 탭 천년의 관측소, 첨성대 (Cheomseongdae)-Photoroom.png",
+          "size": 860295,
+          "modifiedAt": "2026-01-08T19:21:33.945Z",
+          "sha256": "a8c5c2759f9070cf4ed69dc4fee4022018ef35dbbc350f4367432cd6dce7e6fa"
+        },
+        {
+          "path": "assets/archive/image asset/10. 오행 수(水) - 유연한 지혜-Photoroom.png",
+          "size": 861767,
+          "modifiedAt": "2026-01-08T19:23:56.968Z",
+          "sha256": "21508c0cb70e80252627bca3d7c4556e85fb13e4032ebc7ae4f7fa077c023b79"
+        },
+        {
+          "path": "assets/archive/image asset/11. 12간지 휠 (Zodiac Wheel)-Photoroom.png",
+          "size": 1594792,
+          "modifiedAt": "2026-01-08T19:24:07.769Z",
+          "sha256": "05008c03a5b9b02c128f58f511c90c3754fbc62f8f8af9c4ef2a675c99a88bac"
+        },
+        {
+          "path": "assets/archive/image asset/12. 럭키 팩 사이버 복주머니 (Cyber-Bokjumeoni)-Photoroom.png",
+          "size": 1428307,
+          "modifiedAt": "2026-01-08T19:24:37.264Z",
+          "sha256": "5cddb43521f651333786fcec7c7019fec253a298c8657c36360372203cf98c9f"
+        },
+        {
+          "path": "assets/archive/image asset/13. 재화 엽전 스택 (Yeopjeon Stack)-Photoroom.png",
+          "size": 1650349,
+          "modifiedAt": "2026-01-08T19:24:51.694Z",
+          "sha256": "876262cb50df9737ab48302240f8a6514b83c996b6bab4167f9f1afe10fa84ff"
+        },
+        {
+          "path": "assets/archive/image asset/14. 프리미엄 아이템 디지털 부적 (Digital Talisman)-Photoroom.png",
+          "size": 1192161,
+          "modifiedAt": "2026-01-08T19:25:00.088Z",
+          "sha256": "4f726e8fa37bc772f83fb77bf050c89ba4a62b0d9cab3d53ea69bdf96ff347fb"
+        },
+        {
+          "path": "assets/archive/image asset/15. 업적 배지 옥토끼 (Moon Rabbit Badge)-Photoroom.png",
+          "size": 1198789,
+          "modifiedAt": "2026-01-08T19:25:08.176Z",
+          "sha256": "3a53b45cb73aae91203bc80a6794be8b6d832a0b55a623cb5195fd0a6e9fa002"
+        },
+        {
+          "path": "assets/archive/image asset/16. 히스토리로그 황금 두루마리 (Golden Scroll)-Photoroom.png",
+          "size": 849529,
+          "modifiedAt": "2026-01-08T19:25:16.438Z",
+          "sha256": "c5f8e4b1d10ad3298fa743b77c220e62e58ae95d7f484d215a653dcdb00927ef"
+        },
+        {
+          "path": "assets/archive/image asset/17. 설정보안 물고기 자물쇠 (Fish Padlock)-Photoroom.png",
+          "size": 1100096,
+          "modifiedAt": "2026-01-08T19:25:25.443Z",
+          "sha256": "08492e7b897aa875d513e581042c53ad02d1e445e49454cb9a22884ae9739386"
+        },
+        {
+          "path": "assets/archive/image asset/18. 알림 에밀레종 (Temple Bell)-Photoroom.png",
+          "size": 1300719,
+          "modifiedAt": "2026-01-08T19:25:34.637Z",
+          "sha256": "402822837ee39fd213b9dff74ac7e870bb23aa034970cedca0e58f8c6e055ebc"
+        },
+        {
+          "path": "assets/archive/image asset/19. 검색방향 윤도 (Geomancy Compass)-Photoroom.png",
+          "size": 1997453,
+          "modifiedAt": "2026-01-08T19:25:43.249Z",
+          "sha256": "dba07239f8ac06d6b368c91dd021929a7ca86bb43270be10939eac21404e5d22"
+        },
+        {
+          "path": "assets/archive/image asset/2. 일일 운세 탭 시간을 담은 그릇, 앙부일구 (Angbuilgu)-Photoroom.png",
+          "size": 1325303,
+          "modifiedAt": "2026-01-08T19:21:44.359Z",
+          "sha256": "a9f63a02d91607b10d531a8ed6f2a15b12d152fd025ed262ccfa0835ac8b0039"
+        },
+        {
+          "path": "assets/archive/image asset/20. 좋아요찜 손하트 (Finger Heart)-Photoroom.png",
+          "size": 788741,
+          "modifiedAt": "2026-01-08T19:25:50.744Z",
+          "sha256": "7a48e6f431b57d08c5a39258329c1248889bb81a8e1e245f34000f3672f704b6"
+        },
+        {
+          "path": "assets/archive/image asset/3. 채팅 탭 기쁜 소식의 전령, 까치 (Magpie)-Photoroom.png",
+          "size": 1198130,
+          "modifiedAt": "2026-01-08T19:21:53.671Z",
+          "sha256": "021f97c9d71ca0db3884051477f006e2e26909133f35528734050c406b8afb72"
+        },
+        {
+          "path": "assets/archive/image asset/3D 캘린더 (Calendar Copilot Icon)-Photoroom.png",
+          "size": 1127606,
+          "modifiedAt": "2026-01-08T19:29:10.039Z",
+          "sha256": "e94b359112c4bc6bb1414aa2ea1ae37a24544b78639ff775ce8374def07e47c4"
+        },
+        {
+          "path": "assets/archive/image asset/4. 궁합 탭 융합하는 에너지, 태극 (Taegeuk)-Photoroom.png",
+          "size": 1620952,
+          "modifiedAt": "2026-01-08T19:22:02.457Z",
+          "sha256": "05ac0847e49ea349ce87c0b3c078c4784262aa3a0cfb6070ac9d529142aa0fec"
+        },
+        {
+          "path": "assets/archive/image asset/5. 프로필 탭 나를 증명하는 패, 호패 (Hopae)-Photoroom.png",
+          "size": 1535237,
+          "modifiedAt": "2026-01-08T19:22:23.287Z",
+          "sha256": "ab05c484ad937a0219ae4665e1ca5d9515326849cac75b4a09b7df8a160894b6"
+        },
+        {
+          "path": "assets/archive/image asset/5대 오행 오브 (The 5 Elements Orbs)-Photoroom.png",
+          "size": 437450,
+          "modifiedAt": "2026-01-08T19:29:19.338Z",
+          "sha256": "c80c817f5e8c389bdb9b046201ef46eab7fda7e6693de36df174fc64cf955b05"
+        },
+        {
+          "path": "assets/archive/image asset/6. 오행 목(木) - 생명의 구슬-Photoroom.png",
+          "size": 1516706,
+          "modifiedAt": "2026-01-08T19:22:32.620Z",
+          "sha256": "11df01cf076ebfadd329892fa12f9ede5240816e467c4636901771a7194ff6cb"
+        },
+        {
+          "path": "assets/archive/image asset/7. 오행 화(火) - 응축된 열기-Photoroom.png",
+          "size": 780039,
+          "modifiedAt": "2026-01-08T19:23:20.153Z",
+          "sha256": "179f76a448a7324dddd6c084571d3b2c8e4847cc7e06eb5817cc1e668c8ac175"
+        },
+        {
+          "path": "assets/archive/image asset/8. 오행 토(土) - 단단한 기반-Photoroom.png",
+          "size": 1406091,
+          "modifiedAt": "2026-01-08T19:23:34.353Z",
+          "sha256": "ddfc09c845016d3fedb1d804e36e4bb2d5efb7b5ffb0b247477cd5efb7965c11"
+        },
+        {
+          "path": "assets/archive/image asset/9. 오행 금(金) - 완벽한 질서-Photoroom.png",
+          "size": 1674411,
+          "modifiedAt": "2026-01-08T19:23:42.331Z",
+          "sha256": "aed548fe2c39e02c84229f69b796fb308d83d4726f2bc4df4672d1918b938bf6"
+        },
+        {
+          "path": "assets/archive/image asset/럭키 컬러 페인트 (Lucky Color Swatch)-Photoroom.png",
+          "size": 1276983,
+          "modifiedAt": "2026-01-08T19:31:54.550Z",
+          "sha256": "f1dc9930671502b3085e69ca33cba2e310491fcb2a4d17ea27dc4767ad9d8811"
+        },
+        {
+          "path": "assets/archive/image asset/부적 카드 (Digital Talisman Card)-Photoroom.png",
+          "size": 694518,
+          "modifiedAt": "2026-01-08T19:32:02.575Z",
+          "sha256": "1bfeb1362363d5a80692b5b9e67dcf46afc6e9182a8f585e39d74b1a7529131a"
+        },
+        {
+          "path": "assets/archive/image asset/소셜궁합 토큰 (Compatibility Token-Photoroom.png",
+          "size": 884474,
+          "modifiedAt": "2026-01-08T19:32:11.589Z",
+          "sha256": "7181e19e58f2221ac3fdd548e5d21d58b484c1b2f81437f799529fab9cce0408"
+        },
+        {
+          "path": "assets/archive/image asset/알림 스크롤 (Notification Scroll)-Photoroom.png",
+          "size": 1373764,
+          "modifiedAt": "2026-01-08T19:32:20.268Z",
+          "sha256": "f93b4934e88fbc4b24ba0abd4822d6bc2af71269692fc14c3a20314aba187583"
+        },
+        {
+          "path": "assets/archive/image asset/옥토끼 배지 (Moon Rabbit Badge)-Photoroom.png",
+          "size": 2229414,
+          "modifiedAt": "2026-01-08T19:32:28.048Z",
+          "sha256": "21452e2728bd1421ad05d4995b5e75f72e62214b065a7303fa26c3077255f58a"
+        },
+        {
+          "path": "assets/archive/image asset/운명 확인 버튼 (CTA Button Reveal Destiny)-Photoroom.png",
+          "size": 1383108,
+          "modifiedAt": "2026-01-08T19:32:36.505Z",
+          "sha256": "5c736b29f206167850231ad58668e785863ba32f81067c06182d1e74e21a359a"
+        },
+        {
+          "path": "assets/archive/image asset/운명의 나침반 (The Cosmic Compass  Loading Spinner)-Photoroom.png",
+          "size": 1315037,
+          "modifiedAt": "2026-01-08T19:32:43.949Z",
+          "sha256": "01ed7a19e149dfb24deaf067c70695b63baf3044e2fbc7e04a2ca8cc7a6ab422"
+        },
+        {
+          "path": "assets/archive/image asset/AI 점술가 챗봇 아바타 (AI Fortune Teller Avatar)-Photoroom.png",
+          "size": 2301092,
+          "modifiedAt": "2026-01-08T19:29:49.767Z",
+          "sha256": "c2124599d07977b5eecbf46d6d0ca22fbb2686de13786dbef7f4ed940ebfb24b"
+        },
+        {
+          "path": "assets/archive/image asset/destiny check.png",
+          "size": 2264618,
+          "modifiedAt": "2026-01-10T17:16:36.418Z",
+          "sha256": "c6cb2a388e498474ad4decf6c2d77987c09c94a1d4ad45229533b32d317008a5"
+        },
+        {
+          "path": "assets/archive/image asset/Holographic Radar Chart (What-if 시뮬레이터)-Photoroom.png",
+          "size": 527135,
+          "modifiedAt": "2026-01-08T19:30:21.272Z",
+          "sha256": "45998bea6431a9f533c10da8970d3cfce1b55ab85e396f53c8db96f8165f96a9"
+        },
+        {
+          "path": "assets/archive/image asset/The Cyber-Bokjumeoni (럭키 팩 아이콘)-Photoroom.png",
+          "size": 1452143,
+          "modifiedAt": "2026-01-08T19:30:32.338Z",
+          "sha256": "c974b7f4ca19e02ae672f9a909a4cc38b58bb97aa13d06da404c6d5fa27aeed5"
+        },
+        {
+          "path": "assets/archive/image asset/The Welcoming Scholar (환영하는 학자)-Photoroom.png",
+          "size": 999528,
+          "modifiedAt": "2026-01-08T19:31:02.961Z",
+          "sha256": "d7b6be814cf7b2ad333fac1a91538a18fe67df874b30b69b6099064cef0469a0"
+        },
+        {
+          "path": "assets/archive/image asset/The Welcoming Scholar woman (환영하는 학자)-Photoroom.png",
+          "size": 1184973,
+          "modifiedAt": "2026-01-06T19:54:21.475Z",
+          "sha256": "7dc3389abf4909a52bf53f87c7ffe32a6a5075dc4bad10891d0d384e054d246e"
+        }
+      ]
+    },
+    "video": {
+      "fileCount": 3,
+      "totalBytes": 25650367,
+      "files": [
+        {
+          "path": "video/checking saju.mp4",
+          "size": 11316236,
+          "modifiedAt": "2026-01-10T18:15:40.080Z",
+          "sha256": "5b72350700ed2f9ff00b69818f10ca27a7fcdd24ad70ed603d901ccc66e10469"
+        },
+        {
+          "path": "video/intro-video.mp4",
+          "size": 10114773,
+          "modifiedAt": "2026-01-08T14:51:12.150Z",
+          "sha256": "dac6e030434bcb6820229c2a96275c8b4656b56b931ceea7aee4d69c092a8fcb"
+        },
+        {
+          "path": "video/login video.mp4",
+          "size": 4219358,
+          "modifiedAt": "2026-01-08T21:42:31.990Z",
+          "sha256": "338af15940c479a69adf578b68afde1355538985f1bda7428305a64e624e6d7a"
+        }
+      ]
+    },
+    "3d asset": {
+      "fileCount": 26,
+      "totalBytes": 171959692,
+      "files": [
+        {
+          "path": "3d asset/opt/desktop.ini",
+          "size": 916,
+          "modifiedAt": "2026-01-10T20:49:53.907Z",
+          "sha256": "70c584ba20ae15b5c1b6d7c810cae563ab2fae9bea894fecc88141adba94c589"
+        },
+        {
+          "path": "3d asset/opt/Five Elements_earth_element_web_opt_web_opt.glb",
+          "size": 7332844,
+          "modifiedAt": "2026-03-09T18:18:52.606Z",
+          "sha256": "abef3b273d3d42802a2ea51c7135464930abecf8ac3a9362c3566d5c13f268d4"
+        },
+        {
+          "path": "3d asset/opt/Five Elements_fire_element_web_opt_web_opt.glb",
+          "size": 8453372,
+          "modifiedAt": "2026-03-09T18:18:55.494Z",
+          "sha256": "f5fab75b79b2a1a8f8647504d8f13ade089b9348b1363809558adc64a872cf2c"
+        },
+        {
+          "path": "3d asset/opt/Five Elements_metal_element_web_opt_web_opt.glb",
+          "size": 9739540,
+          "modifiedAt": "2026-03-09T18:18:58.867Z",
+          "sha256": "97569e47a3243aa7424be01b30cfb8890f548e08b20bd99d0af1ffabb78022d5"
+        },
+        {
+          "path": "3d asset/opt/Five Elements_water_element_web_opt_web_opt.glb",
+          "size": 6818840,
+          "modifiedAt": "2026-03-09T18:19:01.768Z",
+          "sha256": "098c6793f94511c4525a3e9a54b8d79a33637f6abe22ec290388b7b7bfcbd272"
+        },
+        {
+          "path": "3d asset/opt/Five Elements_wood_element_web_opt_web_opt.glb",
+          "size": 11510488,
+          "modifiedAt": "2026-03-09T18:19:04.313Z",
+          "sha256": "84aa75d2156fee100bb1498d5b024f903aeb6dfe75ad74948e87775a8cc732eb"
+        },
+        {
+          "path": "3d asset/opt/sazoo_cheomseongdae_observatory_web_opt.glb",
+          "size": 4425328,
+          "modifiedAt": "2026-01-10T20:49:14.806Z",
+          "sha256": "b382f9d5cb725435607c38e1a607a58cb6ae7bb11fdfb2f001b2124de4e13f33"
+        },
+        {
+          "path": "3d asset/opt/sazoo_cyber_bokjumeoni_web_opt.glb",
+          "size": 6756032,
+          "modifiedAt": "2026-01-10T20:48:55.123Z",
+          "sha256": "33ebf39320deabdac654d7e0c765426098aff7ecccc1b815549ca3cd2dc5b571"
+        },
+        {
+          "path": "3d asset/opt/sazoo_fox_web_opt.glb",
+          "size": 7236192,
+          "modifiedAt": "2026-01-10T20:49:05.996Z",
+          "sha256": "80bb5e0b5e0df3f4a62694219282fa3beb9ce55de95a9a37b543cbe6317bdb7e"
+        },
+        {
+          "path": "3d asset/opt/sazoo_hanok_web_opt.glb",
+          "size": 9243976,
+          "modifiedAt": "2026-01-10T20:29:16.467Z",
+          "sha256": "33d3c9f7c6eb85e63b5f38f55a33e7e27e6a88f861dfbcbfcffb143b3ccd03e0"
+        },
+        {
+          "path": "3d asset/opt/sazoo_magpie_web_opt.glb",
+          "size": 5847452,
+          "modifiedAt": "2026-01-10T20:49:00.638Z",
+          "sha256": "b69bbc7f7f311dda1441c21ddc57aff86308c6cba1fced5ae8f273dd66483e2e"
+        },
+        {
+          "path": "3d asset/opt/sazoo_moon_rabbit_badge_web_opt.glb",
+          "size": 6209820,
+          "modifiedAt": "2026-01-10T20:48:43.837Z",
+          "sha256": "443781c630e20b7346a394cd3640bff3f9e7c7c14cb56b02d0358e0c7ea8d9d8"
+        },
+        {
+          "path": "3d asset/opt/sazoo_woman_character_web_opt.glb",
+          "size": 7813944,
+          "modifiedAt": "2026-01-10T20:48:57.878Z",
+          "sha256": "7cec0b592523ef6bcfcca3abfe49e37abce72376afbbcdcdbc5167af46f7be8c"
+        },
+        {
+          "path": "3d asset/opt/sazoo_yeopjeon_currency_stack_web_opt.glb",
+          "size": 5705628,
+          "modifiedAt": "2026-01-10T20:49:12.165Z",
+          "sha256": "242fb3364c268e9056c3b78289fc20581caf21f4d5d86e7dd91717017abff57a"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_dog_web_opt.glb",
+          "size": 6230252,
+          "modifiedAt": "2026-03-09T15:41:17.108Z",
+          "sha256": "aa30897254e0c0c811d157fa6f974e2e60b37adaa19af46322f8ef6d29b7f040"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_dragon_web_opt.glb",
+          "size": 6747856,
+          "modifiedAt": "2026-03-09T15:41:36.587Z",
+          "sha256": "19c63818af7017f78d46d96d1f0ef0eeb1c2e8a7d17f23fe1491248331a3244b"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_horse_web_opt.glb",
+          "size": 6358988,
+          "modifiedAt": "2026-03-09T15:41:25.698Z",
+          "sha256": "65c2698eeea0d55a5faeacca64d2e8475846a67545112eac25ac9003483d1781"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_monkey_web_opt.glb",
+          "size": 5853720,
+          "modifiedAt": "2026-03-09T15:41:39.484Z",
+          "sha256": "50c4744722c1677f12c492a5f98145bca2658f09938d1c8cbec52078450d62d1"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_ox_web_opt_web_opt.glb",
+          "size": 7809720,
+          "modifiedAt": "2026-03-09T18:19:07.320Z",
+          "sha256": "af0f3360cd5001a57e5b857e2a2f3feaaa8834143eac14f2266ffb391b0dde84"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_pig_web_opt_web_opt.glb",
+          "size": 5162272,
+          "modifiedAt": "2026-03-09T18:19:10.117Z",
+          "sha256": "31a5a5a40832c036472bff55e83dcbfd524f52e3c65a2266dfb01848d9710119"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_rabbit_web_opt.glb",
+          "size": 6055576,
+          "modifiedAt": "2026-03-09T15:41:44.915Z",
+          "sha256": "f1b89cb373b2da3ed42412baf5d75f88fbbf11bfcd4592fa575725e9ac515b2a"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_rat_web_opt_web_opt.glb",
+          "size": 6134664,
+          "modifiedAt": "2026-03-09T18:19:13.039Z",
+          "sha256": "217460e8255528bc9e745e4b2dd4bcfd1227fd153203848ce7b09a135544f2b6"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_rooster_web_opt_web_opt.glb",
+          "size": 5165424,
+          "modifiedAt": "2026-03-09T18:19:15.810Z",
+          "sha256": "3a757e65c72b5795ed3b6cbee034a7ad3639af35058fd83c4981166e6712a561"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_sheep_web_opt.glb",
+          "size": 4556176,
+          "modifiedAt": "2026-03-09T15:41:33.799Z",
+          "sha256": "103513ed6b98e70c97a052b05c91f97e560e6eb510006ef8f4f5f1da11040d49"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_snake_web_opt.glb",
+          "size": 5887860,
+          "modifiedAt": "2026-03-09T15:41:28.423Z",
+          "sha256": "bd048891a8d2f04f5debaf8d87cf6ef8a54e945aee1ff34ab2a1dd7bce8a2f9b"
+        },
+        {
+          "path": "3d asset/opt/twelve_zodiac_signs_tiger_web_opt.glb",
+          "size": 8902812,
+          "modifiedAt": "2026-03-09T15:41:47.981Z",
+          "sha256": "e68a6dc509a31f8d3ee5cf6ad6afd0ef5246413b9ea5f8ed586510cd557d3092"
+        }
+      ]
+    }
+  },
+  "totals": {
+    "fileCount": 116,
+    "totalBytes": 508575886
+  }
+}

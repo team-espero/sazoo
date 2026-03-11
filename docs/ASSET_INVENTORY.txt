@@ -1,0 +1,81 @@
+﻿ASSET INVENTORY
+Generated: 2026-03-10 05:00:24
+Project Root: C:\Users\user\Desktop\바탕화면 모음\codex\sazoo-v2.1-forest
+
+[Summary]
+- Images: 8 files, 47.83 MB total
+- Videos: 6 files, 48.92 MB total
+- 3D Assets: 50 files, 327.99 MB total
+
+[Images]
+- format: path | ext | size_mb | modified
+- public\avatars\scholar-man.png | .png | 0.95 | 2026-01-09 04:31:02
+- public\avatars\scholar-woman.png | .png | 1.13 | 2026-01-07 04:54:21
+- public\destiny_check.png | .png | 2.16 | 2026-01-11 02:16:36
+- public\static_scholar_woman.png | .png | 1.13 | 2026-01-07 04:54:21
+- public\webp\greeting2.webp | .webp | 14.05 | 2026-01-11 02:28:42
+- public\webp\idle motion.webp | .webp | 14.11 | 2026-01-11 04:00:40
+- public\webp\reading_saju_pink.webp | .webp | 12.72 | 2026-01-11 01:20:08
+- public\yeopjeon.png | .png | 1.57 | 2026-01-09 04:24:51
+
+[Videos]
+- format: path | ext | size_mb | modified
+- public\checking_saju.mp4 | .mp4 | 10.79 | 2026-01-11 03:15:40
+- public\intro-video.mp4 | .mp4 | 9.65 | 2026-01-08 23:51:12
+- public\login_video.mp4 | .mp4 | 4.02 | 2026-01-09 06:42:31
+- video\checking saju.mp4 | .mp4 | 10.79 | 2026-01-11 03:15:40
+- video\intro-video.mp4 | .mp4 | 9.65 | 2026-01-08 23:51:12
+- video\login video.mp4 | .mp4 | 4.02 | 2026-01-09 06:42:31
+
+[3D Assets]
+- format: path | ext | size_mb | modified
+- 3d asset\opt\Five Elements_earth_element_web_opt_web_opt.glb | .glb | 6.99 | 2026-03-10 03:18:52
+- 3d asset\opt\Five Elements_fire_element_web_opt_web_opt.glb | .glb | 8.06 | 2026-03-10 03:18:55
+- 3d asset\opt\Five Elements_metal_element_web_opt_web_opt.glb | .glb | 9.29 | 2026-03-10 03:18:58
+- 3d asset\opt\Five Elements_water_element_web_opt_web_opt.glb | .glb | 6.5 | 2026-03-10 03:19:01
+- 3d asset\opt\Five Elements_wood_element_web_opt_web_opt.glb | .glb | 10.98 | 2026-03-10 03:19:04
+- 3d asset\opt\sazoo_cheomseongdae_observatory_web_opt.glb | .glb | 4.22 | 2026-01-11 05:49:14
+- 3d asset\opt\sazoo_cyber_bokjumeoni_web_opt.glb | .glb | 6.44 | 2026-01-11 05:48:55
+- 3d asset\opt\sazoo_fox_web_opt.glb | .glb | 6.9 | 2026-01-11 05:49:05
+- 3d asset\opt\sazoo_hanok_web_opt.glb | .glb | 8.82 | 2026-01-11 05:29:16
+- 3d asset\opt\sazoo_magpie_web_opt.glb | .glb | 5.58 | 2026-01-11 05:49:00
+- 3d asset\opt\sazoo_moon_rabbit_badge_web_opt.glb | .glb | 5.92 | 2026-01-11 05:48:43
+- 3d asset\opt\sazoo_woman_character_web_opt.glb | .glb | 7.45 | 2026-01-11 05:48:57
+- 3d asset\opt\sazoo_yeopjeon_currency_stack_web_opt.glb | .glb | 5.44 | 2026-01-11 05:49:12
+- 3d asset\opt\twelve_zodiac_signs_dog_web_opt.glb | .glb | 5.94 | 2026-03-10 00:41:17
+- 3d asset\opt\twelve_zodiac_signs_dragon_web_opt.glb | .glb | 6.44 | 2026-03-10 00:41:36
+- 3d asset\opt\twelve_zodiac_signs_horse_web_opt.glb | .glb | 6.06 | 2026-03-10 00:41:25
+- 3d asset\opt\twelve_zodiac_signs_monkey_web_opt.glb | .glb | 5.58 | 2026-03-10 00:41:39
+- 3d asset\opt\twelve_zodiac_signs_ox_web_opt_web_opt.glb | .glb | 7.45 | 2026-03-10 03:19:07
+- 3d asset\opt\twelve_zodiac_signs_pig_web_opt_web_opt.glb | .glb | 4.92 | 2026-03-10 03:19:10
+- 3d asset\opt\twelve_zodiac_signs_rabbit_web_opt.glb | .glb | 5.78 | 2026-03-10 00:41:44
+- 3d asset\opt\twelve_zodiac_signs_rat_web_opt_web_opt.glb | .glb | 5.85 | 2026-03-10 03:19:13
+- 3d asset\opt\twelve_zodiac_signs_rooster_web_opt_web_opt.glb | .glb | 4.93 | 2026-03-10 03:19:15
+- 3d asset\opt\twelve_zodiac_signs_sheep_web_opt.glb | .glb | 4.35 | 2026-03-10 00:41:33
+- 3d asset\opt\twelve_zodiac_signs_snake_web_opt.glb | .glb | 5.62 | 2026-03-10 00:41:28
+- 3d asset\opt\twelve_zodiac_signs_tiger_web_opt.glb | .glb | 8.49 | 2026-03-10 00:41:47
+- public\Five Elements_earth_element_web_opt_web_opt.glb | .glb | 6.99 | 2026-03-10 03:18:52
+- public\Five Elements_fire_element_web_opt_web_opt.glb | .glb | 8.06 | 2026-03-10 03:18:55
+- public\Five Elements_metal_element_web_opt_web_opt.glb | .glb | 9.29 | 2026-03-10 03:18:58
+- public\Five Elements_water_element_web_opt_web_opt.glb | .glb | 6.5 | 2026-03-10 03:19:01
+- public\Five Elements_wood_element_web_opt_web_opt.glb | .glb | 10.98 | 2026-03-10 03:19:04
+- public\sazoo_cheomseongdae_observatory_web_opt.glb | .glb | 4.22 | 2026-01-11 05:49:14
+- public\sazoo_cyber_bokjumeoni_web_opt.glb | .glb | 6.44 | 2026-01-11 05:48:55
+- public\sazoo_fox_web_opt.glb | .glb | 6.9 | 2026-01-11 05:49:05
+- public\sazoo_hanok_web_opt.glb | .glb | 8.82 | 2026-01-11 05:29:16
+- public\sazoo_magpie_web_opt.glb | .glb | 5.58 | 2026-01-11 05:49:00
+- public\sazoo_moon_rabbit_badge_web_opt.glb | .glb | 5.92 | 2026-01-11 05:48:43
+- public\sazoo_woman_character_web_opt.glb | .glb | 7.45 | 2026-01-11 05:48:57
+- public\sazoo_yeopjeon_currency_stack_web_opt.glb | .glb | 5.44 | 2026-01-11 05:49:12
+- public\twelve_zodiac_signs_dog_web_opt.glb | .glb | 5.94 | 2026-03-10 00:41:17
+- public\twelve_zodiac_signs_dragon_web_opt.glb | .glb | 6.44 | 2026-03-10 00:41:36
+- public\twelve_zodiac_signs_horse_web_opt.glb | .glb | 6.06 | 2026-03-10 00:41:25
+- public\twelve_zodiac_signs_monkey_web_opt.glb | .glb | 5.58 | 2026-03-10 00:41:39
+- public\twelve_zodiac_signs_ox_web_opt_web_opt.glb | .glb | 7.45 | 2026-03-10 03:19:07
+- public\twelve_zodiac_signs_pig_web_opt_web_opt.glb | .glb | 4.92 | 2026-03-10 03:19:10
+- public\twelve_zodiac_signs_rabbit_web_opt.glb | .glb | 5.78 | 2026-03-10 00:41:44
+- public\twelve_zodiac_signs_rat_web_opt_web_opt.glb | .glb | 5.85 | 2026-03-10 03:19:13
+- public\twelve_zodiac_signs_rooster_web_opt_web_opt.glb | .glb | 4.93 | 2026-03-10 03:19:15
+- public\twelve_zodiac_signs_sheep_web_opt.glb | .glb | 4.35 | 2026-03-10 00:41:33
+- public\twelve_zodiac_signs_snake_web_opt.glb | .glb | 5.62 | 2026-03-10 00:41:28
+- public\twelve_zodiac_signs_tiger_web_opt.glb | .glb | 8.49 | 2026-03-10 00:41:47

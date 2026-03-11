@@ -1,0 +1,23 @@
+{
+  "message": "오늘 운세를 부드럽고 또렷하게 설명해줘.",
+  "language": "ko",
+  "profile": {
+    "id": "baseline-user",
+    "name": "김형욱",
+    "gender": "male",
+    "birthDate": {
+      "year": 1993,
+      "month": 5,
+      "day": 6,
+      "hour": 11,
+      "minute": 30,
+      "ampm": "AM"
+    },
+    "calendarType": "양력",
+    "isTimeUnknown": false,
+    "relation": "me",
+    "memo": ""
+  },
+  "saju": {},
+  "isInitialAnalysis": false
+}

@@ -1,0 +1,255 @@
+﻿Project Directory Tree Summary
+Generated: 2026-03-09 22:15:42
+Root: C:\Users\user\Desktop\바탕화면 모음\codex\sazoo-v2.1-forest
+
+sazoo-v2.1-forest/
+├─ .github/
+│  └─ workflows/
+│     ├─ ci.yml
+│     ├─ production-deploy.yml
+│     └─ staging-deploy.yml
+├─ 3d asset/
+│  └─ opt/
+│     ├─ 15. 업적 배지 옥토끼 (Moon Rabbit Badge)_web_opt.glb
+│     ├─ 8. 오행 토(土) - 단단한 기반_web_opt.glb
+│     ├─ cheomseongdae_web_opt.glb
+│     ├─ desktop.ini
+│     ├─ earth_element_web_opt.glb
+│     ├─ home_web_opt.glb
+│     ├─ man character_web_opt.glb
+│     ├─ map of sazoo_web_opt.glb
+│     ├─ The Cyber-Bokjumeoni (럭키 팩 아이콘)_web_opt.glb
+│     ├─ woman character_web_opt.glb
+│     ├─ yeopjeon_stack_web_opt.glb
+│     ├─ 까치_web_opt.glb
+│     ├─ 알림 스크롤 (Notification Scroll)_web_opt.glb
+│     ├─ 여우_web_opt.glb
+│     ├─ 오행-목_web_opt.glb
+│     ├─ 재화 엽전 스택 (Yeopjeon Stack)_web_opt.glb
+│     └─ 홈 탭 천년의 관측소, 첨성대 (Cheomseongdae)_web_opt.glb
+├─ android/
+│  ├─ .gradle/
+│  │  └─ ... (omitted)
+│  ├─ app/
+│  │  ├─ build/
+│  │  │  └─ ... (omitted)
+│  │  ├─ src/
+│  │  ├─ .gitignore
+│  │  ├─ build.gradle
+│  │  ├─ capacitor.build.gradle
+│  │  └─ proguard-rules.pro
+│  ├─ build/
+│  │  └─ ... (omitted)
+│  ├─ capacitor-cordova-android-plugins/
+│  │  ├─ build/
+│  │  │  └─ ... (omitted)
+│  │  ├─ src/
+│  │  ├─ build.gradle
+│  │  └─ cordova.variables.gradle
+│  ├─ gradle/
+│  │  └─ wrapper/
+│  ├─ .gitignore
+│  ├─ build.gradle
+│  ├─ capacitor.settings.gradle
+│  ├─ gradle.properties
+│  ├─ gradlew
+│  ├─ gradlew.bat
+│  ├─ keystore.properties
+│  ├─ local.properties
+│  ├─ sazoo-upload-key.jks
+│  ├─ settings.gradle
+│  └─ variables.gradle
+├─ assets/
+│  ├─ archive/
+│  │  └─ image asset/
+│  └─ store/
+│     ├─ app-icon-1024.png
+│     ├─ play-feature-1024x500.png
+│     └─ play-icon-512.png
+├─ components/
+│  ├─ AssetPreloader.tsx
+│  ├─ BackgroundLayout.tsx
+│  ├─ GreetingCharacter.tsx
+│  ├─ HomeScene.tsx
+│  ├─ ShareableFortune.tsx
+│  └─ SpriteAnimation.tsx
+├─ dist/
+│  └─ ... (omitted)
+├─ docs/
+│  ├─ api/
+│  │  └─ openapi.yaml
+│  ├─ deploy/
+│  │  ├─ 01-baseline-audit.md
+│  │  ├─ 02-architecture-decision.md
+│  │  ├─ 03-security-boundary.md
+│  │  ├─ 04-backend-setup.md
+│  │  ├─ 05-frontend-integration.md
+│  │  ├─ 06-env-strategy.md
+│  │  ├─ 07-build-stability.md
+│  │  ├─ 08-quality-gates.md
+│  │  ├─ 09-cicd.md
+│  │  ├─ 10-capacitor-setup.md
+│  │  ├─ build-check.after-changes.log
+│  │  ├─ build-check.full.log
+│  │  ├─ DEPLOY_TODO.md
+│  │  ├─ dev-check.after-changes.err
+│  │  ├─ dev-check.after-changes.log
+│  │  ├─ dev-check.err
+│  │  ├─ dev-check.log
+│  │  └─ RELEASE_MATRIX.md
+│  ├─ figma-workflow-captures/
+│  │  └─ ... (omitted)
+│  ├─ legal/
+│  │  ├─ privacy-policy.md
+│  │  └─ terms.md
+│  ├─ release/
+│  │  ├─ GO_LIVE_CHECKLIST.md
+│  │  ├─ RELEASE_NOTES_TEMPLATE.md
+│  │  └─ RUNBOOK.md
+│  ├─ store/
+│  │  ├─ assets-checklist.md
+│  │  ├─ metadata-en.md
+│  │  └─ metadata-ko.md
+│  ├─ android_release_checklist.txt
+│  ├─ app_feature_guide.md
+│  ├─ ASSET_INVENTORY.txt
+│  ├─ COMMUNICATION_AUDIT_EXPANDED.md
+│  ├─ master_development_guide.md
+│  ├─ release_copy_app_store_limited_v1.0.1.md
+│  ├─ release_copy_play_console_limited_v1.0.1.md
+│  ├─ release_copy_v1.0.1.md
+│  └─ technical_roadmap.md
+├─ image asset/
+├─ ios/
+│  ├─ App/
+│  │  ├─ App/
+│  │  ├─ App.xcodeproj/
+│  │  ├─ App.xcworkspace/
+│  │  └─ Podfile
+│  ├─ capacitor-cordova-ios-plugins/
+│  │  ├─ resources/
+│  │  ├─ sources/
+│  │  ├─ CordovaPlugins.podspec
+│  │  ├─ CordovaPluginsResources.podspec
+│  │  └─ CordovaPluginsStatic.podspec
+│  └─ .gitignore
+├─ node_modules/
+│  └─ ... (omitted)
+├─ public/
+│  ├─ avatars/
+│  │  ├─ scholar-man.png
+│  │  └─ scholar-woman.png
+│  ├─ basis/
+│  │  ├─ basis_transcoder.js
+│  │  ├─ basis_transcoder.wasm
+│  │  └─ README.md
+│  ├─ draco/
+│  │  ├─ gltf/
+│  │  ├─ draco_decoder.js
+│  │  ├─ draco_decoder.wasm
+│  │  ├─ draco_encoder.js
+│  │  ├─ draco_wasm_wrapper.js
+│  │  └─ README.md
+│  ├─ webp/
+│  │  ├─ greeting2.webp
+│  │  ├─ idle motion.webp
+│  │  └─ reading_saju_pink.webp
+│  ├─ bokjumeoni.glb
+│  ├─ checking_saju.mp4
+│  ├─ cheomseongdae.glb
+│  ├─ destiny_check.png
+│  ├─ earth_element.glb
+│  ├─ fox.glb
+│  ├─ home.glb
+│  ├─ intro-video.mp4
+│  ├─ login_video.mp4
+│  ├─ magpie.glb
+│  ├─ man.glb
+│  ├─ map_of_sazoo.glb
+│  ├─ moon_rabbit.glb
+│  ├─ scroll.glb
+│  ├─ static_scholar_woman.png
+│  ├─ woman.glb
+│  ├─ yeopjeon.png
+│  └─ yeopjeon_stack.glb
+├─ screens/
+│  ├─ tabs/
+│  │  ├─ CalendarScreen.tsx
+│  │  ├─ ChatScreen.tsx
+│  │  ├─ HomeTab.tsx
+│  │  ├─ MiniAppsScreen.tsx
+│  │  └─ ProfileScreen.tsx
+│  ├─ AnalyzingScreen.tsx
+│  ├─ ErrorFallback.tsx
+│  ├─ IntroScreen.tsx
+│  ├─ LandingScreen.tsx
+│  ├─ MainScreen.tsx
+│  └─ OnboardingScreen.tsx
+├─ scripts/
+│  ├─ build-android-release.mjs
+│  ├─ bump-android-version.mjs
+│  ├─ capture-app-workflow.mjs
+│  ├─ generate-store-assets.ps1
+│  └─ lint-secrets.mjs
+├─ server/
+│  ├─ ai/
+│  │  └─ geminiProvider.js
+│  ├─ schemas/
+│  │  └─ fortuneSchemas.js
+│  ├─ app.js
+│  ├─ app.test.ts
+│  ├─ env.js
+│  ├─ env.test.ts
+│  └─ index.js
+├─ src/
+│  ├─ config/
+│  │  └─ env.ts
+│  └─ services/
+│     ├─ api.ts
+│     └─ storage.ts
+├─ video/
+│  ├─ checking saju.mp4
+│  ├─ intro-video.mp4
+│  └─ login video.mp4
+├─ webp/
+├─ .env.example
+├─ .env.local
+├─ .env.production.example
+├─ .env.staging.example
+├─ .gitignore
+├─ App.tsx
+├─ build_output.txt
+├─ capacitor.config.ts
+├─ cloudflared.exe
+├─ components.tsx
+├─ context.tsx
+├─ dev_check.err
+├─ dev_check.log
+├─ dev_i18n_check.err
+├─ dev_i18n_check.log
+├─ dev_server.err
+├─ dev_server.log
+├─ index.html
+├─ index.tsx
+├─ metadata.json
+├─ package.json
+├─ package-lock.json
+├─ README.md
+├─ sazoo 재화 프롬프트.txt
+├─ skeletons.tsx
+├─ tsconfig.json
+├─ tunnel.log
+├─ tunnel_live.err
+├─ tunnel_live.log
+├─ tunnel_output.txt
+├─ tunnel_output_final.txt
+├─ tunnel_output_v2.txt
+├─ tunnel_output_v3.txt
+├─ tunnel_output_verif.txt
+├─ utils.ts
+├─ vite.config.ts
+└─ vitest.config.ts
+
+Notes:
+- Maximum depth: 3
+- Omitted folders: node_modules, .git, dist, dist-ssr, .gradle, build, figma-workflow-captures

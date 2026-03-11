@@ -1,0 +1,22 @@
+{
+  "language": "ko",
+  "date": "2026-03-10",
+  "profile": {
+    "id": "baseline-user",
+    "name": "김형욱",
+    "gender": "male",
+    "birthDate": {
+      "year": 1993,
+      "month": 5,
+      "day": 6,
+      "hour": 11,
+      "minute": 30,
+      "ampm": "AM"
+    },
+    "calendarType": "양력",
+    "isTimeUnknown": false,
+    "relation": "me",
+    "memo": ""
+  },
+  "saju": {}
+}

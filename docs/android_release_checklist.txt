@@ -1,0 +1,21 @@
+Android Release Checklist
+
+1) Bump version
+- npm run mobile:version:patch
+
+2) Build signed release artifacts
+- npm run mobile:release
+
+3) Output files
+- APK: android/app/build/outputs/apk/release/app-release.apk
+- AAB: android/app/build/outputs/bundle/release/app-release.aab
+
+4) Play Console upload
+- Create a new release in your production or testing track.
+- Upload app-release.aab.
+- Add release notes.
+- Review warnings and start rollout.
+
+5) Key management
+- Keep android/sazoo-upload-key.jks and android/keystore.properties in secure backup.
+- If key is lost, future updates to the same app package cannot be signed.

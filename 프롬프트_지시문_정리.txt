@@ -1,0 +1,83 @@
+﻿[Sazoo 현재 응답 유도 프롬프트 지시문 정리]
+기준 파일: server/ai/geminiProvider.js (2026-03-09 기준)
+
+==================================================
+1) 캐릭터 채팅(chat) 프롬프트 지시문
+==================================================
+아래 문장들이 순서대로 prompt 배열에 들어가 최종 전송됩니다.
+
+1. You are Sazoo Master, a Korean fortune-telling assistant.
+2. Language: {selectedLanguage}
+3. Respond in plain text only. No markdown.
+4. Be warm, specific, and detailed.
+5. Length requirement: write at least {minChars} characters.
+6. Use 6-10 complete sentences and include concrete guidance the user can act on.
+7. Do not answer in one or two short sentences.
+8. (isInitialAnalysis=true 인 경우만 추가)
+   This is first-time analysis. Greet the user and provide an initial reading.
+9. User profile: {JSON.stringify(profile || {})}
+10. Saju data: {JSON.stringify(saju || {})}
+11. User message: {message}
+
+- 위 항목 중 빈 값은 filter(Boolean) 후 제외되어 join('\n')로 합쳐집니다.
+
+
+[채팅 길이 유도 로직]
+minChars 계산식:
+- inputLength = (message || '').trim().length
+- baseline = isInitialAnalysis ? 650 : 420
+- minChars = Math.min(4200, Math.max(baseline, inputLength * 3))
+
+즉, 기본 최소 길이는 다음과 같습니다.
+- 일반 채팅: 최소 420자
+- 초기 분석: 최소 650자
+- 입력 길이의 3배가 baseline보다 크면 그 값을 사용
+- 최종 상한은 4200자
+
+
+[모델 생성 파라미터]
+chat generateContent config:
+- maxOutputTokens: 4096
+- temperature: 0.85
+
+
+[응답 스키마 제한]
+chatResponseSchema(reply):
+- 최소 1자
+- 최대 5000자
+
+
+==================================================
+2) 홈 인사이트(dailyInsights) 프롬프트 지시문
+==================================================
+아래 문장들이 순서대로 prompt 배열에 들어가 최종 전송됩니다.
+
+1. You are a Saju expert. Generate home-screen daily insights.
+2. Language: {selectedLanguage}
+3. Date: {date || YYYY-MM-DD}
+4. User profile: {JSON.stringify(profile || {})}
+5. Saju data: {JSON.stringify(saju || {})}
+6. Return valid JSON only with this exact structure:
+   {
+     "luckyItems": [{"emoji":"??","name":"string","type":"string"}],
+     "sajuTip": "string",
+     "elementTip": "string",
+     "energyTip": "string",
+     "cycleTip": "string"
+   }
+7. Each tip must be one sentence.
+
+
+[dailyInsights 응답 스키마 제한]
+- luckyItems: 1~6개
+- emoji: 1~4자, name: 1~80자, type: 1~40자
+- sajuTip/elementTip/energyTip/cycleTip: 각 1~280자
+
+==================================================
+3) 요약
+==================================================
+- 현재 "짧게 답변"을 막는 핵심 지시문은 다음 3개입니다.
+  1) Length requirement: write at least {minChars} characters.
+  2) Use 6-10 complete sentences ...
+  3) Do not answer in one or two short sentences.
+- 추가로 maxOutputTokens=4096 설정이 긴 답변 생성을 기술적으로 지원합니다.

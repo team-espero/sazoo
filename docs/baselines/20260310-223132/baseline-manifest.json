@@ -1,0 +1,21 @@
+{
+  "capturedAt": "2026-03-10T13:31:32.797Z",
+  "baselineRoot": "docs/baselines/20260310-223132",
+  "localPreviewUrl": "http://127.0.0.1:4273",
+  "publicUrl": "https://alpha-starter-existing-athletic.trycloudflare.com",
+  "publicCaptureAvailable": true,
+  "apiStatus": {
+    "chatStatus": 200,
+    "insightsStatus": 200
+  },
+  "assetTotals": {
+    "fileCount": 116,
+    "totalBytes": 508575886
+  },
+  "artifacts": {
+    "localCaptureIndex": "docs/baselines/20260310-223132/captures-local/index.md",
+    "publicCaptureIndex": "docs/baselines/20260310-223132/captures-public/index.md",
+    "apiExamples": "docs/baselines/20260310-223132/api-examples/README.md",
+    "assetSnapshot": "docs/baselines/20260310-223132/asset-snapshot/asset-snapshot.md"
+  }
+}

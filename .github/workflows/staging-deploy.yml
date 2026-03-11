@@ -1,0 +1,38 @@
+﻿name: Staging Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Quality Gates
+        env:
+          BUILD_OUT_DIR: dist
+        run: npm run quality
+
+      - name: Trigger Staging Deploy
+        if: ${{ secrets.STAGING_DEPLOY_WEBHOOK != '' }}
+        run: |
+          curl -sS -X POST "$STAGING_DEPLOY_WEBHOOK"
+        env:
+          STAGING_DEPLOY_WEBHOOK: ${{ secrets.STAGING_DEPLOY_WEBHOOK }}
+
+      - name: Staging Deploy Not Configured
+        if: ${{ secrets.STAGING_DEPLOY_WEBHOOK == '' }}
+        run: echo "STAGING_DEPLOY_WEBHOOK is not configured. Skipping deploy trigger."
