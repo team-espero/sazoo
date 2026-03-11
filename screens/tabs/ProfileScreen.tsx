@@ -455,6 +455,7 @@ const LaunchMetricsModal = ({
     onClose,
     onRetry,
     report,
+    dailyInsightsSource,
     loading,
     error,
     copy,
@@ -465,6 +466,7 @@ const LaunchMetricsModal = ({
     onClose: () => void;
     onRetry: () => void;
     report: LaunchAnalyticsReport | null;
+    dailyInsightsSource?: 'model' | 'fallback';
     loading: boolean;
     error: string | null;
     copy: any;
@@ -484,6 +486,17 @@ const LaunchMetricsModal = ({
         { label: copy.metricFirstReadingSuccess, value: report.counts.first_reading_success },
         { label: copy.metricFirstReadingFailure, value: report.counts.first_reading_failure },
     ] : [];
+    const dailyInsightsSourceLabel = language === 'ko' ? '오늘 인사이트 소스' : language === 'ja' ? '今日のインサイトソース' : 'Daily Insights Source';
+    const dailyInsightsSourceDesc = language === 'ko'
+        ? '현재 홈 인사이트가 Gemini 모델 응답인지 빠른 fallback 경로인지 표시합니다.'
+        : language === 'ja'
+            ? '現在のホームインサイトがGeminiモデル由来か、高速フォールバック由来かを表示します。'
+            : 'Shows whether the current home insight came from Gemini or the fast fallback path.';
+    const dailyInsightsSourceValue = dailyInsightsSource === 'model'
+        ? (language === 'ko' ? 'Gemini 모델' : language === 'ja' ? 'Geminiモデル' : 'Gemini Model')
+        : dailyInsightsSource === 'fallback'
+            ? (language === 'ko' ? '빠른 Fallback' : language === 'ja' ? '高速フォールバック' : 'Fast Fallback')
+            : (language === 'ko' ? '없음' : language === 'ja' ? '未設定' : 'Unavailable');
 
     return (
         <div className="fixed inset-0 z-[85] flex items-center justify-center p-4">
@@ -528,7 +541,7 @@ const LaunchMetricsModal = ({
                         </div>
                     ) : report ? (
                         <div className="space-y-5">
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
                                     <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.totalEvents}</p>
                                     <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{report.totalEvents}</p>
@@ -543,6 +556,14 @@ const LaunchMetricsModal = ({
                                 <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
                                     <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.withinTarget}</p>
                                     <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{Math.round(report.timeToFirstValue.withinTargetRate * 100)}%</p>
+                                </div>
+                                <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
+                                    <div className="flex items-center gap-2">
+                                        <BarChart3 size={14} className="text-emerald-500" />
+                                        <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{dailyInsightsSourceLabel}</p>
+                                    </div>
+                                    <p className={`mt-3 text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{dailyInsightsSourceValue}</p>
+                                    <p className={`mt-2 text-xs font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{dailyInsightsSourceDesc}</p>
                                 </div>
                             </div>
 
@@ -1024,6 +1045,7 @@ const ProfileScreen = () => {
                     onClose={() => setIsLaunchMetricsOpen(false)}
                     onRetry={openLaunchMetrics}
                     report={launchReport}
+                    dailyInsightsSource={sajuState.dailyInsights?.source}
                     loading={launchReportLoading}
                     error={launchReportError}
                     copy={copy}
