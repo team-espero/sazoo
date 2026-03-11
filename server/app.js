@@ -52,6 +52,14 @@ const mapKnownError = (error) => {
     };
   }
 
+  if (error instanceof SyntaxError && error?.type === 'entity.parse.failed') {
+    return {
+      status: 400,
+      code: 'INVALID_JSON',
+      message: 'Request body must be valid JSON.',
+    };
+  }
+
   if (message.includes('Model returned invalid daily insights payload')) {
     return {
       status: 502,
@@ -458,6 +466,12 @@ export function createApp({ env, aiProvider }) {
   });
 
   app.use((error, _req, res, _next) => {
+    console.error('[server] request failed', {
+      code: error?.code || '',
+      message: error?.message || 'Unexpected error',
+      stack: error?.stack || '',
+    });
+
     const mapped = mapKnownError(error);
     res.status(mapped.status).json({
       error: {

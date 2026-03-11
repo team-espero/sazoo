@@ -73,3 +73,5 @@ server/data/wallet-store.json
 docs/deploy/*.log
 docs/deploy/*.err
 C:/temp/sazoo-dist/
+.vercel
+.env*.local

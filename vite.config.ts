@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const defaultOutDir = process.platform === 'win32' ? 'C:/temp/sazoo-dist' : 'dist';
+const isVercelBuild = ['1', 'true', 'yes'].includes(String(process.env.VERCEL || '').toLowerCase());
+const resolvedBasePath = process.env.VITE_BASE_PATH || (isVercelBuild ? '/' : './');
 
 const chunkByModule = (id: string) => {
   if (!id.includes('node_modules')) return undefined;
@@ -43,7 +45,7 @@ const chunkByModule = (id: string) => {
 };
 
 export default defineConfig({
-  base: './',
+  base: resolvedBasePath,
   define: {
     'process.env.NODE_ENV': JSON.stringify('production'),
   },
