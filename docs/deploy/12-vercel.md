@@ -49,6 +49,30 @@ npx vercel env add GEMINI_API_KEY preview
 npx vercel --prod
 ```
 
+## Preview automation
+
+Current preview automation uses GitHub Actions plus the Vercel CLI.
+
+Reason:
+- direct Vercel Git integration to `team-espero/sazoo` is not currently available from the connected Vercel account context
+- GitHub Actions provides a stable fallback that still creates preview deployments for branch pushes and pull requests
+
+Required GitHub repository configuration:
+
+- Actions secret: `VERCEL_TOKEN`
+- Actions variable: `VERCEL_ORG_ID`
+- Actions variable: `VERCEL_PROJECT_ID`
+
+Workflow:
+
+- `.github/workflows/vercel-preview.yml`
+
+Behavior:
+
+- branch pushes trigger a preview deployment
+- pull requests trigger a preview deployment
+- PR runs update a comment with the preview URL
+
 ## Post-deploy checks
 
 ```powershell

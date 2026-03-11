@@ -276,7 +276,7 @@ Goal: set up the actual shipping pipeline before production integrations expand 
   - production
 - [x] Set Vercel environment variables
 - [x] Confirm `VITE_API_BASE_URL` for each environment
-- [ ] Configure preview deploys on PR via Git integration
+- [x] Configure preview deploy automation on branch pushes / PRs via GitHub Actions and Vercel CLI
 - [x] Confirm static asset serving for video / GLB works on Vercel
 - [~] Confirm routing does not break deep links
 
@@ -516,7 +516,7 @@ If development starts now, begin with these in order:
 - [x] Create prompt architecture document and split runtime prompt layers
 - [x] Design progressive profiling data model
 - [x] Connect Git remote and protect main branch
-- [~] Connect Vercel preview and production envs
+- [x] Connect Vercel preview and production envs
 - [ ] Connect custom production domain when domain is available
 - [x] Finalize Firebase Google auth state handling
 - [ ] Implement Kakao login for real

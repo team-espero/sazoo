@@ -416,9 +416,10 @@ Verify:
 - Production currently serves from `https://sazoo.vercel.app`
 - GitHub `main` branch protection is enabled with the `verify` status check and one required approval
 - Vercel durable storage migrated from `/tmp` fallback to Neon-backed Postgres for production and preview
+- Preview deployments are automated through GitHub Actions plus Vercel CLI
 - Still pending:
-  - automatic PR preview deployments through Git integration
   - custom production domain attachment once domain is available
+  - direct Vercel Git integration to `team-espero/sazoo` if organization repository access is granted later
 
 ---
 

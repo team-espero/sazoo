@@ -434,6 +434,9 @@ This includes:
   - `msjs-projects/sazoo`
 - Production is currently served from:
   - `https://sazoo.vercel.app`
+- Preview deployments are automated through:
+  - GitHub Actions
+  - Vercel CLI with repository secrets / variables
 - Server-side secrets:
   - `GEMINI_API_KEY` is stored only in Vercel Environment Variables
 - Custom production domain:
