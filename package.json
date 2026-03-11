@@ -32,7 +32,8 @@
     "qa:memory:store": "node scripts/qa-memory-store.mjs",
     "qa:launch-db": "node scripts/qa-launch-db-state.mjs",
     "qa:gemini:live": "node scripts/qa-live-gemini.mjs",
-    "ci:gemini": "node scripts/qa-live-gemini.mjs --strict"
+    "ci:gemini": "node scripts/qa-live-gemini.mjs --strict",
+    "seed:dev": "node scripts/seed-launch-data.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",

@@ -180,16 +180,33 @@ export interface LaunchAnalyticsReport {
     install_from_invite: number;
     d1_retention: number;
     invite_reward_claimed: number;
+    invite_reward_granted: number;
     invite_reward_duplicate: number;
     invite_reward_claim_failed: number;
     first_reading_success: number;
     first_reading_failure: number;
+    onboarding_step_view: number;
+    onboarding_step_complete: number;
+    coin_spent: number;
+    ad_reward_granted: number;
+    scene_change: number;
+    mini_app_open: number;
   };
   timeToFirstValue: {
     samples: number;
     averageMs: number;
     withinTargetCount: number;
     withinTargetRate: number;
+  };
+  onboarding: {
+    viewsByStep: Record<string, number>;
+    completesByStep: Record<string, number>;
+  };
+  productHealth: {
+    coinSpendByContext: Record<string, number>;
+    adRewardsByPlacement: Record<string, number>;
+    miniAppOpenByApp: Record<string, number>;
+    sceneChangeByScene: Record<string, number>;
   };
   recentEvents: Array<{
     name: string;
@@ -916,22 +933,6 @@ export const api = {
       );
       },
     },
-  shareCards: {
-    getMetadata: async (inviteId: string) => {
-      return postJson<ShareCardMetadata | null, { inviteId: string }>('/share-cards/metadata/state', {
-        inviteId,
-      });
-    },
-    upsertMetadata: async (metadata: ShareCardMetadata) => {
-      return postJson<ShareCardMetadata, WalletIdentity & { metadata: ShareCardMetadata }>(
-        '/share-cards/metadata/upsert',
-        {
-          ...getWalletIdentity(),
-          metadata,
-        },
-      );
-    },
-  },
   shareCards: {
     getMetadata: async (inviteId: string) => {
       return postJson<ShareCardMetadata | null, { inviteId: string }>('/share-cards/metadata/state', {

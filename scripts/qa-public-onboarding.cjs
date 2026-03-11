@@ -1,4 +1,4 @@
-﻿const { chromium } = require('playwright');
+const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
@@ -19,7 +19,7 @@ const path = require('path');
   });
 
   const page = await context.newPage();
-  const url = 'https://alpha-starter-existing-athletic.trycloudflare.com';
+  const url = process.env.QA_PUBLIC_URL || 'https://sazoo.vercel.app';
   const started = Date.now();
 
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -40,7 +40,7 @@ const path = require('path');
   await page.waitForTimeout(1500);
 
   await page.getByRole('button', { name: '정보 입력하고 운세 보기' }).click({ timeout: 30000 });
-  await page.getByRole('button', { name: '카카오로 계속하기' }).click({ timeout: 30000 });
+  await page.getByRole('button', { name: '게스트로 계속하기' }).click({ timeout: 30000 });
 
   await page.getByPlaceholder('이름을 입력해주세요').fill('김형욱');
   await page.getByRole('button', { name: /Boy Male|Male/ }).first().click();

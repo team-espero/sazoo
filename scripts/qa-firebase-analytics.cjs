@@ -1,8 +1,8 @@
-const { chromium } = require('playwright');
+﻿const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
-const DEFAULT_URL = process.env.QA_URL || 'http://127.0.0.1:4173';
+const DEFAULT_URL = process.env.QA_URL || 'http://127.0.0.1:5180';
 const EXPECTED_MEASUREMENT_ID = process.env.FIREBASE_MEASUREMENT_ID || 'G-01CN9KV391';
 
 const isAnalyticsCollectRequest = (url) =>
@@ -104,13 +104,12 @@ const extractAnalyticsMetadata = (url, body) => {
     await skipButton.click();
   }
 
-  const startButton = page.getByRole('button', {
-    name: /운세 시작하기|Start Reading|鑑定を始める|공유된 비교 결과 열기|Open shared comparison/,
-  });
-  await startButton.click({ timeout: 30000 });
+  await page.getByRole('button', {
+    name: /운세 시작하기|Start Reading|Start Your Fortune|運勢を始める/,
+  }).click({ timeout: 30000 });
 
   const onboardingButton = page.getByRole('button', {
-    name: /정보 입력하고 운세 보기|Share your details|入力して鑑定を見る/,
+    name: /정보 입력하고 운세 보기|Enter info and view reading|情報を入力して鑑定を見る/,
   });
 
   if (await onboardingButton.isVisible().catch(() => false)) {

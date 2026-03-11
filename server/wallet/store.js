@@ -537,6 +537,9 @@ export function createWalletStore(dbPath, options = {}) {
     async getWallet(identity, snapshot) {
       return withMutation(() => resolveWallet(identity, snapshot));
     },
+    async getLedger(identity, limit = 50) {
+      return withMutation(() => resolveWallet(identity, null).ledger.slice(0, limit));
+    },
     async spend(identity, context = 'generic') {
       return withMutation(() => {
         const currentWallet = resolveWallet(identity, null);

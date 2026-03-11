@@ -22,6 +22,10 @@ export const walletStateRequestSchema = walletIdentitySchema.extend({
   snapshot: walletBalanceSchema.partial().optional(),
 });
 
+export const walletLedgerRequestSchema = walletIdentitySchema.extend({
+  limit: z.number().int().min(1).max(100).default(50),
+});
+
 export const walletSpendRequestSchema = walletIdentitySchema.extend({
   context: z.string().trim().min(1).max(80).default('generic'),
 });

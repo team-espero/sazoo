@@ -1,11 +1,19 @@
-﻿import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, User, Clock, Calendar, Chrome } from 'lucide-react';
-import { signInWithPopup } from 'firebase/auth';
-import { Button, InputField, GenderCard, TagCloud, GlassCard, SegmentedControl, WheelPicker, JellyToggle } from '../components';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Calendar, Chrome, Clock, MessageCircle, User } from 'lucide-react';
+import {
+  Button,
+  GenderCard,
+  GlassCard,
+  InputField,
+  JellyToggle,
+  SegmentedControl,
+  TagCloud,
+  WheelPicker,
+} from '../components';
 import AssetPreloader from '../components/AssetPreloader';
 import { AppLanguage, useSajuActions, useSajuSettings } from '../context';
-import { auth, googleProvider, isFirebaseReady } from '../src/config/firebase';
+import { useAuth } from '../src/auth/AuthProvider';
 import { analytics } from '../src/services/analytics';
 
 const ONBOARDING_COPY: Record<AppLanguage, any> = {
@@ -13,6 +21,9 @@ const ONBOARDING_COPY: Record<AppLanguage, any> = {
     step0Title: 'Connect in 3 seconds',
     continueKakao: 'Continue with Kakao',
     continueGoogle: 'Continue with Google',
+    continueGuest: 'Continue as Guest',
+    authConnected: 'Connected. This profile will safely follow your account.',
+    kakaoSetupPending: 'Kakao setup pending',
     step1Title: 'What should we call you?',
     step1Desc: 'Create your profile to begin your reading.',
     nameLabel: 'Name',
@@ -39,19 +50,15 @@ const ONBOARDING_COPY: Record<AppLanguage, any> = {
     knownTime: 'Known time',
     hour: 'Hour',
     minute: 'Min',
-    step4Title: 'How familiar are you with Saju?',
-    step4Desc: 'We tailor explanations by your level.',
-    levels: [
-      { id: 'newbie', label: 'New to Saju', desc: 'I am just getting started.', color: 'bg-[#98FF98]' },
-      { id: 'intermediate', label: 'Know the basics', desc: 'I understand common terms.', color: 'bg-[#A0E7E5]' },
-      { id: 'expert', label: 'Want depth', desc: 'I want advanced interpretation.', color: 'bg-[#FFB7B2]' },
-    ],
     analyze: 'Start Analysis',
   },
   ko: {
     step0Title: '3초 만에 연결하기',
     continueKakao: '카카오로 계속하기',
     continueGoogle: 'Google로 계속하기',
+    continueGuest: '게스트로 계속하기',
+    authConnected: '연결되었어요. 지금 만드는 프로필은 계정에 안전하게 이어집니다.',
+    kakaoSetupPending: '카카오 설정 대기중',
     step1Title: '어떻게 불러드릴까요?',
     step1Desc: '나만의 프로필을 만들어보세요.',
     nameLabel: '이름',
@@ -78,19 +85,15 @@ const ONBOARDING_COPY: Record<AppLanguage, any> = {
     knownTime: '시간 알고 있음',
     hour: '시',
     minute: '분',
-    step4Title: '사주 지식은 어느 정도인가요?',
-    step4Desc: '수준에 맞춰 설명해드릴게요.',
-    levels: [
-      { id: 'newbie', label: '사주가 처음이에요', desc: '기초부터 쉽게 알고 싶어요.', color: 'bg-[#98FF98]' },
-      { id: 'intermediate', label: '기본은 알아요', desc: '용어를 어느 정도 이해해요.', color: 'bg-[#A0E7E5]' },
-      { id: 'expert', label: '깊게 보고 싶어요', desc: '심화 해석을 원해요.', color: 'bg-[#FFB7B2]' },
-    ],
     analyze: '운세 분석하기',
   },
   ja: {
     step0Title: '3秒で接続',
     continueKakao: 'Kakaoで続行',
     continueGoogle: 'Googleで続行',
+    continueGuest: 'ゲストで続行',
+    authConnected: '接続できました。今のプロフィールはこのままアカウントへ引き継がれます。',
+    kakaoSetupPending: 'Kakao設定待ち',
     step1Title: 'お名前を教えてください',
     step1Desc: 'プロフィールを作成して始めましょう。',
     nameLabel: '名前',
@@ -117,13 +120,6 @@ const ONBOARDING_COPY: Record<AppLanguage, any> = {
     knownTime: '時間あり',
     hour: '時',
     minute: '分',
-    step4Title: '四柱推命の知識レベル',
-    step4Desc: 'レベルに合わせて説明します。',
-    levels: [
-      { id: 'newbie', label: '初めてです', desc: '基礎から知りたいです。', color: 'bg-[#98FF98]' },
-      { id: 'intermediate', label: '基本はわかる', desc: '用語はだいたい理解しています。', color: 'bg-[#A0E7E5]' },
-      { id: 'expert', label: '深く学びたい', desc: '詳細な解釈を希望します。', color: 'bg-[#FFB7B2]' },
-    ],
     analyze: '鑑定を開始',
   },
 };
@@ -139,16 +135,29 @@ const OnboardingScreen = ({ onComplete }: any) => {
   const [date, setDate] = useState({ year: 1998, month: 5, day: 21 });
   const [time, setTime] = useState({ ampm: 'AM', hour: 10, minute: '30' });
   const [isTimeUnknown, setIsTimeUnknown] = useState(false);
-  const [knowledgeLevel, setKnowledgeLevel] = useState('newbie');
+  const knowledgeLevel = 'newbie' as const;
 
   const { updateProfileBatch, updateConcern, calculateAndSetSaju } = useSajuActions();
   const { language = 'ko' } = useSajuSettings();
+  const {
+    status: authStatus,
+    session,
+    error: authError,
+    pendingProvider,
+    isGoogleReady,
+    isKakaoReady,
+    signInWithGoogle,
+    signInWithKakao,
+    clearError,
+  } = useAuth();
+
   const copy = ONBOARDING_COPY[language as AppLanguage] ?? ONBOARDING_COPY.ko;
   const calendarTypeMap = {
     solar: '양력',
     lunar: '음력',
     leap: '윤달',
   } as const;
+
   const calendarOptions = copy.calendarTypes;
   const selectedCalendarLabel = calendarTypeKey === 'solar'
     ? calendarOptions[0]
@@ -156,18 +165,21 @@ const OnboardingScreen = ({ onComplete }: any) => {
       ? calendarOptions[1]
       : calendarOptions[2];
 
-  const years = React.useMemo(() => Array.from({ length: 100 }, (_, i) => 2026 - i), []);
-  const months = React.useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
+  const years = useMemo(() => Array.from({ length: 100 }, (_, index) => 2026 - index), []);
+  const months = useMemo(() => Array.from({ length: 12 }, (_, index) => index + 1), []);
+  const hours = useMemo(() => Array.from({ length: 12 }, (_, index) => index + 1), []);
+  const minutes = useMemo(() => Array.from({ length: 60 }, (_, index) => String(index).padStart(2, '0')), []);
+  const ampms = useMemo(() => ['AM', 'PM'], []);
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month, 0).getDate();
   const maxDays = getDaysInMonth(date.year, date.month);
-  const days = React.useMemo(() => Array.from({ length: maxDays }, (_, i) => i + 1), [maxDays]);
+  const days = useMemo(() => Array.from({ length: maxDays }, (_, index) => index + 1), [maxDays]);
 
   useEffect(() => {
     if (date.day > maxDays) {
       setDate((prev) => ({ ...prev, day: maxDays }));
     }
-  }, [maxDays, date.day]);
+  }, [date.day, maxDays]);
 
   useEffect(() => {
     const video = document.createElement('video');
@@ -176,20 +188,29 @@ const OnboardingScreen = ({ onComplete }: any) => {
     video.load();
   }, []);
 
-  const hours = React.useMemo(() => Array.from({ length: 12 }, (_, i) => i + 1), []);
-  const minutes = React.useMemo(() => Array.from({ length: 60 }, (_, i) => (i < 10 ? '0' + i : String(i))), []);
-  const ampms = React.useMemo(() => ['AM', 'PM'], []);
+  useEffect(() => {
+    analytics.trackOnboardingStep(step, 'view', { language });
+  }, [language, step]);
+
+  useEffect(() => {
+    if (step === 0 && authStatus === 'authenticated') {
+      setStep(1);
+    }
+  }, [authStatus, step]);
+
+  useEffect(() => {
+    if (authError) {
+      setSocialLoginError(authError);
+    }
+  }, [authError]);
 
   const nextStep = () => {
     analytics.trackOnboardingStep(step, 'complete', { language });
     setStep((prev) => prev + 1);
   };
+
   const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
   const parseDigits = (value: string) => value.replace(/\D/g, '');
-
-  useEffect(() => {
-    analytics.trackOnboardingStep(step, 'view', { language });
-  }, [language, step]);
 
   const updateDateField = (key: 'year' | 'month' | 'day', rawValue: string) => {
     const digits = parseDigits(rawValue);
@@ -220,24 +241,28 @@ const OnboardingScreen = ({ onComplete }: any) => {
         return { ...prev, hour: clamp(Number(digits.slice(0, 2)), 1, 12) };
       }
 
-      return { ...prev, minute: String(clamp(Number(digits.slice(0, 2)), 0, 59)).padStart(2, '0') };
+      return {
+        ...prev,
+        minute: String(clamp(Number(digits.slice(0, 2)), 0, 59)).padStart(2, '0'),
+      };
     });
   };
 
   const handleGoogleLogin = async () => {
-    if (!auth || !googleProvider || !isFirebaseReady) {
-      setSocialLoginError('Google login is temporarily unavailable.');
-      return;
+    clearError();
+    setSocialLoginError(null);
+    const result = await signInWithGoogle();
+    if (!result.ok && result.error) {
+      setSocialLoginError(result.error);
     }
+  };
 
-    try {
-      setSocialLoginError(null);
-      const result = await signInWithPopup(auth, googleProvider);
-      const { user } = result;
-      console.log(`로그인 성공! UID: ${user.uid}, 이메일: ${user.email ?? ''}`);
-    } catch (error) {
-      console.error('Google 로그인 실패:', error);
-      setSocialLoginError('Google login failed. Please try again later.');
+  const handleKakaoLogin = async () => {
+    clearError();
+    setSocialLoginError(null);
+    const result = await signInWithKakao();
+    if (!result.ok && result.error) {
+      setSocialLoginError(result.error);
     }
   };
 
@@ -247,12 +272,14 @@ const OnboardingScreen = ({ onComplete }: any) => {
     try {
       setIsSubmitting(true);
       analytics.trackOnboardingStep(step, 'complete', { language, action: 'start_analysis' });
+
       const birthDatePayload = {
         ...date,
         ...time,
         hour: isTimeUnknown ? 0 : time.hour,
         minute: isTimeUnknown ? 0 : Number(time.minute),
       };
+
       await updateProfileBatch({
         name,
         gender,
@@ -283,14 +310,23 @@ const OnboardingScreen = ({ onComplete }: any) => {
               <div className="text-center w-full">
                 <h2 className="typo-h2 mb-6">{copy.step0Title}</h2>
                 <div className="w-full space-y-4">
-                  <Button fullWidth onClick={nextStep} variant="kakao">
+                  <Button fullWidth onClick={handleKakaoLogin} variant="kakao" disabled={pendingProvider !== null}>
                     <MessageCircle fill="#391B1B" size={24} className="absolute left-6 text-[#391B1B]" />
-                    <span className="text-[#391B1B]">{copy.continueKakao}</span>
+                    <span className="text-[#391B1B]">{isKakaoReady ? copy.continueKakao : copy.kakaoSetupPending}</span>
                   </Button>
-                  <Button fullWidth onClick={handleGoogleLogin} variant="google" disabled={!isFirebaseReady}>
+                  <Button fullWidth onClick={handleGoogleLogin} variant="google" disabled={!isGoogleReady || pendingProvider !== null}>
                     <Chrome size={24} className="absolute left-6 text-slate-600" />
                     <span className="text-slate-600">{copy.continueGoogle}</span>
                   </Button>
+                  <Button fullWidth onClick={nextStep} variant="glass" disabled={pendingProvider !== null}>
+                    <span>{copy.continueGuest}</span>
+                  </Button>
+                  {authStatus === 'authenticated' && (
+                    <p className="px-2 text-xs font-semibold text-emerald-600 text-center">
+                      {copy.authConnected}
+                      {session?.email ? ` (${session.email})` : ''}
+                    </p>
+                  )}
                   {socialLoginError && (
                     <p className="px-2 text-xs font-medium text-rose-500 text-center">{socialLoginError}</p>
                   )}
@@ -306,7 +342,7 @@ const OnboardingScreen = ({ onComplete }: any) => {
                 <p className="text-slate-500 text-sm font-medium">{copy.step1Desc}</p>
               </div>
               <div className="space-y-8">
-                <InputField label={copy.nameLabel} icon={User} placeholder={copy.namePlaceholder} value={name} onChange={(e: any) => setName(e.target.value)} />
+                <InputField label={copy.nameLabel} icon={User} placeholder={copy.namePlaceholder} value={name} onChange={(event: any) => setName(event.target.value)} />
                 <div>
                   <label className="text-xs font-extrabold text-emerald-600 uppercase block mb-3">{copy.genderLabel}</label>
                   <div className="flex gap-4">
@@ -344,10 +380,10 @@ const OnboardingScreen = ({ onComplete }: any) => {
                     options={calendarOptions}
                     selected={selectedCalendarLabel}
                     onChange={(selectedLabel: string) => {
-                      const idx = calendarOptions.indexOf(selectedLabel);
-                      if (idx === 0) setCalendarTypeKey('solar');
-                      if (idx === 1) setCalendarTypeKey('lunar');
-                      if (idx === 2) setCalendarTypeKey('leap');
+                      const index = calendarOptions.indexOf(selectedLabel);
+                      if (index === 0) setCalendarTypeKey('solar');
+                      if (index === 1) setCalendarTypeKey('lunar');
+                      if (index === 2) setCalendarTypeKey('leap');
                     }}
                   />
                 </div>
@@ -358,42 +394,21 @@ const OnboardingScreen = ({ onComplete }: any) => {
                     <label className="text-[10px] font-extrabold text-emerald-600 uppercase">{copy.birthDateLabel}</label>
                   </div>
                   <div className="flex space-x-1">
-                    <WheelPicker items={years} value={date.year} onChange={(v: any) => setDate({ ...date, year: v })} className="w-[38%]" label={copy.year} />
-                    <WheelPicker items={months} value={date.month} onChange={(v: any) => setDate({ ...date, month: v })} className="w-[28%]" label={copy.month} />
-                    <WheelPicker items={days} value={date.day} onChange={(v: any) => setDate({ ...date, day: v })} className="w-[28%]" label={copy.day} />
+                    <WheelPicker items={years} value={date.year} onChange={(value: any) => setDate({ ...date, year: value })} className="w-[38%]" label={copy.year} />
+                    <WheelPicker items={months} value={date.month} onChange={(value: any) => setDate({ ...date, month: value })} className="w-[28%]" label={copy.month} />
+                    <WheelPicker items={days} value={date.day} onChange={(value: any) => setDate({ ...date, day: value })} className="w-[28%]" label={copy.day} />
                   </div>
                   <div className="mt-3">
                     <label className="mb-2 block text-[10px] font-extrabold uppercase text-slate-400">{copy.directInputLabel}</label>
                     <div className="grid grid-cols-3 gap-2">
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={date.year}
-                        onChange={(e) => updateDateField('year', e.target.value)}
-                        className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300"
-                        placeholder="1998"
-                      />
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={date.month}
-                        onChange={(e) => updateDateField('month', e.target.value)}
-                        className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300"
-                        placeholder="5"
-                      />
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={date.day}
-                        onChange={(e) => updateDateField('day', e.target.value)}
-                        className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300"
-                        placeholder="21"
-                      />
+                      <input type="number" inputMode="numeric" value={date.year} onChange={(event) => updateDateField('year', event.target.value)} className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300" placeholder="1998" />
+                      <input type="number" inputMode="numeric" value={date.month} onChange={(event) => updateDateField('month', event.target.value)} className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300" placeholder="5" />
+                      <input type="number" inputMode="numeric" value={date.day} onChange={(event) => updateDateField('day', event.target.value)} className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300" placeholder="21" />
                     </div>
                   </div>
                 </div>
 
-                <div className="w-full h-[1px] bg-white/40 my-1"></div>
+                <div className="w-full h-[1px] bg-white/40 my-1" />
 
                 <div className="relative">
                   <div className="flex items-center justify-between mb-2">
@@ -407,39 +422,21 @@ const OnboardingScreen = ({ onComplete }: any) => {
                     </div>
                   </div>
                   <div className={`flex space-x-1 transition-all duration-500 ${isTimeUnknown ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100'}`}>
-                    <WheelPicker items={ampms} value={time.ampm} onChange={(v: any) => setTime({ ...time, ampm: v })} className="w-[30%]" label="AM/PM" />
-                    <WheelPicker items={hours} value={time.hour} onChange={(v: any) => setTime({ ...time, hour: v })} className="w-[30%]" label={copy.hour} />
+                    <WheelPicker items={ampms} value={time.ampm} onChange={(value: any) => setTime({ ...time, ampm: value })} className="w-[30%]" label="AM/PM" />
+                    <WheelPicker items={hours} value={time.hour} onChange={(value: any) => setTime({ ...time, hour: value })} className="w-[30%]" label={copy.hour} />
                     <span className="text-2xl font-bold text-slate-400 self-center pt-6">:</span>
-                    <WheelPicker items={minutes} value={time.minute} onChange={(v: any) => setTime({ ...time, minute: v })} className="w-[30%]" label={copy.minute} />
+                    <WheelPicker items={minutes} value={time.minute} onChange={(value: any) => setTime({ ...time, minute: value })} className="w-[30%]" label={copy.minute} />
                   </div>
                   <div className={`mt-3 ${isTimeUnknown ? 'opacity-30 pointer-events-none grayscale' : ''}`}>
                     <label className="mb-2 block text-[10px] font-extrabold uppercase text-slate-400">{copy.timeDirectInputLabel}</label>
                     <div className="grid grid-cols-[5.25rem_minmax(0,1fr)_5.25rem] gap-2">
-                      <select
-                        value={time.ampm}
-                        onChange={(e) => setTime({ ...time, ampm: e.target.value })}
-                        className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-lg font-black text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none"
-                      >
+                      <select value={time.ampm} onChange={(event) => setTime({ ...time, ampm: event.target.value as 'AM' | 'PM' })} className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-lg font-black text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none">
                         {ampms.map((ampm) => (
                           <option key={ampm} value={ampm}>{ampm}</option>
                         ))}
                       </select>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={time.hour}
-                        onChange={(e) => updateTimeField('hour', e.target.value)}
-                        className="min-h-[50px] min-w-0 rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300"
-                        placeholder="10"
-                      />
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        value={time.minute}
-                        onChange={(e) => updateTimeField('minute', e.target.value)}
-                        className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300"
-                        placeholder="30"
-                      />
+                      <input type="number" inputMode="numeric" value={time.hour} onChange={(event) => updateTimeField('hour', event.target.value)} className="min-h-[50px] min-w-0 rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300" placeholder="10" />
+                      <input type="number" inputMode="numeric" value={time.minute} onChange={(event) => updateTimeField('minute', event.target.value)} className="min-h-[50px] rounded-2xl border border-slate-200/80 bg-white px-3 text-center text-xl font-black tracking-tight text-slate-900 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300" placeholder="30" />
                     </div>
                   </div>
                 </div>

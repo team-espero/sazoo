@@ -19,7 +19,14 @@ Get-Content $envFile | ForEach-Object {
 
   $parts = $_ -split '=', 2
   if ($parts.Length -eq 2) {
-    $envMap[$parts[0].Trim()] = $parts[1]
+    $rawValue = $parts[1].Trim()
+    if (
+      ($rawValue.StartsWith('"') -and $rawValue.EndsWith('"')) -or
+      ($rawValue.StartsWith("'") -and $rawValue.EndsWith("'"))
+    ) {
+      $rawValue = $rawValue.Substring(1, $rawValue.Length - 2).Trim()
+    }
+    $envMap[$parts[0].Trim()] = $rawValue
   }
 }
 
@@ -53,6 +60,8 @@ $previewVars = [ordered]@{
   'VITE_API_BASE_URL' = '/api/v1'
   'VITE_API_TIMEOUT_MS' = '65000'
   'VITE_BASE_PATH' = '/'
+  'VITE_KAKAO_JAVASCRIPT_KEY' = $envMap['VITE_KAKAO_JAVASCRIPT_KEY']
+  'VITE_KAKAO_REDIRECT_URI' = $envMap['VITE_KAKAO_REDIRECT_URI']
   'VITE_FIREBASE_API_KEY' = $envMap['VITE_FIREBASE_API_KEY']
   'VITE_FIREBASE_AUTH_DOMAIN' = $envMap['VITE_FIREBASE_AUTH_DOMAIN']
   'VITE_FIREBASE_PROJECT_ID' = $envMap['VITE_FIREBASE_PROJECT_ID']
@@ -61,6 +70,9 @@ $previewVars = [ordered]@{
   'VITE_FIREBASE_APP_ID' = $envMap['VITE_FIREBASE_APP_ID']
   'VITE_FIREBASE_MEASUREMENT_ID' = $envMap['VITE_FIREBASE_MEASUREMENT_ID']
   'GEMINI_API_KEY' = $envMap['GEMINI_API_KEY']
+  'KAKAO_REST_API_KEY' = $envMap['KAKAO_REST_API_KEY']
+  'KAKAO_CLIENT_SECRET' = $envMap['KAKAO_CLIENT_SECRET']
+  'KAKAO_ALLOWED_REDIRECT_URIS' = $envMap['KAKAO_ALLOWED_REDIRECT_URIS']
   'GEMINI_CHAT_MODEL' = $envMap['GEMINI_CHAT_MODEL']
   'GEMINI_INSIGHTS_MODEL' = $envMap['GEMINI_INSIGHTS_MODEL']
   'API_PREFIX' = '/api/v1'
@@ -74,6 +86,8 @@ $productionVars = [ordered]@{
   'VITE_API_BASE_URL' = '/api/v1'
   'VITE_API_TIMEOUT_MS' = '65000'
   'VITE_BASE_PATH' = '/'
+  'VITE_KAKAO_JAVASCRIPT_KEY' = $envMap['VITE_KAKAO_JAVASCRIPT_KEY']
+  'VITE_KAKAO_REDIRECT_URI' = $envMap['VITE_KAKAO_REDIRECT_URI']
   'VITE_FIREBASE_API_KEY' = $envMap['VITE_FIREBASE_API_KEY']
   'VITE_FIREBASE_AUTH_DOMAIN' = $envMap['VITE_FIREBASE_AUTH_DOMAIN']
   'VITE_FIREBASE_PROJECT_ID' = $envMap['VITE_FIREBASE_PROJECT_ID']
@@ -82,6 +96,9 @@ $productionVars = [ordered]@{
   'VITE_FIREBASE_APP_ID' = $envMap['VITE_FIREBASE_APP_ID']
   'VITE_FIREBASE_MEASUREMENT_ID' = $envMap['VITE_FIREBASE_MEASUREMENT_ID']
   'GEMINI_API_KEY' = $envMap['GEMINI_API_KEY']
+  'KAKAO_REST_API_KEY' = $envMap['KAKAO_REST_API_KEY']
+  'KAKAO_CLIENT_SECRET' = $envMap['KAKAO_CLIENT_SECRET']
+  'KAKAO_ALLOWED_REDIRECT_URIS' = $envMap['KAKAO_ALLOWED_REDIRECT_URIS']
   'GEMINI_CHAT_MODEL' = $envMap['GEMINI_CHAT_MODEL']
   'GEMINI_INSIGHTS_MODEL' = $envMap['GEMINI_INSIGHTS_MODEL']
   'API_PREFIX' = '/api/v1'
@@ -92,13 +109,13 @@ $productionVars = [ordered]@{
 
 foreach ($entry in $previewVars.GetEnumerator()) {
   if (-not [string]::IsNullOrWhiteSpace($entry.Value)) {
-    Upsert-VercelEnv -Name $entry.Key -Target 'preview' -Value $entry.Value -Sensitive:($entry.Key -eq 'GEMINI_API_KEY')
+    Upsert-VercelEnv -Name $entry.Key -Target 'preview' -Value $entry.Value -Sensitive:(@('GEMINI_API_KEY', 'KAKAO_REST_API_KEY', 'KAKAO_CLIENT_SECRET') -contains $entry.Key)
   }
 }
 
 foreach ($entry in $productionVars.GetEnumerator()) {
   if (-not [string]::IsNullOrWhiteSpace($entry.Value)) {
-    Upsert-VercelEnv -Name $entry.Key -Target 'production' -Value $entry.Value -Sensitive:($entry.Key -eq 'GEMINI_API_KEY')
+    Upsert-VercelEnv -Name $entry.Key -Target 'production' -Value $entry.Value -Sensitive:(@('GEMINI_API_KEY', 'KAKAO_REST_API_KEY', 'KAKAO_CLIENT_SECRET') -contains $entry.Key)
   }
 }
 

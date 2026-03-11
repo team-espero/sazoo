@@ -1,4 +1,4 @@
-﻿const { chromium } = require('playwright');
+const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
@@ -8,7 +8,7 @@ const UI = {
   introSkip: /건너뛰기|Skip|スキップ/,
   startReading: /운세 시작하기|Start Reading|Start Your Fortune|運勢を始める/,
   onboardingCta: /정보 입력하고 운세 보기|Enter info and view reading|情報を入力して鑑定を見る/,
-  continueKakao: /카카오로 계속하기|Continue with Kakao|Kakaoで続行/,
+  continueGuest: /게스트로 계속하기|Continue as Guest|ゲストとして続行/,
   next: /다음 단계로|Next|次へ/,
   analyze: /운세 분석하기|Start Analysis|Analyze|鑑定を開始|鑑定を始める/,
   concernWealth: /재물|Wealth|金運|Money/,
@@ -67,7 +67,7 @@ const skipIntroIfNeeded = async (page) => {
   await page.getByRole('button', { name: UI.startReading }).click({ timeout: 30000 });
   await page.waitForTimeout(1500);
   await page.getByRole('button', { name: UI.onboardingCta }).click({ timeout: 30000 });
-  await page.getByRole('button', { name: UI.continueKakao }).click({ timeout: 30000 });
+  await page.getByRole('button', { name: UI.continueGuest }).click({ timeout: 30000 });
 
   await page.getByPlaceholder(UI.namePlaceholder).fill('김형욱');
   await page.getByRole('button', { name: UI.male }).first().click();
