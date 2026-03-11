@@ -16,7 +16,7 @@ import { CONTINUATION_OPENINGS, CONTINUATION_PATTERNS, GENERIC_OPENERS } from '.
 const MODEL_DISCOVERY_TTL_MS = 5 * 60 * 1000;
 const INITIAL_TIMEOUT_MS = 2200;
 const CHAT_TIMEOUT_MS = 12000;
-const INSIGHT_TIMEOUT_MS = 3200;
+const INSIGHT_TIMEOUT_MS = 1800;
 
 const INITIAL_MODEL_CANDIDATES = [
   'gemini-2.5-flash-lite',
@@ -32,8 +32,8 @@ const CHAT_MODEL_CANDIDATES = [
 ];
 
 const INSIGHT_MODEL_CANDIDATES = [
-  'gemini-2.5-flash-lite',
   'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-flash-latest',
   'gemini-2.5-pro',
 ];
@@ -186,7 +186,7 @@ function buildCandidateList(task, requestedModel) {
   }
 
   if (task === 'insights') {
-    return unique([requested, ...INSIGHT_MODEL_CANDIDATES]);
+    return unique([...INSIGHT_MODEL_CANDIDATES, requested]);
   }
 
   return unique([requested, ...CHAT_MODEL_CANDIDATES]);
@@ -236,7 +236,10 @@ function validateDailyInsightsPayload(payload) {
     return null;
   }
 
-  return parsed.data;
+  return {
+    ...parsed.data,
+    source: parsed.data.source || 'model',
+  };
 }
 
 function validateCouplePayload(text) {
@@ -328,7 +331,9 @@ export function createGeminiProvider({ apiKey, chatModel, insightsModel }) {
 
   async function generateAcrossModels({ task, prompt, requestedModel, timeoutMs, validateResult }) {
     const resolvedCandidates = await resolveCandidateModels(task, requestedModel);
-    const candidates = task === 'initial' ? resolvedCandidates.slice(0, 1) : resolvedCandidates;
+    const candidates = task === 'initial' || task === 'insights'
+      ? resolvedCandidates.slice(0, 1)
+      : resolvedCandidates;
     let lastError = null;
 
     for (const modelName of candidates) {
@@ -438,7 +443,10 @@ export function createGeminiProvider({ apiKey, chatModel, insightsModel }) {
     },
 
     async dailyInsights({ language, date, profile, saju }) {
-      const fallback = buildFallbackDailyInsights(language);
+      const fallback = {
+        ...buildFallbackDailyInsights(language),
+        source: 'fallback',
+      };
       const prompt = buildDailyInsightsPrompt({ language, date, profile, saju });
 
       try {

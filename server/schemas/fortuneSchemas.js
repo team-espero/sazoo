@@ -63,4 +63,5 @@ export const dailyInsightsResponseSchema = z.object({
   elementTip: z.string().trim().min(1).max(280),
   energyTip: z.string().trim().min(1).max(280),
   cycleTip: z.string().trim().min(1).max(280),
+  source: z.enum(['model', 'fallback']).optional(),
 });
