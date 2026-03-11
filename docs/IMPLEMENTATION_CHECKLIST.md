@@ -259,33 +259,35 @@ Goal: set up the actual shipping pipeline before production integrations expand 
 
 ### 5.1 Git Connection
 
-- [~] Connect repository to remote Git provider
+- [x] Connect repository to remote Git provider
 - [x] Define branch strategy
-- [ ] Protect main branch
+- [x] Protect main branch
 - [x] Add `.env` / secret ignore verification
 - [x] Add PR checklist
+- Guide: `docs/deploy/13-github-branch-protection.md`
 - [x] Add release tagging convention
 
 ### 5.2 Vercel Connection
 
-- [ ] Connect frontend to Vercel
-- [ ] Define environments:
+- [x] Connect frontend to Vercel
+- [x] Define environments:
   - development
   - preview
   - production
-- [ ] Set Vercel environment variables
-- [ ] Confirm `VITE_API_BASE_URL` for each environment
-- [ ] Configure preview deploys on PR
-- [ ] Confirm static asset serving for video / GLB works on Vercel
-- [ ] Confirm routing does not break deep links
+- [x] Set Vercel environment variables
+- [x] Confirm `VITE_API_BASE_URL` for each environment
+- [ ] Configure preview deploys on PR via Git integration
+- [x] Confirm static asset serving for video / GLB works on Vercel
+- [~] Confirm routing does not break deep links
 
 ### 5.3 Backend Deployment Plan
 
-- [ ] Decide final backend host
-- [ ] Add production env template for backend
-- [ ] Add domain / CORS plan
-- [ ] Add health check monitor
-- [ ] Add production log strategy
+- [x] Decide final backend host
+- [x] Add production env template for backend
+- [~] Add domain / CORS plan
+- [x] Add health check monitor
+- [x] Add production log strategy
+- [ ] Connect custom production domain later when domain is ready
 
 Done when:
 - Code is versioned properly and frontend preview/prod deploys are repeatable.
@@ -347,15 +349,15 @@ Goal: replace prototype-only persistence with launch-ready data flow.
 
 ### 7.2 Database
 
-- [~] Choose final DB:
+- [x] Choose final DB:
   - PostgreSQL
   - or MongoDB
 - [~] Create schema for:
   - [x] users
   - [~] auth identities
-  - wallet / ledger
+  - [x] wallet / ledger
   - [x] unlocks
-  - invite records
+  - [x] invite records
   - [x] chat summaries
   - [x] profile memory
 - [~] Add migration strategy
@@ -513,8 +515,9 @@ If development starts now, begin with these in order:
 - [x] Add chat top-left coin counter in `current/max` format
 - [x] Create prompt architecture document and split runtime prompt layers
 - [x] Design progressive profiling data model
-- [ ] Connect Git remote and protect main branch
-- [ ] Connect Vercel preview and production envs
+- [x] Connect Git remote and protect main branch
+- [~] Connect Vercel preview and production envs
+- [ ] Connect custom production domain when domain is available
 - [x] Finalize Firebase Google auth state handling
 - [ ] Implement Kakao login for real
 - [ ] Define invite deep link route spec

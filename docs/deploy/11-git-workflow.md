@@ -30,6 +30,10 @@ Enable these settings in the remote provider after the repo is connected:
 - Block force pushes
 - Block branch deletion
 
+Detailed setup guide:
+
+- `docs/deploy/13-github-branch-protection.md`
+
 ## Required Status Checks
 
 Use these once the repo is connected:

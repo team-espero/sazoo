@@ -136,10 +136,11 @@ Response (schema):
 
 ### 1) Sensitive key material in local env file
 
-- `.env.local` contains:
-  - `VITE_GEMINI_API_KEY=...`
-  - `VITE_GEMINI_PROJECT_ID=...`
-  - `VITE_GEMINI_PROJECT_NUMBER=...`
+- `.env.local` previously contained client-exposed Gemini variables before the security fix.
+- Current secure state:
+  - Gemini is server-side only
+  - frontend no longer uses `VITE_GEMINI_*`
+  - backend uses `GEMINI_API_KEY`
 - Risk:
   - `VITE_*` keys are client-exposed by design.
   - Even if currently unused in runtime code, accidental usage or leakage risk is high.
@@ -185,4 +186,3 @@ Response (schema):
   - `screens/tabs/ProfileScreen.tsx`
   - `screens/OnboardingScreen.tsx`
   - `components/BackgroundLayout.tsx`
-
