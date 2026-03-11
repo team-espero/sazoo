@@ -407,6 +407,19 @@ Verify:
 - production deploy works
 - env separation is correct
 
+### 6.5 Current Status
+
+- Git remote connected and first commits pushed to `main`
+- Vercel project linked to `msjs-projects/sazoo`
+- `preview` and `production` environments configured
+- `GEMINI_API_KEY` stored only in Vercel server-side environment variables
+- Production currently serves from `https://sazoo.vercel.app`
+- GitHub `main` branch protection is enabled with the `verify` status check and one required approval
+- Vercel durable storage migrated from `/tmp` fallback to Neon-backed Postgres for production and preview
+- Still pending:
+  - automatic PR preview deployments through Git integration
+  - custom production domain attachment once domain is available
+
 ---
 
 ## 7. Workstream 4 - Firebase Google Login Finalization

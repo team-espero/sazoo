@@ -279,11 +279,11 @@ State currently manages:
 Persistence:
 - local storage through `src/services/storage`
 - safe persistence wrappers for profile and wallet-like data
-- server-backed user state now lives in the launch SQLite layer and is mirrored locally for fast boot
-- invite-unlocked special reports are also persisted in the same launch SQLite layer and mirrored locally
-- chat summaries are stored in the same launch SQLite layer so older guidance can be restored separately from raw chat history
+- server-backed user state now lives in a durable launch database layer and is mirrored locally for fast boot
+- invite-unlocked special reports are also persisted in the same durable database layer and mirrored locally
+- chat summaries are stored in the same durable database layer so older guidance can be restored separately from raw chat history
 - progressive profile memory is stored separately from chat UI state in `profile_memory_v1`
-- progressive profile memory is also persisted server-side in `server/memory/store.js`
+- progressive profile memory is also persisted server-side in the same durable database layer
 - older dialogue is compressed into:
   - `conversationDigest`
   - `openLoops`
@@ -295,13 +295,17 @@ Persistence:
 - server memory identity prefers:
   - `userId` when authenticated
   - `installationId` as fallback
-- launch DB path:
+- local dev launch DB path:
   - `server/data/sazoo-launch.sqlite`
-- launch DB tables currently include:
-  - `user_state_records`
-  - `special_report_unlock_records`
-  - `chat_summary_records`
-  - `profile_memory_records`
+- production/preview durable DB:
+  - Neon Postgres via Vercel `DATABASE_URL`
+- durable data model currently includes:
+  - user state
+  - special report unlocks
+  - chat summaries
+  - profile memory
+  - wallet ledger
+  - invite claims
 - legacy memory migration source:
   - `server/data/profile-memory.sqlite`
 
@@ -356,7 +360,9 @@ Current behavior:
   - `500 KRW`
   - server-side Google Play receipt verification endpoint now exists for real purchase token validation
 - Persistence:
-  - wallet state is now backed by a SQLite ledger in `server/wallet/store.js`
+  - wallet state is now backed by a durable database ledger
+  - local development falls back to SQLite
+  - Vercel preview/production use Neon Postgres through `DATABASE_URL`
   - local storage remains as optimistic cache / fallback
   - ledger tracks:
     - `earned_from_daily`
@@ -417,7 +423,24 @@ This includes:
 - GLB files
 - basis / draco decoder assets
 
-## 11. Current Product Boundaries
+## 11. Deployment Status
+
+- Git remote is connected to GitHub:
+  - `team-espero/sazoo`
+- GitHub `main` branch protection is enabled:
+  - required check: `verify`
+  - approvals required: `1`
+- Vercel project is linked:
+  - `msjs-projects/sazoo`
+- Production is currently served from:
+  - `https://sazoo.vercel.app`
+- Server-side secrets:
+  - `GEMINI_API_KEY` is stored only in Vercel Environment Variables
+- Custom production domain:
+  - not connected yet
+  - intentionally deferred until the final domain is ready
+
+## 12. Current Product Boundaries
 
 The following are implemented but still product-incomplete:
 - Tarot is still placeholder-level
@@ -426,7 +449,7 @@ The following are implemented but still product-incomplete:
 - notifications are UI-level, not fully connected to an external push pipeline
 - premium billing is simulated in-app, not fully store-connected
 
-## 12. Key Files
+## 13. Key Files
 
 - `App.tsx`: app shell, viewport sync, error boundary, screen switching
 - `context.tsx`: global state, actions, onboarding, daily insights, coin logic
@@ -442,6 +465,8 @@ The following are implemented but still product-incomplete:
 - `components/CurrencyManagementCard.tsx`: wallet UI for ad rewards, cooldowns, and starter bundle actions
 - `server/invite/claimStore.js`: server-side invite claim dedupe and special report generation
 - `server/wallet/store.js`: server-side wallet state, ledger, purchase, ad reward, and invite credit flow
+- `server/runtime.js`: runtime bootstrap that selects durable Postgres on Vercel or local SQLite for development
+- `server/db/postgres.js`: Neon-backed durable database helpers for Vercel environments
 - `server/app.js`: backend HTTP layer
 - `server/ai/geminiProvider.js`: Gemini orchestration, sanitization, fallback
 - `server/memory/store.js`: server-backed progressive profile memory persistence and merge rules
@@ -451,8 +476,10 @@ The following are implemented but still product-incomplete:
 - `scripts/qa-firebase-analytics.cjs`: Playwright QA for Firebase Analytics dispatch
 - `scripts/qa-firebase-analytics-flow.cjs`: Playwright QA for invite entry to first-reading Firebase events
 - `scripts/qa-currency-chat.cjs`: Playwright QA for free-pool display and failed-chat refund behavior
+- `scripts/http-wallet-smoke.ps1`: production wallet persistence smoke check
+- `scripts/vercel-chat-smoke.ps1`: Vercel-protected deployment chat smoke check
 
-## 13. Summary
+## 14. Summary
 
 Sazoo is currently implemented as a **mobile-first, AI-assisted saju app** with:
 - fast onboarding-to-reading flow
