@@ -212,10 +212,15 @@ results.push(await measure('daily_insights', async () => {
     assert(text.length >= (strictMode ? 35 : 20), `daily_insights.${field} is too short.`);
     assert(text.length <= 280, `daily_insights.${field} is too long.`);
   }
+  assert(
+    response.source === 'model' || response.source === 'fallback',
+    'daily_insights.source is missing or invalid.',
+  );
 
   return {
     ok: true,
     luckyItems: response.luckyItems.length,
+    source: response.source,
     preview: response.sajuTip.slice(0, 160),
   };
 }));
