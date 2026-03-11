@@ -2,20 +2,22 @@
 const fs = require('fs');
 const path = require('path');
 
-const DEFAULT_BASE_URL = 'https://alpha-starter-existing-athletic.trycloudflare.com';
+const DEFAULT_BASE_URL = process.env.QA_PUBLIC_URL || 'https://sazoo.vercel.app';
 const UI = {
   introPlay: /인트로 재생|Start|再生/,
   introSkip: /건너뛰기|Skip|スキップ/,
   startReading: /운세 시작하기|Start Reading|運勢を始める/,
   inviteStart: /공유된 비교 결과 열기|Open shared comparison|共有された比較結果を開く/,
   onboardingCta: /정보 입력하고 운세 보기|Enter info and view reading|情報を入力して鑑定を見る/,
-  continueKakao: /카카오로 계속하기|Continue with Kakao|Kakaoで続行/,
+  continueGuest: /게스트로 계속하기|Continue as Guest|ゲストとして続行/,
   next: /다음 단계로|Next|次へ/,
   analyze: /운세 분석하기|Start Analysis|鑑定を開始|鑑定を始める/,
   concernWealth: /재물|Wealth|金運|Money/,
   namePlaceholder: /이름을 입력해주세요|Enter your name|名前を入力してください/,
   rewardTitle: /초대 보상|Invite reward|招待報酬/,
   rewardContinue: /계속 보기|Continue|続ける/,
+  restoreTitle: /비교 화면을 복원|comparison sent to you|比較画面を復元|공유된 비교 결과/,
+  restoreContinue: /복원된 화면 보기|Open restored screen|復元された画面を開く/,
   specialReports: /특수 리포트|Special Reports|特別レポート/,
   comparisonReport: /비교 리포트|comparison report|比較レポート/,
   homeGreeting: /안녕하세요|Hello|こんにちは/,
@@ -42,7 +44,7 @@ const buildInviteUrl = (baseUrl) => {
     createdAt: new Date().toISOString(),
   };
   const url = new URL(baseUrl);
-  url.searchParams.set('invite', encodeBase64Url(JSON.stringify(payload)));
+  url.pathname = `/compare/${encodeBase64Url(JSON.stringify(payload))}`;
   return { url: url.toString(), payload };
 };
 
@@ -69,7 +71,7 @@ const completeOnboarding = async (page) => {
   await wait(1200);
 
   await page.getByRole('button', { name: UI.onboardingCta }).click({ timeout: 30000 });
-  await page.getByRole('button', { name: UI.continueKakao }).click({ timeout: 30000 });
+  await page.getByRole('button', { name: UI.continueGuest }).click({ timeout: 30000 });
 
   await page.getByPlaceholder(UI.namePlaceholder).fill('김형욱');
   await page.getByRole('button', { name: UI.male }).first().click();
@@ -141,17 +143,44 @@ const readInviteState = async (page) => {
   const firstState = await readInviteState(page);
   await rewardContinueButton.click({ timeout: 10000 });
 
+  const restoreModal = page.getByText(UI.restoreTitle).first();
+  await restoreModal.waitFor({ timeout: 15000 });
+  const restoreModalVisible = await restoreModal.isVisible().catch(() => false);
+  const restoreContinueButton = page.getByRole('button', { name: UI.restoreContinue }).first();
+  if (await restoreContinueButton.isVisible().catch(() => false)) {
+    await restoreContinueButton.click({ timeout: 10000 });
+  }
+
   const homeGreetingVisible = await page.getByText(UI.homeGreeting).first().isVisible().catch(() => false);
-  await page.locator('div.glass-pill button').nth(4).click({ timeout: 15000 }).catch(() => {});
+  const bottomNav = page.locator('div.absolute.bottom-0.left-0.w-full.safe-pad-x div.glass-pill').last();
+  const profileTabButton = bottomNav.locator('button').nth(4);
+  await profileTabButton.waitFor({ timeout: 15000 });
+  await profileTabButton.evaluate((node) => node.click());
+  await wait(1800);
+  await page.mouse.wheel(0, 2400).catch(() => {});
+  await wait(800);
   const specialReportsSectionVisible = await page.getByText(UI.specialReports).isVisible().catch(() => false);
-  const unlockedReportVisible = await page.getByText(UI.comparisonReport).first().isVisible().catch(() => false);
+  const unlockedReportVisible =
+    await page.getByText(UI.comparisonReport).first().isVisible().catch(() => false)
+    || await page.getByRole('button', { name: /리포트 보기|View Report|レポートを見る/ }).first().isVisible().catch(() => false);
+  const profileScreenshotPath = path.join(process.cwd(), 'qa_public_invite_flow_profile_result.png');
+  await page.screenshot({ path: profileScreenshotPath, fullPage: true });
 
   await page.goto(inviteUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
   await wait(1800);
   await skipIntroIfNeeded(page);
-  await page.getByRole('button', { name: startButtonPattern }).click({ timeout: 30000 });
+  await wait(1800);
+
+  const mainAutoRestored = await page.getByText(UI.restoreTitle).first().isVisible().catch(() => false);
+  if (!mainAutoRestored) {
+    const startButton = page.getByRole('button', { name: startButtonPattern }).first();
+    if (await startButton.isVisible().catch(() => false)) {
+      await startButton.click({ timeout: 30000 });
+    }
+  }
 
   const duplicateRewardVisible = await rewardModal.isVisible().catch(() => false);
+  const duplicateRestoreVisible = await page.getByText(UI.restoreTitle).first().isVisible().catch(() => false);
   await wait(1500);
   const secondState = await readInviteState(page);
 
@@ -161,6 +190,7 @@ const readInviteState = async (page) => {
     inviteId: payload.inviteId,
     inviteLandingCtaVisible,
     rewardModalVisible,
+    restoreModalVisible,
     restoredHomeVisible: homeGreetingVisible,
     specialReportsSectionVisible,
     unlockedReportVisible,
@@ -168,11 +198,13 @@ const readInviteState = async (page) => {
     firstClaimedInviteRewards: firstState.claimedInviteRewards,
     firstSpecialReportCount: Array.isArray(firstState.specialReports) ? firstState.specialReports.length : 0,
     duplicateRewardPrevented: !duplicateRewardVisible,
+    duplicateRestoreVisible,
     secondWallet: secondState.wallet,
     secondClaimedInviteRewards: secondState.claimedInviteRewards,
     secondSpecialReportCount: Array.isArray(secondState.specialReports) ? secondState.specialReports.length : 0,
     totalMs: Date.now() - started,
     screenshotPath,
+    profileScreenshotPath,
   };
 
   fs.writeFileSync(path.join(process.cwd(), 'qa_public_invite_flow_result.json'), JSON.stringify(result, null, 2));
@@ -182,3 +214,5 @@ const readInviteState = async (page) => {
   console.error(error);
   process.exit(1);
 });
+
+

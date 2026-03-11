@@ -7,6 +7,7 @@ export type LaunchEventName =
   | 'invite_open'
   | 'invite_reward_claimed'
   | 'invite_reward_duplicate'
+  | 'invite_reward_self_blocked'
   | 'invite_reward_claim_failed'
   | 'install_from_invite'
   | 'd1_retention'

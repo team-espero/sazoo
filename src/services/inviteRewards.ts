@@ -10,13 +10,13 @@ export type SpecialReportUnlock = {
   unlockedAt: string;
 };
 
-export type InviteClaimStatus = 'claimed' | 'duplicate';
+export type InviteClaimStatus = 'claimed' | 'duplicate' | 'self_invite_blocked';
 
 export type InviteRewardServerResult = {
   status: InviteClaimStatus;
   coinReward: number;
   claimedAt: string;
-  specialReport: SpecialReportUnlock;
+  specialReport?: SpecialReportUnlock;
 };
 
 export type InviteRewardLocalState = {
@@ -46,6 +46,13 @@ export const persistInviteRewardResult = (
   invite: InvitePayload,
   result: InviteRewardServerResult,
 ): InviteRewardLocalState => {
+  if (!result.specialReport) {
+    return {
+      claimedInviteIds: getClaimedInviteIds(),
+      specialReports: getUnlockedSpecialReports(),
+    };
+  }
+
   const currentClaimedInviteIds = getClaimedInviteIds();
   const nextClaimedInviteIds = currentClaimedInviteIds.includes(invite.inviteId)
     ? currentClaimedInviteIds

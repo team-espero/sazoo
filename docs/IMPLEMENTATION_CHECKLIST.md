@@ -382,18 +382,19 @@ Done when:
 Goal: finish the social growth loop end to end.
 
 - [ ] Define share card templates:
+- [x] Define share card templates:
   - my result only
   - my result vs friend result
   - invite card
-- [ ] Build share renderer for comparison card
-- [ ] Create invite token format
-- [ ] Create deep link route mapping
-- [ ] Restore exact destination screen after install/open
-- [ ] Restore comparison context after install/open
-- [ ] Add invite reward claim guard
-- [ ] Add anti-abuse checks
-- [ ] QA web open -> install -> reopen -> restore flow
-- [ ] QA app installed -> direct open -> restore flow
+- [x] Build share renderer for comparison card
+- [x] Create invite token format
+- [x] Create deep link route mapping
+- [x] Restore exact destination screen after install/open
+- [x] Restore comparison context after install/open
+- [x] Add invite reward claim guard
+- [x] Add anti-abuse checks
+- [x] QA web open -> install -> reopen -> restore flow
+- [x] QA app installed -> direct open -> restore flow
 
 Done when:
 - Invite flow works reliably across direct open, reinstall, and first install.
@@ -520,7 +521,7 @@ If development starts now, begin with these in order:
 - [ ] Connect custom production domain when domain is available
 - [x] Finalize Firebase Google auth state handling
 - [ ] Implement Kakao login for real
-- [ ] Define invite deep link route spec
+- [x] Define invite deep link route spec
 - [ ] Implement launch event instrumentation
 - [ ] Prepare Android release signing and AAB generation
 
