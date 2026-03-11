@@ -1,15 +1,16 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, type Auth } from 'firebase/auth';
 import type { Analytics } from 'firebase/analytics';
+import { normalizeClientEnvString } from './env';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: normalizeClientEnvString(import.meta.env.VITE_FIREBASE_API_KEY),
+  authDomain: normalizeClientEnvString(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
+  projectId: normalizeClientEnvString(import.meta.env.VITE_FIREBASE_PROJECT_ID),
+  storageBucket: normalizeClientEnvString(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: normalizeClientEnvString(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+  appId: normalizeClientEnvString(import.meta.env.VITE_FIREBASE_APP_ID),
+  measurementId: normalizeClientEnvString(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID),
 };
 
 const hasRequiredConfig = [
@@ -30,6 +31,9 @@ if (hasRequiredConfig) {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
     googleProvider = new GoogleAuthProvider();
+    googleProvider.setCustomParameters({
+      prompt: 'select_account',
+    });
   } catch (error) {
     console.error('Firebase initialization failed:', error);
   }

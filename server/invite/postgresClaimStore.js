@@ -1,4 +1,4 @@
-import { createPostgresDatabase, acquireAdvisoryLock, fromJson } from '../db/postgres.js';
+﻿import { createPostgresDatabase, acquireAdvisoryLock, fromJson } from '../db/postgres.js';
 
 const EMPTY_STATE = {
   claimsByInstallation: {},
@@ -8,8 +8,8 @@ const EMPTY_STATE = {
 const buildSpecialReport = ({ invite, language, claimedAt }) => {
   const titleByLanguage = {
     en: `${invite.inviterName}'s comparison report`,
-    ko: `${invite.inviterName} 비교 리포트`,
-    ja: `${invite.inviterName} 比較レポート`,
+    ko: `${invite.inviterName} comparison report`,
+    ja: `${invite.inviterName} comparison report`,
   };
 
   return {

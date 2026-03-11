@@ -1,4 +1,4 @@
-﻿import React, {
+import React, {
   createContext,
   useCallback,
   useContext,
@@ -7,10 +7,10 @@
   useRef,
   useState,
 } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
 import { calculateSaju, isValidDailyInsightsPayload } from './utils';
-import { auth } from './src/config/firebase';
 import { api, ApiError, type UserStateSnapshot, type WalletBalance, type WalletPurchaseResponse, type WalletRewardedAdResponse, UserProfile } from './src/services/api';
+import { getAuthSession, subscribeToAuthSession } from './src/services/authSession';
+import { analytics } from './src/services/analytics';
 import { CURRENCY_WINDOW_MS, DAILY_FREE_YEOPJEON, MAX_REWARDED_ADS_PER_DAY, YEOPJEON_STARTER_BUNDLE } from './src/services/currencyCatalog';
 import { getUnlockedSpecialReports } from './src/services/inviteRewards';
 import { storage, KEYS } from './src/services/storage';
@@ -106,7 +106,7 @@ const INITIAL_PROFILE: UserProfile = {
   gender: null,
   knowledgeLevel: 'newbie',
   birthDate: { year: 1998, month: 5, day: 21, hour: 10, minute: 30, ampm: 'AM' },
-  calendarType: '양력',
+  calendarType: '?묐젰',
   isTimeUnknown: false,
   relation: 'me',
   memo: '',
@@ -531,7 +531,15 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
   const useCoin = useCallback(async (contextKey = 'generic') => {
     try {
       const result = await api.wallet.spendCoin(contextKey);
-      applyCurrencyState(normalizeCurrencyState(result.wallet));
+      const nextCurrency = normalizeCurrencyState(result.wallet);
+      applyCurrencyState(nextCurrency);
+      analytics.trackCoinSpent({
+        contextKey,
+        spendSource: result.source,
+        freeCoins: nextCurrency.freeCoins,
+        paidCoins: nextCurrency.paidCoins,
+        totalCoinsUsed: nextCurrency.totalCoinsUsed,
+      });
       return { success: true, source: result.source };
     } catch (error) {
       if (error instanceof ApiError && error.code === 'INSUFFICIENT_COINS') {
@@ -579,7 +587,19 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
     rewardClaimId?: string,
   ) => {
     const result = await api.wallet.claimRewardedAd(provider, placementId, rewardClaimId);
-    applyCurrencyState(normalizeCurrencyState(result.wallet));
+    const nextCurrency = normalizeCurrencyState(result.wallet);
+    applyCurrencyState(nextCurrency);
+    if (result.status === 'claimed') {
+      analytics.trackAdRewardGranted({
+        provider: result.provider,
+        placementId,
+        rewardAmount: result.rewardAmount,
+        rewardClaimId: result.rewardClaimId,
+        remainingAdsToday: result.remainingAdsToday,
+        freeCoins: nextCurrency.freeCoins,
+        paidCoins: nextCurrency.paidCoins,
+      });
+    }
     return result;
   }, [applyCurrencyState]);
 
@@ -596,6 +616,14 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
     const result = await api.wallet.creditPaidCoins(amount, reason);
     const nextCurrency = normalizeCurrencyState(result.wallet);
     applyCurrencyState(nextCurrency);
+    if (reason === 'earned_from_invite') {
+      analytics.trackInviteRewardGranted({
+        amount,
+        reason,
+        paidCoins: nextCurrency.paidCoins,
+        freeCoins: nextCurrency.freeCoins,
+      });
+    }
     return nextCurrency;
   }, [applyCurrencyState]);
 
@@ -609,6 +637,7 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
 
     const init = async () => {
       try {
+        api.cache.reconcileLaunchState();
         const [
           userStateResult,
           balanceResult,
@@ -689,49 +718,77 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
   }, [buildUserStateSnapshot, calculateSajuForProfile, checkDailyCurrencyReset, updateStoredLanguage, updateStoredTheme]);
 
   useEffect(() => {
-    if (!auth) {
-      return undefined;
-    }
-
     let cancelled = false;
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        authPromotionKeyRef.current = null;
+    const syncLaunchMirror = async () => {
+      const [userState, walletBalance, specialReports] = await Promise.all([
+        api.user.getState(buildUserStateSnapshot()),
+        api.wallet.getBalance(currencyRef.current),
+        api.unlocks.getSpecialReports(getUnlockedSpecialReports()),
+      ]);
+
+      if (cancelled) {
         return;
       }
 
-      const promotionKey = `${user.uid}:${profilesRef.current.length}:${activeProfileIdRef.current}`;
+      applyUserStateSnapshot(userState);
+      applyCurrencyState(normalizeCurrencyState(walletBalance));
+      storage.set(KEYS.SPECIAL_REPORT_UNLOCKS, specialReports || []);
+    };
+
+    const promoteAuthSession = async () => {
+      const { changed } = api.cache.reconcileLaunchState();
+      const session = getAuthSession();
+      if (!session?.userId) {
+        authPromotionKeyRef.current = null;
+        if (changed) {
+          await syncLaunchMirror();
+        }
+        return;
+      }
+
+      const promotionKey = `${session.userId}:${profilesRef.current.length}:${activeProfileIdRef.current}:${sajuStateRef.current.isOnboardingComplete ? '1' : '0'}`;
       if (authPromotionKeyRef.current === promotionKey) {
+        if (changed) {
+          await syncLaunchMirror();
+        }
         return;
       }
 
       authPromotionKeyRef.current = promotionKey;
-      void (async () => {
-        try {
-          const result = await api.auth.promoteInstallation(
-            buildUserStateSnapshot(),
-            getUnlockedSpecialReports(),
-          );
 
-          if (cancelled) {
-            return;
-          }
+      try {
+        const result = await api.auth.promoteInstallation(
+          buildUserStateSnapshot(),
+          getUnlockedSpecialReports(),
+        );
 
-          storage.set(KEYS.SPECIAL_REPORT_UNLOCKS, result.specialReports || []);
-          applyUserStateSnapshot(result.userState);
-        } catch (error) {
-          console.error('Failed to promote installation state after login:', error);
-          authPromotionKeyRef.current = null;
+        if (cancelled) {
+          return;
         }
-      })();
+
+        storage.set(KEYS.SPECIAL_REPORT_UNLOCKS, result.specialReports || []);
+        applyUserStateSnapshot(result.userState);
+        const nextWallet = await api.wallet.getBalance(currencyRef.current);
+        if (!cancelled) {
+          applyCurrencyState(normalizeCurrencyState(nextWallet));
+        }
+      } catch (error) {
+        console.error('Failed to promote installation state after login:', error);
+        authPromotionKeyRef.current = null;
+      }
+    };
+
+    void promoteAuthSession();
+    const unsubscribe = subscribeToAuthSession(() => {
+      void promoteAuthSession();
     });
 
     return () => {
       cancelled = true;
       unsubscribe();
     };
-  }, [applyUserStateSnapshot, buildUserStateSnapshot]);
+  }, [applyCurrencyState, applyUserStateSnapshot, buildUserStateSnapshot]);
 
   useEffect(() => {
     const handleResume = () => {
@@ -850,4 +907,3 @@ export const useSaju = () => {
     ...actions,
   }), [actions, currencyState, data, settings]);
 };
-

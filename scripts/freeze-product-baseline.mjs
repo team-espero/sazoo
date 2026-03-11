@@ -16,7 +16,7 @@ const readmePath = path.join(baselineRoot, 'README.md');
 
 const LOCAL_PREVIEW_URL = process.env.BASELINE_LOCAL_URL || 'http://127.0.0.1:4273';
 const LOCAL_PREVIEW_PORT = Number(new URL(LOCAL_PREVIEW_URL).port || 4273);
-const PUBLIC_BASELINE_URL = process.env.BASELINE_PUBLIC_URL || 'https://alpha-starter-existing-athletic.trycloudflare.com';
+const PUBLIC_BASELINE_URL = process.env.BASELINE_PUBLIC_URL || 'https://sazoo.vercel.app';
 const HTTP_OK = new Set([200, 304]);
 const ASSET_DIRS = ['public', 'assets', 'video', '3d asset'];
 
@@ -201,7 +201,7 @@ async function generateApiExamples() {
 
   const profile = {
     id: 'baseline-user',
-    name: '김형욱',
+    name: '源?뺤슧',
     gender: 'male',
     birthDate: {
       year: 1993,
@@ -211,14 +211,14 @@ async function generateApiExamples() {
       minute: 30,
       ampm: 'AM',
     },
-    calendarType: '양력',
+    calendarType: '?묐젰',
     isTimeUnknown: false,
     relation: 'me',
     memo: '',
   };
 
   const chatRequest = {
-    message: '오늘 운세를 부드럽고 또렷하게 설명해줘.',
+    message: '?ㅻ뒛 ?댁꽭瑜?遺?쒕읇怨??먮졆?섍쾶 ?ㅻ챸?댁쨾.',
     language: 'ko',
     profile,
     saju: {},

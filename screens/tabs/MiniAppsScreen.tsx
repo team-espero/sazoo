@@ -4,6 +4,7 @@ import { ChevronRight, Heart, X, User, Plus, Search, Coins } from 'lucide-react'
 import { Button, InputField, ProfileAvatar } from '../../components';
 import { AppLanguage, useSajuActions, useSajuCurrency, useSajuData, useSajuSettings } from '../../context';
 import { api } from '../../src/services/api';
+import { analytics } from '../../src/services/analytics';
 
 const MINI_COPY: Record<AppLanguage, any> = {
     en: {
@@ -526,6 +527,20 @@ const MiniAppsScreen = () => {
     const totalCoins = currency ? (currency.freeCoins + currency.paidCoins) : 0;
     const copy = MINI_COPY[language as AppLanguage] ?? MINI_COPY.ko;
 
+    const handleSelectApp = (appId: string) => {
+        if (appId !== 'couple' && appId !== 'dream') {
+            return;
+        }
+
+        analytics.trackMiniAppOpen({
+            appId,
+            screen: 'miniapps',
+            freeCoins: currency?.freeCoins ?? 0,
+            paidCoins: currency?.paidCoins ?? 0,
+        });
+        setSelectedApp(appId);
+    };
+
     if (selectedApp === 'couple') {
         return <CoupleMatchingApp onBack={() => setSelectedApp(null)} appLanguage={language} />;
     }
@@ -550,10 +565,7 @@ const MiniAppsScreen = () => {
                 {copy.apps.map((app: any) => (
                     <motion.button
                         key={app.id}
-                        onClick={() => {
-                            if (app.id === 'couple') setSelectedApp('couple');
-                            if (app.id === 'dream') setSelectedApp('dream');
-                        }}
+                        onClick={() => handleSelectApp(app.id)}
                         whileHover={{ y: -8, rotateX: 2, rotateY: -2, boxShadow: '0 20px 30px rgba(0,0,0,0.1)' }}
                         whileTap={{ scale: 0.95 }}
                         className={`aspect-square rounded-[28px] bg-white border border-white/60 shadow-lg p-5 flex flex-col items-center justify-center text-center space-y-3 relative overflow-hidden group ${app.id !== 'couple' && app.id !== 'dream' ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}

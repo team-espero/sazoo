@@ -5,6 +5,23 @@ import { z } from 'zod';
 loadDotenv();
 loadDotenv({ path: '.env.local', override: true });
 
+const stripWrappingQuotes = (value) => {
+  if (typeof value !== 'string') {
+    return value;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length >= 2) {
+    const first = trimmed[0];
+    const last = trimmed[trimmed.length - 1];
+    if ((first === '"' && last === '"') || (first === '\'' && last === '\'')) {
+      return trimmed.slice(1, -1).trim();
+    }
+  }
+
+  return trimmed;
+};
+
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(8787),
@@ -23,6 +40,9 @@ const serverEnvSchema = z.object({
   WALLET_STORE_PATH: z.string().min(1).default('server/data/wallet-store.json'),
   WALLET_DB_PATH: z.string().min(1).default('server/data/wallet-ledger.sqlite'),
   PROFILE_MEMORY_DB_PATH: z.string().min(1).default('server/data/profile-memory.sqlite'),
+  KAKAO_REST_API_KEY: z.string().default(''),
+  KAKAO_CLIENT_SECRET: z.string().default(''),
+  KAKAO_ALLOWED_REDIRECT_URIS: z.string().default(''),
   GOOGLE_PLAY_PACKAGE_NAME: z.string().min(1).default('com.sazoo.app'),
   GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL: z.string().default(''),
   GOOGLE_PLAY_SERVICE_ACCOUNT_PRIVATE_KEY: z.string().default(''),
@@ -32,6 +52,12 @@ const normalizeOrigins = (rawOrigins) =>
   rawOrigins
     .split(',')
     .map((origin) => origin.trim())
+    .filter(Boolean);
+
+const normalizeUris = (rawUris) =>
+  rawUris
+    .split(',')
+    .map((uri) => uri.trim())
     .filter(Boolean);
 
 const isVercelRuntime = (source) => {
@@ -61,18 +87,44 @@ const buildDefaultCorsOrigins = (source) => {
   return Array.from(new Set(origins)).join(',');
 };
 
+const buildDefaultKakaoRedirectUris = (source) => {
+  const hosts = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:5180',
+    'http://127.0.0.1:5180',
+  ];
+
+  const vercelUrls = [
+    source?.VERCEL_URL,
+    source?.VERCEL_PROJECT_PRODUCTION_URL,
+  ].filter(Boolean);
+
+  for (const host of vercelUrls) {
+    hosts.push(`https://${String(host).replace(/^https?:\/\//, '')}`);
+  }
+
+  return Array.from(new Set(hosts)).map((origin) => `${origin}/auth/kakao/callback`).join(',');
+};
+
+const normalizeSource = (source = {}) => Object.fromEntries(
+  Object.entries(source).map(([key, value]) => [key, stripWrappingQuotes(value)]),
+);
+
 const withServerDefaults = (source = {}) => {
+  const normalizedSource = normalizeSource(source);
   const dataRoot = buildDefaultDataRoot(source);
 
   return {
-    ...source,
-    CORS_ORIGINS: source.CORS_ORIGINS || buildDefaultCorsOrigins(source),
-    ANALYTICS_LOG_PATH: source.ANALYTICS_LOG_PATH || path.join(dataRoot, 'client-events.jsonl'),
-    INVITE_CLAIMS_PATH: source.INVITE_CLAIMS_PATH || path.join(dataRoot, 'invite-claims.json'),
-    LAUNCH_DB_PATH: source.LAUNCH_DB_PATH || path.join(dataRoot, 'sazoo-launch.sqlite'),
-    WALLET_STORE_PATH: source.WALLET_STORE_PATH || path.join(dataRoot, 'wallet-store.json'),
-    WALLET_DB_PATH: source.WALLET_DB_PATH || path.join(dataRoot, 'wallet-ledger.sqlite'),
-    PROFILE_MEMORY_DB_PATH: source.PROFILE_MEMORY_DB_PATH || path.join(dataRoot, 'profile-memory.sqlite'),
+    ...normalizedSource,
+    CORS_ORIGINS: normalizedSource.CORS_ORIGINS || buildDefaultCorsOrigins(normalizedSource),
+    ANALYTICS_LOG_PATH: normalizedSource.ANALYTICS_LOG_PATH || path.join(dataRoot, 'client-events.jsonl'),
+    INVITE_CLAIMS_PATH: normalizedSource.INVITE_CLAIMS_PATH || path.join(dataRoot, 'invite-claims.json'),
+    LAUNCH_DB_PATH: normalizedSource.LAUNCH_DB_PATH || path.join(dataRoot, 'sazoo-launch.sqlite'),
+    WALLET_STORE_PATH: normalizedSource.WALLET_STORE_PATH || path.join(dataRoot, 'wallet-store.json'),
+    WALLET_DB_PATH: normalizedSource.WALLET_DB_PATH || path.join(dataRoot, 'wallet-ledger.sqlite'),
+    PROFILE_MEMORY_DB_PATH: normalizedSource.PROFILE_MEMORY_DB_PATH || path.join(dataRoot, 'profile-memory.sqlite'),
+    KAKAO_ALLOWED_REDIRECT_URIS: normalizedSource.KAKAO_ALLOWED_REDIRECT_URIS || buildDefaultKakaoRedirectUris(normalizedSource),
   };
 };
 
@@ -101,6 +153,9 @@ export function parseServerEnv(source) {
     walletStorePath: parsed.data.WALLET_STORE_PATH,
     walletDbPath: parsed.data.WALLET_DB_PATH,
     profileMemoryDbPath: parsed.data.PROFILE_MEMORY_DB_PATH,
+    kakaoRestApiKey: parsed.data.KAKAO_REST_API_KEY,
+    kakaoClientSecret: parsed.data.KAKAO_CLIENT_SECRET,
+    kakaoAllowedRedirectUris: normalizeUris(parsed.data.KAKAO_ALLOWED_REDIRECT_URIS),
     googlePlayPackageName: parsed.data.GOOGLE_PLAY_PACKAGE_NAME,
     googlePlayServiceAccountEmail: parsed.data.GOOGLE_PLAY_SERVICE_ACCOUNT_EMAIL,
     googlePlayServiceAccountPrivateKey: parsed.data.GOOGLE_PLAY_SERVICE_ACCOUNT_PRIVATE_KEY,

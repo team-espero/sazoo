@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright';
 
-const BASE_URL = process.env.CAPTURE_BASE_URL || 'http://127.0.0.1:4173';
+const BASE_URL = process.env.CAPTURE_BASE_URL || 'http://127.0.0.1:5180';
 const USE_API_MOCKS = process.env.CAPTURE_USE_MOCKS !== '0';
 const now = new Date();
 const timestamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
@@ -303,25 +303,14 @@ async function run() {
     await snapshot(page, 'onboarding_step0_login', 'Onboarding step 0 (social login)');
 
     const root = onboardingRoot(page);
-    const kakaoButton = root.locator('button').filter({ hasText: /카카오|Kakao/i }).first();
-    const fallbackButtons = root.locator('button:visible');
-    if (await isVisible(kakaoButton)) {
-      await kakaoButton.click({ force: true });
+    const guestButton = root
+      .locator('button')
+      .filter({ hasText: /게스트로 계속하기|Continue as Guest|ゲストとして続行/i })
+      .first();
+    if (await isVisible(guestButton)) {
+      await guestButton.click({ force: true });
     } else {
-      const totalButtons = await fallbackButtons.count();
-      let clicked = false;
-      for (let i = 0; i < totalButtons; i += 1) {
-        const candidate = fallbackButtons.nth(i);
-        const disabled = await candidate.isDisabled().catch(() => false);
-        if (!disabled) {
-          await candidate.click({ force: true });
-          clicked = true;
-          break;
-        }
-      }
-      if (!clicked) {
-        await root.locator('button').first().click({ force: true });
-      }
+      await root.locator('button').first().click({ force: true });
     }
 
     const nameInput = root.locator('input[type="text"]').first();

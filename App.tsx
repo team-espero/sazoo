@@ -1,7 +1,8 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GlobalStyles } from './utils';
+import { AuthProvider } from './src/auth/AuthProvider';
 import { SajuProvider, useSajuData, useSajuSettings } from './context';
 import ErrorFallback from './screens/ErrorFallback';
 import IntroScreen from './screens/IntroScreen';
@@ -133,9 +134,11 @@ export default function App() {
           window.location.reload();
         }}
       >
-        <SajuProvider>
-          <AppContent />
-        </SajuProvider>
+        <AuthProvider>
+          <SajuProvider>
+            <AppContent />
+          </SajuProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </div>
   );

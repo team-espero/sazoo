@@ -1,6 +1,6 @@
 import { clientEnv } from '../config/env';
-import { auth } from '../config/firebase';
 import { COIN_BUNDLES, CURRENCY_WINDOW_MS, DAILY_FREE_YEOPJEON, MAX_REWARDED_ADS_PER_DAY, YEOPJEON_STARTER_BUNDLE, type CoinBundleId } from './currencyCatalog';
+import { getCurrentAuthUserId } from './authSession';
 import type { InvitePayload } from './invite';
 import { getOrCreateInstallationId } from './inviteRewards';
 import { storage, KEYS } from './storage';
@@ -40,6 +40,7 @@ export interface DailyInsights {
   elementTip: string;
   energyTip: string;
   cycleTip: string;
+  source?: 'model' | 'fallback';
 }
 
 export interface ChatRequest {
@@ -113,6 +114,20 @@ export interface WalletCoinBundle {
   priceKrw: number;
 }
 
+export interface WalletLedgerEntry {
+  id: string;
+  kind: string;
+  amount: number;
+  source: string;
+  metadata: Record<string, unknown>;
+  balanceAfter: {
+    freeCoins: number;
+    paidCoins: number;
+    totalCoinsUsed: number;
+  };
+  createdAt: string;
+}
+
 export interface WalletSpendResponse {
   wallet: WalletBalance;
   source: 'free' | 'paid';
@@ -165,16 +180,33 @@ export interface LaunchAnalyticsReport {
     install_from_invite: number;
     d1_retention: number;
     invite_reward_claimed: number;
+    invite_reward_granted: number;
     invite_reward_duplicate: number;
     invite_reward_claim_failed: number;
     first_reading_success: number;
     first_reading_failure: number;
+    onboarding_step_view: number;
+    onboarding_step_complete: number;
+    coin_spent: number;
+    ad_reward_granted: number;
+    scene_change: number;
+    mini_app_open: number;
   };
   timeToFirstValue: {
     samples: number;
     averageMs: number;
     withinTargetCount: number;
     withinTargetRate: number;
+  };
+  onboarding: {
+    viewsByStep: Record<string, number>;
+    completesByStep: Record<string, number>;
+  };
+  productHealth: {
+    coinSpendByContext: Record<string, number>;
+    adRewardsByPlacement: Record<string, number>;
+    miniAppOpenByApp: Record<string, number>;
+    sceneChangeByScene: Record<string, number>;
   };
   recentEvents: Array<{
     name: string;
@@ -183,6 +215,27 @@ export interface LaunchAnalyticsReport {
   }>;
 }
 
+export interface KakaoExchangeResponse {
+  profile: {
+    id: string;
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+  };
+  accessToken: string;
+  refreshToken: string | null;
+  expiresIn: number;
+}
+
+export interface AuthIdentityRecord {
+  provider: 'google' | 'kakao';
+  providerAccountId: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
+  lastLoginAt: string;
+  updatedAt?: string;
+}
 export interface ShareCardMetadata {
   inviteId: string;
   source: 'daily_fortune';
@@ -313,10 +366,52 @@ const cacheSpecialReports = (reports: SpecialReportUnlock[]) => {
   return reports;
 };
 
-const getWalletIdentity = (): WalletIdentity => ({
-  installationId: getOrCreateInstallationId(),
-  userId: auth?.currentUser?.uid || undefined,
-});
+const OWNER_SCOPED_CACHE_KEYS = [
+  KEYS.COINS,
+  KEYS.SAJU_DATA,
+  KEYS.ONBOARDING_STATUS,
+  KEYS.USER_TIER,
+  KEYS.ACTIVE_PROFILE_ID,
+  KEYS.SPECIAL_REPORT_UNLOCKS,
+  KEYS.PROFILE_MEMORY,
+  KEYS.DAILY_INSIGHTS,
+  KEYS.INITIAL_ANALYSIS_DONE,
+];
+
+const clearOwnerScopedCaches = () => {
+  for (const key of OWNER_SCOPED_CACHE_KEYS) {
+    storage.remove(key);
+  }
+};
+
+const getLaunchCacheOwnerKey = () => {
+  const userId = getCurrentAuthUserId();
+  return userId ? `user:${userId}` : `installation:${getOrCreateInstallationId()}`;
+};
+
+const reconcileLaunchCacheOwner = () => {
+  const nextOwnerKey = getLaunchCacheOwnerKey();
+  const currentOwnerKey = storage.get(KEYS.LAUNCH_CACHE_OWNER, '') as string;
+
+  if (currentOwnerKey && currentOwnerKey !== nextOwnerKey) {
+    clearOwnerScopedCaches();
+    storage.set(KEYS.LAUNCH_CACHE_INVALIDATED_AT, new Date().toISOString());
+  }
+
+  storage.set(KEYS.LAUNCH_CACHE_OWNER, nextOwnerKey);
+  return {
+    ownerKey: nextOwnerKey,
+    changed: currentOwnerKey !== nextOwnerKey,
+  };
+};
+
+const getWalletIdentity = (): WalletIdentity => {
+  reconcileLaunchCacheOwner();
+  return {
+    installationId: getOrCreateInstallationId(),
+    userId: getCurrentAuthUserId() || undefined,
+  };
+};
 
 const canFallbackToLocalWallet = (error: unknown) =>
   !(error instanceof ApiError) || RETRYABLE_ERROR_CODES.has(error.code);
@@ -514,6 +609,12 @@ export const api = {
     },
     updateBalance: async (balanceData: Partial<WalletBalance> | null | undefined) => {
       return api.wallet.getBalance(balanceData);
+    },
+    getLedger: async (limit = 50) => {
+      return postJson<WalletLedgerEntry[], WalletIdentity & { limit: number }>('/wallet/ledger', {
+        ...getWalletIdentity(),
+        limit,
+      });
     },
     spendCoin: async (context = 'generic'): Promise<WalletSpendResponse> => {
       try {
@@ -849,14 +950,29 @@ export const api = {
     },
   },
   auth: {
+    exchangeKakaoCode: async (code: string, redirectUri: string, state?: string) => {
+      return postJson<KakaoExchangeResponse, { code: string; redirectUri: string; state?: string }>(
+        '/auth/kakao/exchange',
+        {
+          code,
+          redirectUri,
+          state,
+        },
+      );
+    },
     promoteInstallation: async (snapshot: UserStateSnapshot, specialReports: SpecialReportUnlock[] = []) => {
+      const userId = getCurrentAuthUserId();
+      if (!userId) {
+        throw new ApiError('UNAUTHENTICATED', 'Authenticated user id is required.', 401);
+      }
+
       const data = await postJson<AuthPromotionResponse, WalletIdentity & {
         userId: string;
         snapshot: UserStateSnapshot;
         specialReports?: SpecialReportUnlock[];
       }>('/auth/promote-installation', {
         ...getWalletIdentity(),
-        userId: auth?.currentUser?.uid || '',
+        userId,
         snapshot,
         specialReports,
       });
@@ -864,10 +980,40 @@ export const api = {
       cacheSpecialReports(data.specialReports || []);
       return data;
     },
+    getIdentities: async () => {
+      return postJson<AuthIdentityRecord[], WalletIdentity>('/auth/identities/state', {
+        ...getWalletIdentity(),
+      });
+    },
+    upsertIdentity: async (identity: AuthIdentityRecord) => {
+      const walletIdentity = getWalletIdentity();
+      if (!walletIdentity.userId) {
+        throw new ApiError('UNAUTHENTICATED', 'Authenticated user id is required.', 401);
+      }
+
+      return postJson<AuthIdentityRecord, WalletIdentity & { userId: string; identity: AuthIdentityRecord }>(
+        '/auth/identities/upsert',
+        {
+          ...walletIdentity,
+          userId: walletIdentity.userId,
+          identity,
+        },
+      );
+    },
   },
   analytics: {
     getLaunchReport: async () => {
       return getJson<LaunchAnalyticsReport>('/client-events/report');
+    },
+  },
+  cache: {
+    reconcileLaunchState: () => reconcileLaunchCacheOwner(),
+    invalidateLaunchState: () => {
+      clearOwnerScopedCaches();
+      storage.set(KEYS.LAUNCH_CACHE_INVALIDATED_AT, new Date().toISOString());
+      const ownerKey = getLaunchCacheOwnerKey();
+      storage.set(KEYS.LAUNCH_CACHE_OWNER, ownerKey);
+      return ownerKey;
     },
   },
 };

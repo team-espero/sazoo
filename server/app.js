@@ -8,7 +8,12 @@ import {
   dailyInsightsRequestSchema,
 } from './schemas/fortuneSchemas.js';
 import { inviteClaimRequestSchema } from './schemas/inviteSchemas.js';
+import { kakaoExchangeRequestSchema } from './schemas/kakaoSchemas.js';
 import { memoryStateRequestSchema } from './schemas/memorySchemas.js';
+import {
+  authIdentityStateRequestSchema,
+  authIdentityUpsertRequestSchema,
+} from './schemas/authIdentitySchemas.js';
 import {
   authPromotionRequestSchema,
   userStateRequestSchema,
@@ -30,6 +35,7 @@ import {
   walletPurchaseRequestSchema,
   walletRefundRequestSchema,
   walletRewardedAdClaimRequestSchema,
+  walletLedgerRequestSchema,
   walletSpendRequestSchema,
   walletStateRequestSchema,
 } from './schemas/walletSchemas.js';
@@ -136,6 +142,30 @@ const mapKnownError = (error) => {
     };
   }
 
+  if (code === 'KAKAO_AUTH_NOT_CONFIGURED') {
+    return {
+      status: 503,
+      code,
+      message: 'Kakao login is not configured yet.',
+    };
+  }
+
+  if (code === 'KAKAO_REDIRECT_URI_MISMATCH' || code === 'KAKAO_INVALID_CALLBACK') {
+    return {
+      status: 400,
+      code,
+      message: 'Kakao redirect URI is invalid.',
+    };
+  }
+
+  if (code === 'KAKAO_TOKEN_EXCHANGE_FAILED' || code === 'KAKAO_PROFILE_FETCH_FAILED') {
+    return {
+      status: 502,
+      code,
+      message: 'Kakao login failed upstream.',
+    };
+  }
+
   return {
     status: 500,
     code: 'SERVER_ERROR',
@@ -195,6 +225,10 @@ export function createApp({ env, aiProvider }) {
       status: 'ok',
       timestamp: new Date().toISOString(),
       env: env.nodeEnv,
+      auth: {
+        kakaoConfigured: Boolean(env.kakaoRestApiKey),
+        kakaoRedirectUriCount: Array.isArray(env.kakaoAllowedRedirectUris) ? env.kakaoAllowedRedirectUris.length : 0,
+      },
     });
   });
 
@@ -333,6 +367,36 @@ export function createApp({ env, aiProvider }) {
     }
   });
 
+  app.post(`${env.apiPrefix}/auth/identities/state`, async (req, res, next) => {
+    try {
+      const payload = authIdentityStateRequestSchema.parse(req.body);
+      const data = await env.authIdentityStore.listIdentities(payload);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post(`${env.apiPrefix}/auth/identities/upsert`, async (req, res, next) => {
+    try {
+      const payload = authIdentityUpsertRequestSchema.parse(req.body);
+      const data = await env.authIdentityStore.upsertIdentity(payload, payload.identity);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post(`${env.apiPrefix}/auth/kakao/exchange`, async (req, res, next) => {
+    try {
+      const payload = kakaoExchangeRequestSchema.parse(req.body);
+      const data = await env.kakaoAuthService.exchangeCode(payload);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.post(`${env.apiPrefix}/memory/profile/state`, async (req, res, next) => {
     try {
       const payload = memoryStateRequestSchema.parse(req.body);
@@ -389,10 +453,40 @@ export function createApp({ env, aiProvider }) {
     }
   });
 
+  app.post(`${env.apiPrefix}/share-cards/metadata/state`, async (req, res, next) => {
+    try {
+      const payload = shareMetadataStateRequestSchema.parse(req.body);
+      const data = await env.shareMetadataStore.getMetadata(payload.inviteId);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post(`${env.apiPrefix}/share-cards/metadata/upsert`, async (req, res, next) => {
+    try {
+      const payload = shareMetadataUpsertRequestSchema.parse(req.body);
+      const data = await env.shareMetadataStore.upsertMetadata(payload, payload.metadata);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.post(`${env.apiPrefix}/wallet/state`, async (req, res, next) => {
     try {
       const payload = walletStateRequestSchema.parse(req.body);
       const data = await env.walletStore.getWallet(payload, payload.snapshot);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post(`${env.apiPrefix}/wallet/ledger`, async (req, res, next) => {
+    try {
+      const payload = walletLedgerRequestSchema.parse(req.body);
+      const data = await env.walletStore.getLedger(payload, payload.limit);
       res.status(200).json({ data });
     } catch (error) {
       next(error);
