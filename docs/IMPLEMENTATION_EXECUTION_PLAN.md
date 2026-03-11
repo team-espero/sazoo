@@ -617,6 +617,21 @@ Must add:
 
 - share -> open -> install/open -> restore -> reward works reliably
 
+### 9.5 Current Status
+
+Implemented:
+- comparison share cards persist canonical metadata before opening the share flow
+- invite links support path-based deep links such as `/compare/:token`
+- legacy query-string invite links still restore for backward compatibility
+- app boot restores the intended destination immediately for onboarded recipients
+- recipients see a restore modal with the shared result summary before continuing
+- invite rewards remain server-authoritative with duplicate-claim protection
+- self-invite attempts are blocked server-side using persisted share ownership metadata
+- Playwright QA covers first open, onboarding, reward claim, duplicate reopen, and restore state
+
+Remaining:
+- extend the same restoration pattern to native app-link flows once Android deep links are finalized
+
 ---
 
 ## 10. Workstream 7 - Analytics Instrumentation

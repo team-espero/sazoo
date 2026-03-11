@@ -10,6 +10,8 @@ import { createInviteClaimStore as createPostgresInviteClaimStore } from './invi
 import { createProfileMemoryStore } from './memory/store.js';
 import { createProfileMemoryStore as createPostgresProfileMemoryStore } from './memory/postgresStore.js';
 import { createReceiptVerifier } from './payments/receiptVerifier.js';
+import { createShareMetadataStore } from './share/store.js';
+import { createShareMetadataStore as createPostgresShareMetadataStore } from './share/postgresStore.js';
 import { createUnlockStore } from './unlocks/store.js';
 import { createUnlockStore as createPostgresUnlockStore } from './unlocks/postgresStore.js';
 import { createUserStateStore } from './user/store.js';
@@ -59,6 +61,9 @@ export function getRuntime() {
     : createProfileMemoryStore(serverEnv.launchDbPath, {
         migrationSourcePath: serverEnv.profileMemoryDbPath,
       });
+  const shareMetadataStore = usingDurablePostgres
+    ? createPostgresShareMetadataStore(serverEnv.databaseUrl)
+    : createShareMetadataStore(serverEnv.launchDbPath);
   const receiptVerifier = createReceiptVerifier(serverEnv);
 
   const app = createApp({
@@ -71,6 +76,7 @@ export function getRuntime() {
       unlockStore,
       chatSummaryStore,
       profileMemoryStore,
+      shareMetadataStore,
       receiptVerifier,
     },
     aiProvider,

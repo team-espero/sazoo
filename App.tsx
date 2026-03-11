@@ -46,7 +46,24 @@ const AppContent = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const pendingInvite = getPendingInvite();
+    if (!pendingInvite || !sajuState.isOnboardingComplete || screen !== 'landing') {
+      return;
+    }
+
+    setActiveTab(resolveInviteTargetTab(pendingInvite));
+    setScreen('main');
+  }, [sajuState.isOnboardingComplete, screen]);
+
   const handleIntroComplete = () => {
+    const pendingInvite = getPendingInvite();
+    if (pendingInvite && sajuState.isOnboardingComplete) {
+      setActiveTab(resolveInviteTargetTab(pendingInvite));
+      setScreen('main');
+      return;
+    }
+
     setScreen('landing');
   };
 

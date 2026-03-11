@@ -183,6 +183,22 @@ export interface LaunchAnalyticsReport {
   }>;
 }
 
+export interface ShareCardMetadata {
+  inviteId: string;
+  source: 'daily_fortune';
+  targetTab: 'home' | 'chat' | 'calendar' | 'miniapps' | 'profile';
+  inviterName: string;
+  previewTitle: string;
+  previewSummary: string;
+  comparisonSummary: string;
+  shareUrl: string;
+  language: AppLanguage;
+  createdAt?: string;
+  updatedAt?: string;
+  installationId?: string;
+  userId?: string;
+}
+
 export class ApiError extends Error {
   code: string;
   status: number;
@@ -812,6 +828,22 @@ export const api = {
           ...getWalletIdentity(),
           profileId,
           snapshot,
+        },
+      );
+      },
+    },
+  shareCards: {
+    getMetadata: async (inviteId: string) => {
+      return postJson<ShareCardMetadata | null, { inviteId: string }>('/share-cards/metadata/state', {
+        inviteId,
+      });
+    },
+    upsertMetadata: async (metadata: ShareCardMetadata) => {
+      return postJson<ShareCardMetadata, WalletIdentity & { metadata: ShareCardMetadata }>(
+        '/share-cards/metadata/upsert',
+        {
+          ...getWalletIdentity(),
+          metadata,
         },
       );
     },

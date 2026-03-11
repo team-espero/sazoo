@@ -22,6 +22,10 @@ import {
   unlockUpsertRequestSchema,
 } from './schemas/unlockSchemas.js';
 import {
+  shareMetadataStateRequestSchema,
+  shareMetadataUpsertRequestSchema,
+} from './schemas/shareMetadataSchemas.js';
+import {
   walletCreditRequestSchema,
   walletPurchaseRequestSchema,
   walletRefundRequestSchema,
@@ -231,6 +235,26 @@ export function createApp({ env, aiProvider }) {
   app.post(`${env.apiPrefix}/invites/claim`, async (req, res, next) => {
     try {
       const payload = inviteClaimRequestSchema.parse(req.body);
+      const metadata = await env.shareMetadataStore?.getMetadata?.(payload.invite.inviteId);
+      const isSelfInvite = Boolean(
+        metadata
+        && (
+          (payload.userId && metadata.userId && payload.userId === metadata.userId)
+          || (metadata.installationId && payload.installationId === metadata.installationId)
+        )
+      );
+
+      if (isSelfInvite) {
+        res.status(200).json({
+          data: {
+            status: 'self_invite_blocked',
+            coinReward: 0,
+            claimedAt: new Date().toISOString(),
+          },
+        });
+        return;
+      }
+
       const data = await env.inviteClaimStore.claim(payload);
       if (env.unlockStore?.upsertSpecialReport && data?.specialReport) {
         await env.unlockStore.upsertSpecialReport(payload, data.specialReport);
@@ -255,6 +279,26 @@ export function createApp({ env, aiProvider }) {
     try {
       const payload = userStateSaveRequestSchema.parse(req.body);
       const data = await env.userStateStore.saveState(payload, payload.snapshot);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post(`${env.apiPrefix}/share-cards/metadata/state`, async (req, res, next) => {
+    try {
+      const payload = shareMetadataStateRequestSchema.parse(req.body);
+      const data = await env.shareMetadataStore.getMetadata(payload.inviteId);
+      res.status(200).json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post(`${env.apiPrefix}/share-cards/metadata/upsert`, async (req, res, next) => {
+    try {
+      const payload = shareMetadataUpsertRequestSchema.parse(req.body);
+      const data = await env.shareMetadataStore.upsertMetadata(payload, payload.metadata);
       res.status(200).json({ data });
     } catch (error) {
       next(error);

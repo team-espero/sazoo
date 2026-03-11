@@ -1,6 +1,7 @@
 import { KEYS, storage } from './storage';
 
 export type InviteTargetTab = 'home' | 'chat' | 'calendar' | 'miniapps' | 'profile';
+export type InviteRouteKind = 'invite' | 'compare' | 'fortune';
 
 export type InvitePayload = {
   version: 1;
@@ -15,6 +16,8 @@ export type InvitePayload = {
 };
 
 const INVITE_QUERY_KEY = 'invite';
+const DEFAULT_INVITE_ROUTE: InviteRouteKind = 'compare';
+const INVITE_ROUTE_KINDS = new Set<InviteRouteKind>(['invite', 'compare', 'fortune']);
 
 const encodeBase64Url = (value: string) =>
   btoa(unescape(encodeURIComponent(value))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
@@ -64,9 +67,10 @@ export const parseInviteToken = (token: string): InvitePayload | null => {
 };
 
 export const buildInviteLink = (payload: InvitePayload, baseHref?: string) => {
-  const resolvedBase = baseHref || (typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://sazoo.app/');
+  const resolvedBase = baseHref || (typeof window !== 'undefined' ? window.location.origin : 'https://sazoo.app');
   const url = new URL(resolvedBase);
-  url.searchParams.set(INVITE_QUERY_KEY, serializeInvitePayload(payload));
+  url.pathname = `/${DEFAULT_INVITE_ROUTE}/${serializeInvitePayload(payload)}`;
+  url.search = '';
   return url.toString();
 };
 
@@ -83,18 +87,38 @@ export const clearPendingInvite = () => {
 export const resolveInviteTargetTab = (payload: InvitePayload | null | undefined): InviteTargetTab =>
   payload?.targetTab && isInviteTargetTab(payload.targetTab) ? payload.targetTab : 'chat';
 
+const extractInviteTokenFromPath = (pathname: string) => {
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length < 2) return null;
+
+  const [routeKind, token] = segments;
+  if (!INVITE_ROUTE_KINDS.has(routeKind as InviteRouteKind) || !token) {
+    return null;
+  }
+
+  return {
+    routeKind: routeKind as InviteRouteKind,
+    token,
+  };
+};
+
 export const captureInviteFromLocation = (href = typeof window !== 'undefined' ? window.location.href : '') => {
   if (!href) return null;
 
   const url = new URL(href);
-  const token = url.searchParams.get(INVITE_QUERY_KEY);
+  const routeMatch = extractInviteTokenFromPath(url.pathname);
+  const token = routeMatch?.token || url.searchParams.get(INVITE_QUERY_KEY);
   if (!token) return null;
 
   const payload = parseInviteToken(token);
   if (!payload) return null;
 
   persistPendingInvite(payload);
-  url.searchParams.delete(INVITE_QUERY_KEY);
+  if (routeMatch) {
+    url.pathname = '/';
+  } else {
+    url.searchParams.delete(INVITE_QUERY_KEY);
+  }
 
   if (typeof window !== 'undefined') {
     window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
