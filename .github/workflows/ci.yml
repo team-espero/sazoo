@@ -9,6 +9,8 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    env:
+      HAS_GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +42,7 @@ jobs:
         run: npm run qa:launch-db
 
       - name: Live Gemini Strict Gate
-        if: ${{ secrets.GEMINI_API_KEY != '' }}
+        if: ${{ env.HAS_GEMINI_API_KEY != '' }}
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ env.HAS_GEMINI_API_KEY }}
         run: npm run ci:gemini

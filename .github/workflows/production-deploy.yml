@@ -8,6 +8,8 @@ on:
 jobs:
   deploy-production:
     runs-on: ubuntu-latest
+    env:
+      PRODUCTION_DEPLOY_WEBHOOK_VALUE: ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,12 +29,12 @@ jobs:
         run: npm run build
 
       - name: Trigger Production Deploy
-        if: ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK != '' }}
+        if: ${{ env.PRODUCTION_DEPLOY_WEBHOOK_VALUE != '' }}
         run: |
           curl -sS -X POST "$PRODUCTION_DEPLOY_WEBHOOK"
         env:
-          PRODUCTION_DEPLOY_WEBHOOK: ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK }}
+          PRODUCTION_DEPLOY_WEBHOOK: ${{ env.PRODUCTION_DEPLOY_WEBHOOK_VALUE }}
 
       - name: Production Deploy Not Configured
-        if: ${{ secrets.PRODUCTION_DEPLOY_WEBHOOK == '' }}
+        if: ${{ env.PRODUCTION_DEPLOY_WEBHOOK_VALUE == '' }}
         run: echo "PRODUCTION_DEPLOY_WEBHOOK is not configured. Skipping deploy trigger."
