@@ -4,6 +4,8 @@ import { Activity, Wind, Flame, Sun, Star, Droplets, Sparkles, Info, LayoutGrid,
 import { useSajuActions, useSajuCurrency, useSajuData, useSajuSettings } from '../../context';
 import { GlassCard, CustomRadarChart, DailyFortuneCard, LuckyItems, SajuGrid, LuckyElementCard } from '../../components';
 import { analytics } from '../../src/services/analytics';
+import { resolveRuntimeAssetUrl } from '../../src/services/assetRuntime';
+import { getUnlockedHomeModelIds } from '../../src/services/homeRewards';
 import { heavenlyStems, earthlyBranches } from '../../utils';
 const HomeScene = React.lazy(() => import('../../components/HomeScene'));
 
@@ -257,36 +259,35 @@ const FiveElementsChart = ({ onEnergyInfoClick, onDaewoonInfoClick }: any) => {
     );
 };
 
+const lockAt = (unlockCondition: number) => ({ alwaysUnlocked: false, unlockCondition });
+
 const BASE_MODELS = [
     { id: 'hanok', name: 'Hanok', url: '/sazoo_hanok_web_home_1024.glb', scale: 5.5, position: [0, -2.0, 0], rotationSpeed: 0.25, alwaysUnlocked: true },
-    { id: 'cheomseongdae', name: 'Cheomseongdae', url: '/sazoo_cheomseongdae_observatory_web_opt.glb', scale: 4.8, position: [0, -1.8, 0], rotationSpeed: 1.0, alwaysUnlocked: true },
-    { id: 'earth', name: '토(土) - 기반', url: '/Five Elements_earth_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'wood', name: '목(木) - 성장', url: '/Five Elements_wood_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'fire', name: '화(火) - 열기', url: '/Five Elements_fire_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'metal', name: '금(金) - 질서', url: '/Five Elements_metal_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'water', name: '수(水) - 지혜', url: '/Five Elements_water_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'rat', name: '12 zodiac signs - 쥐', url: '/twelve_zodiac_signs_rat_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'ox', name: '12 zodiac signs - 소', url: '/twelve_zodiac_signs_ox_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'tiger', name: '12 zodiac signs - 호랑이', url: '/twelve_zodiac_signs_tiger_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'rabbit', name: '12 zodiac signs - 토끼', url: '/twelve_zodiac_signs_rabbit_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'dragon', name: '12 zodiac signs - 용', url: '/twelve_zodiac_signs_dragon_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'snake', name: '12 zodiac signs - 뱀', url: '/twelve_zodiac_signs_snake_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'horse', name: '12 zodiac signs - 말', url: '/twelve_zodiac_signs_horse_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'sheep', name: '12 zodiac signs - 양', url: '/twelve_zodiac_signs_sheep_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'monkey', name: '12 zodiac signs - 원숭이', url: '/twelve_zodiac_signs_monkey_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'rooster', name: '12 zodiac signs - 닭', url: '/twelve_zodiac_signs_rooster_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'dog', name: '12 zodiac signs - 개', url: '/twelve_zodiac_signs_dog_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'pig', name: '12 zodiac signs - 돼지', url: '/twelve_zodiac_signs_pig_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    // New Unlocked Assets
-    { id: 'magpie', name: 'Magpie (까치)', url: '/sazoo_magpie_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'fox', name: 'Fox (여우)', url: '/sazoo_fox_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'bokjumeoni', name: 'Lucky Pack', url: '/sazoo_cyber_bokjumeoni_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-    { id: 'yeopjeon_currency', name: 'Yeopjeon Currency Stack', url: '/sazoo_yeopjeon_currency_stack_web_opt.glb', scale: 3.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: true },
-
-    // Locked Assets
-    { id: 'yeopjeon', name: 'Yeopjeon', url: '/sazoo_yeopjeon_currency_stack_web_opt.glb', scale: 3.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: false, unlockCondition: 3 },
-    { id: 'woman', name: 'Woman Character', url: '/sazoo_woman_character_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: false, unlockCondition: 5 },
-    { id: 'moon_rabbit', name: 'Moon Rabbit Badge', url: '/sazoo_moon_rabbit_badge_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, alwaysUnlocked: false, unlockCondition: 8 },
+    { id: 'cheomseongdae', name: 'Cheomseongdae', url: '/sazoo_cheomseongdae_observatory_web_opt.glb', scale: 4.8, position: [0, -1.8, 0], rotationSpeed: 1.0, ...lockAt(2) },
+    { id: 'magpie', name: 'Magpie (까치)', url: '/sazoo_magpie_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(4) },
+    { id: 'fox', name: 'Fox (여우)', url: '/sazoo_fox_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(6) },
+    { id: 'bokjumeoni', name: 'Lucky Pack', url: '/sazoo_cyber_bokjumeoni_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(8) },
+    { id: 'yeopjeon_currency', name: 'Yeopjeon Currency Stack', url: '/sazoo_yeopjeon_currency_stack_web_opt.glb', scale: 3.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(10) },
+    { id: 'earth', name: '토(土) - 기반', url: '/Five Elements_earth_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(12) },
+    { id: 'wood', name: '목(木) - 성장', url: '/Five Elements_wood_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(14) },
+    { id: 'fire', name: '화(火) - 열기', url: '/Five Elements_fire_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(16) },
+    { id: 'metal', name: '금(金) - 질서', url: '/Five Elements_metal_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(18) },
+    { id: 'water', name: '수(水) - 지혜', url: '/Five Elements_water_element_web_opt_web_opt.glb', scale: 5.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(20) },
+    { id: 'rat', name: '12 zodiac signs - 쥐', url: '/twelve_zodiac_signs_rat_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(22) },
+    { id: 'ox', name: '12 zodiac signs - 소', url: '/twelve_zodiac_signs_ox_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(24) },
+    { id: 'tiger', name: '12 zodiac signs - 호랑이', url: '/twelve_zodiac_signs_tiger_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(26) },
+    { id: 'rabbit', name: '12 zodiac signs - 토끼', url: '/twelve_zodiac_signs_rabbit_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(28) },
+    { id: 'dragon', name: '12 zodiac signs - 용', url: '/twelve_zodiac_signs_dragon_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(30) },
+    { id: 'snake', name: '12 zodiac signs - 뱀', url: '/twelve_zodiac_signs_snake_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(32) },
+    { id: 'horse', name: '12 zodiac signs - 말', url: '/twelve_zodiac_signs_horse_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(34) },
+    { id: 'sheep', name: '12 zodiac signs - 양', url: '/twelve_zodiac_signs_sheep_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(36) },
+    { id: 'monkey', name: '12 zodiac signs - 원숭이', url: '/twelve_zodiac_signs_monkey_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(38) },
+    { id: 'rooster', name: '12 zodiac signs - 닭', url: '/twelve_zodiac_signs_rooster_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(40) },
+    { id: 'dog', name: '12 zodiac signs - 개', url: '/twelve_zodiac_signs_dog_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(42) },
+    { id: 'pig', name: '12 zodiac signs - 돼지', url: '/twelve_zodiac_signs_pig_web_opt_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(44) },
+    { id: 'yeopjeon', name: 'Yeopjeon', url: '/sazoo_yeopjeon_currency_stack_web_opt.glb', scale: 3.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(46) },
+    { id: 'woman', name: 'Woman Character', url: '/sazoo_woman_character_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(48) },
+    { id: 'moon_rabbit', name: 'Moon Rabbit Badge', url: '/sazoo_moon_rabbit_badge_web_opt.glb', scale: 4.0, position: [0, -1.5, 0], rotationSpeed: 0.5, ...lockAt(50) },
 
     ...Array.from({ length: 15 }, (_, i) => ({
         id: `locked-${i}`,
@@ -310,10 +311,10 @@ const HomeTab = ({ setActiveTab }: any) => {
             ? 'ロック中のコンテンツは利用に応じて解放されます。'
             : '잠금된 컨텐츠는 sazoo를 더 열심히 사용하면 해금돼요';
     const lockMessageTemplate = language === 'en'
-        ? (count: number) => `Use ${count} coins to unlock this.`
+        ? (count: number) => `Use ${count} coins in total to unlock this.`
         : language === 'ja'
-            ? (count: number) => `コイン${count}枚で解放できます。`
-            : (count: number) => `코인 ${count}개를 사용하면 해금돼요!`;
+            ? (count: number) => `コインを合計${count}枚使うと解放されます。`
+            : (count: number) => `엽전을 누적 ${count}개 사용하면 해금돼요.`;
     const promptCopy = {
         daily: language === 'en' ? 'today fortune' : language === 'ja' ? '今日の運勢' : '오늘 운세',
         luckyItems: language === 'en' ? "Explain today's recommended items, color, and place." : language === 'ja' ? '今日のおすすめアイテム、色、場所を説明して。' : '오늘의 추천 아이템과 색상, 장소에 대해서 설명해줘.',
@@ -342,12 +343,20 @@ const HomeTab = ({ setActiveTab }: any) => {
     const [lockMessage, setLockMessage] = React.useState<string | null>(null);
     const [shouldRenderScene, setShouldRenderScene] = React.useState(false);
 
+    const unlockedRewardModelIds = getUnlockedHomeModelIds();
+
     const MODELS = BASE_MODELS.map(m => ({
         ...m,
-        unlocked: m.alwaysUnlocked || ((m as any).unlockCondition && currency.totalCoinsUsed >= (m as any).unlockCondition)
+        unlocked: m.alwaysUnlocked
+            || unlockedRewardModelIds.includes(m.id)
+            || (((m as any).unlockCondition && currency.totalCoinsUsed >= (m as any).unlockCondition))
     }));
 
     const activeModel = MODELS[currentModelIdx];
+    const resolvedActiveModelUrl = React.useMemo(
+        () => resolveRuntimeAssetUrl(String((activeModel as any).url || '')),
+        [activeModel],
+    );
 
     React.useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -377,6 +386,17 @@ const HomeTab = ({ setActiveTab }: any) => {
             window.clearTimeout(timer);
         };
     }, [currentModelIdx]);
+
+    React.useEffect(() => {
+        if (activeModel?.unlocked) {
+            return;
+        }
+
+        const defaultModelIndex = MODELS.findIndex((model) => model.id === 'hanok');
+        if (defaultModelIndex >= 0 && currentModelIdx !== defaultModelIndex) {
+            setCurrentModelIdx(defaultModelIndex);
+        }
+    }, [MODELS, activeModel, currentModelIdx]);
 
     const handleInfoClick = (message: string) => {
         if (!canUseCoin()) {
@@ -427,7 +447,7 @@ const HomeTab = ({ setActiveTab }: any) => {
                             }
                         >
                             <HomeScene
-                                modelUrl={(activeModel as any).url}
+                                modelUrl={resolvedActiveModelUrl}
                                 scale={(activeModel as any).scale as number}
                                 position={(activeModel as any).position as [number, number, number]}
                                 rotationSpeed={(activeModel as any).rotationSpeed}

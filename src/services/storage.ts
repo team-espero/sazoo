@@ -55,4 +55,7 @@ export const KEYS = {
     AUTH_SESSION: 'auth_session_v1',
     LAUNCH_CACHE_OWNER: 'launch_cache_owner_v1',
     LAUNCH_CACHE_INVALIDATED_AT: 'launch_cache_invalidated_at_v1',
+    HOME_UNLOCKED_MODELS: 'home_unlocked_models_v1',
+    HOME_WELCOME_GIFT_CLAIMS: 'home_welcome_gift_claims_v1',
+    HOME_NOTIFICATION_HISTORY: 'home_notification_history_v1',
 };

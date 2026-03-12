@@ -5,6 +5,7 @@ import CurrencyManagementCard from '../../components/CurrencyManagementCard';
 import { AppLanguage, useSajuActions, useSajuData, useSajuSettings } from '../../context';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../../src/auth/AuthProvider';
+import { getHomeNotificationHistory, subscribeToHomeRewards, type HomeNotificationRecord } from '../../src/services/homeRewards';
 import { getUnlockedSpecialReports, type SpecialReportUnlock } from '../../src/services/inviteRewards';
 import { api, type LaunchAnalyticsReport } from '../../src/services/api';
 
@@ -201,6 +202,32 @@ const PROFILE_COPY: Record<AppLanguage, any> = {
         unlockedAt: '解放日時',
         reportSummary: '要約',
         reportSourceId: '招待 ID',
+    },
+};
+
+const NOTIFICATION_HISTORY_COPY: Record<AppLanguage, {
+    title: string;
+    description: string;
+    empty: string;
+    badge: string;
+}> = {
+    en: {
+        title: 'Notification History',
+        description: 'Gift and system updates you can revisit later.',
+        empty: 'No notifications yet. Welcome gifts and future app updates will appear here.',
+        badge: 'Saved update',
+    },
+    ko: {
+        title: '알림 내역',
+        description: '환영 선물과 주요 앱 알림을 여기에서 다시 확인해요.',
+        empty: '아직 저장된 알림이 없어요. 환영 선물과 앞으로의 앱 알림이 여기에 쌓여요.',
+        badge: '저장된 알림',
+    },
+    ja: {
+        title: '通知履歴',
+        description: 'ウェルカムギフトや重要なお知らせをここで見返せます。',
+        empty: 'まだ保存された通知はありません。ウェルカムギフトや今後のお知らせがここに追加されます。',
+        badge: '保存済み通知',
     },
 };
 
@@ -923,12 +950,14 @@ const ProfileScreen = () => {
     const [launchReportError, setLaunchReportError] = useState<string | null>(null);
     const [specialReports, setSpecialReports] = useState<SpecialReportUnlock[]>([]);
     const [selectedReport, setSelectedReport] = useState<SpecialReportUnlock | null>(null);
+    const [notificationHistory, setNotificationHistory] = useState<HomeNotificationRecord[]>([]);
     const [localAuthMessage, setLocalAuthMessage] = useState<string | null>(null);
 
     const currentProfile = sajuState.profile;
     const isMe = currentProfile.id === 'me';
     const isDark = themeMode === 'dark';
     const copy = PROFILE_COPY[language as AppLanguage] ?? PROFILE_COPY.ko;
+    const notificationCopy = NOTIFICATION_HISTORY_COPY[language as AppLanguage] ?? NOTIFICATION_HISTORY_COPY.ko;
     const launchMetricsMenuLabel = language === 'ko'
         ? '운영 리포트'
         : language === 'ja'
@@ -966,6 +995,23 @@ const ProfileScreen = () => {
             document.removeEventListener('visibilitychange', syncReports);
         };
     }, []);
+
+    useEffect(() => {
+        const syncNotifications = () => {
+            setNotificationHistory(getHomeNotificationHistory(session?.userId));
+        };
+
+        syncNotifications();
+        const unsubscribe = subscribeToHomeRewards(syncNotifications);
+        window.addEventListener('focus', syncNotifications);
+        document.addEventListener('visibilitychange', syncNotifications);
+
+        return () => {
+            unsubscribe();
+            window.removeEventListener('focus', syncNotifications);
+            document.removeEventListener('visibilitychange', syncNotifications);
+        };
+    }, [session?.userId]);
 
     const openLaunchMetrics = async () => {
         setIsLaunchMetricsOpen(true);
@@ -1215,6 +1261,48 @@ const ProfileScreen = () => {
                 ))}
 
                 <CurrencyManagementCard isDark={isDark} />
+
+                <div>
+                    <div className="mb-3 flex items-center justify-between px-4">
+                        <div>
+                            <h4 className={`text-[10px] font-extrabold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{notificationCopy.title}</h4>
+                            <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{notificationCopy.description}</p>
+                        </div>
+                        <div className={`rounded-full px-3 py-1 text-xs font-black ${isDark ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-700 shadow-sm'}`}>
+                            {notificationHistory.length}
+                        </div>
+                    </div>
+
+                    {notificationHistory.length === 0 ? (
+                        <div className={`rounded-[28px] border border-dashed p-6 text-center ${isDark ? 'border-slate-700 bg-slate-900/30 text-slate-400' : 'border-slate-200 bg-white/60 text-slate-500'}`}>
+                            <BellRing size={20} className="mx-auto mb-3 text-emerald-500" />
+                            <p className="text-sm font-medium leading-relaxed">{notificationCopy.empty}</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {notificationHistory.map((notification) => (
+                                <div
+                                    key={notification.id}
+                                    className={`w-full rounded-[28px] border p-5 text-left shadow-sm ${isDark ? 'border-slate-700 bg-slate-900/40' : 'border-white/70 bg-white/70'}`}
+                                >
+                                    <div className="mb-3 flex items-start justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`rounded-2xl p-3 ${isDark ? 'bg-slate-800 text-emerald-400' : 'bg-emerald-50 text-emerald-500'}`}>
+                                                <BellRing size={18} />
+                                            </div>
+                                            <div>
+                                                <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{notificationCopy.badge}</p>
+                                                <h5 className={`text-base font-black leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>{notification.title}</h5>
+                                            </div>
+                                        </div>
+                                        <span className={`text-[11px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatUnlockedAt(notification.createdAt, language as AppLanguage)}</span>
+                                    </div>
+                                    <p className={`text-sm font-medium leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{notification.body}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
 
                 <div>
                     <div className="mb-3 flex items-center justify-between px-4">
