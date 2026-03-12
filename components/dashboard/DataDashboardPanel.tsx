@@ -1,10 +1,23 @@
 import React from 'react';
-import { BarChart3, RefreshCw, TimerReset } from 'lucide-react';
+import { BarChart3, RefreshCw, TimerReset, TrendingUp } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { AppLanguage } from '../../context';
 import type { LaunchAnalyticsReport } from '../../src/services/api';
 import { buildGeminiCostDashboardData } from '../../src/services/geminiCostModel';
 import { Button } from '../../components';
+
+type JourneyDebugSnapshot = {
+  profileId: string;
+  profileName: string;
+  memoryQuality: string;
+  journeySummary: string;
+  recentSummary: string;
+  conversationDigest: string;
+  updatedAt: string;
+  lifecycleStage: string;
+  lifecycleMode: string;
+  daysSinceFirstReading?: number;
+};
 
 type DashboardCopy = {
   badge: string;
@@ -16,359 +29,133 @@ type DashboardCopy = {
   totalEvents: string;
   avgTimeToValue: string;
   withinTarget: string;
-  recentEvents: string;
-  noRecentEvents: string;
-  dailyInsightsSourceLabel: string;
-  dailyInsightsSourceDesc: string;
-  dailyInsightsSourceModel: string;
-  dailyInsightsSourceFallback: string;
-  dailyInsightsSourceUnavailable: string;
-  metricShare: string;
-  metricInviteOpen: string;
-  metricInstallFromInvite: string;
-  metricD1Retention: string;
-  metricInviteRewardClaimed: string;
-  metricInviteRewardGranted: string;
-  metricInviteRewardDuplicate: string;
-  metricInviteRewardSelfBlocked: string;
-  metricInviteRewardFailed: string;
-  metricFirstReadingSuccess: string;
-  metricFirstReadingFailure: string;
-  metricCoinSpent: string;
-  metricAdRewardGranted: string;
-  metricSceneChange: string;
-  metricMiniAppOpen: string;
-  metricOnboardingViews: string;
-  metricOnboardingCompletes: string;
-  coinSpendByContext: string;
-  adRewardsByPlacement: string;
-  miniAppsByApp: string;
-  scenesById: string;
-  emptyBreakdown: string;
+  dailyInsightsSource: string;
+  currentRange: string;
+  compareDelta: string;
   funnelTitle: string;
-  funnelDescription: string;
-  funnelShare: string;
-  funnelInviteOpen: string;
-  funnelInstall: string;
-  funnelReward: string;
-  rateShareToOpen: string;
-  rateOpenToInstall: string;
-  rateInstallToReward: string;
+  trendTitle: string;
   qualityTitle: string;
   qualityDescription: string;
-  qualityFirstReadingRate: string;
-  qualityInviteFailureRate: string;
-  qualityActiveDays: string;
-  qualityAvgEventsPerDay: string;
-  trendsTitle: string;
-  trendsDescription: string;
-  trendsNoData: string;
-  topSignalsTitle: string;
-  topSignalsDescription: string;
-  topCoinSpendContext: string;
-  topMiniApp: string;
-  topScene: string;
-  topOnboardingViewStep: string;
-  topOnboardingCompleteStep: string;
-  topHottestDay: string;
-  noTopSignal: string;
+  recentEvents: string;
+  noRecentEvents: string;
+  journeyDebug: string;
+  journeyDescription: string;
+  productBreakdown: string;
+  costTitle: string;
+  comparisonTitle: string;
+  generatedAt: string;
+  previousRange: string;
+  noData: string;
 };
 
 const buildDashboardCopy = (language: AppLanguage): DashboardCopy => {
   if (language === 'ko') {
     return {
-      badge: '운영 리포트',
-      title: '데이터 대시보드',
-      description: '퍼널, 첫 가치 도달 속도, 최근 7일 추이와 핵심 사용 신호를 한 번에 확인합니다.',
-      loading: '데이터 대시보드를 불러오는 중이에요...',
-      error: '데이터 대시보드를 지금 불러오지 못했어요.',
-      retry: '다시 불러오기',
-      totalEvents: '전체 이벤트',
-      avgTimeToValue: '평균 첫 가치 도달',
-      withinTarget: '30초 이내',
-      recentEvents: '최근 이벤트',
-      noRecentEvents: '아직 기록된 최근 이벤트가 없어요.',
-      dailyInsightsSourceLabel: '오늘 인사이트 소스',
-      dailyInsightsSourceDesc: '현재 홈 인사이트가 Gemini 모델 응답인지 빠른 fallback인지 보여줍니다.',
-      dailyInsightsSourceModel: 'Gemini 모델',
-      dailyInsightsSourceFallback: '빠른 Fallback',
-      dailyInsightsSourceUnavailable: '없음',
-      metricShare: '공유',
-      metricInviteOpen: '초대 링크 열기',
-      metricInstallFromInvite: '초대 설치 전환',
-      metricD1Retention: 'D1 리텐션',
-      metricInviteRewardClaimed: '초대 보상 클레임',
-      metricInviteRewardGranted: '초대 보상 지급',
-      metricInviteRewardDuplicate: '중복 보상 차단',
-      metricInviteRewardSelfBlocked: '셀프 초대 차단',
-      metricInviteRewardFailed: '초대 보상 실패',
-      metricFirstReadingSuccess: '첫 사주 결과 성공',
-      metricFirstReadingFailure: '첫 사주 결과 실패',
-      metricCoinSpent: '코인 소모',
-      metricAdRewardGranted: '광고 보상 지급',
-      metricSceneChange: '씬 변경',
-      metricMiniAppOpen: '미니앱 진입',
-      metricOnboardingViews: '온보딩 조회',
-      metricOnboardingCompletes: '온보딩 완료',
-      coinSpendByContext: '코인 사용 위치',
-      adRewardsByPlacement: '광고 보상 위치',
-      miniAppsByApp: '미니앱 진입 분포',
-      scenesById: '씬 변경 분포',
-      emptyBreakdown: '아직 집계된 세부 항목이 없어요.',
-      funnelTitle: '초대 퍼널',
-      funnelDescription: '공유 이후 실제 열람과 설치 전환이 어디까지 이어지는지 확인합니다.',
-      funnelShare: '공유',
-      funnelInviteOpen: '초대 열기',
-      funnelInstall: '초대 설치',
-      funnelReward: '보상 지급',
-      rateShareToOpen: '공유 → 열기',
-      rateOpenToInstall: '열기 → 설치',
-      rateInstallToReward: '설치 → 보상',
-      qualityTitle: '품질 & 유지',
-      qualityDescription: '첫 결과 품질과 재방문 기반 체력을 빠르게 점검합니다.',
-      qualityFirstReadingRate: '첫 결과 성공률',
-      qualityInviteFailureRate: '초대 보상 실패율',
-      qualityActiveDays: '활성 일수',
-      qualityAvgEventsPerDay: '활성일 평균 이벤트',
-      trendsTitle: '최근 7일 추이',
-      trendsDescription: '최근 7일 동안 이벤트가 어떻게 움직였는지 보여줍니다.',
-      trendsNoData: '최근 7일 데이터가 아직 없어요.',
-      topSignalsTitle: 'Top Signals',
-      topSignalsDescription: '지금 가장 많이 반복되는 사용 패턴입니다.',
-      topCoinSpendContext: '가장 많이 쓰인 코인 위치',
-      topMiniApp: '가장 많이 열린 미니앱',
-      topScene: '가장 많이 선택된 씬',
-      topOnboardingViewStep: '가장 많이 본 온보딩 단계',
-      topOnboardingCompleteStep: '가장 많이 완료한 온보딩 단계',
-      topHottestDay: '이벤트가 가장 많았던 날',
-      noTopSignal: '아직 데이터가 없어요.',
+      badge: '� ����Ʈ',
+      title: '������ ��ú���',
+      description: '��ǰ �۳�, ù ��ġ ���� �ӵ�, �ֱ� ����, � ��ǥ�� �� ȭ�鿡�� Ȯ���մϴ�.',
+      loading: '������ ��ú��带 �ҷ����� ���̿���...',
+      error: '������ ��ú��带 �ҷ����� ���߾��.',
+      retry: '�ٽ� �õ�',
+      totalEvents: '��ü �̺�Ʈ',
+      avgTimeToValue: '��� ù ��ġ ����',
+      withinTarget: '30�� �̳� ����',
+      dailyInsightsSource: '������ �λ���Ʈ �ҽ�',
+      currentRange: '���� ��ȸ �Ⱓ',
+      compareDelta: '���� �Ⱓ ���',
+      funnelTitle: '�ʴ� �۳�',
+      trendTitle: '�Ⱓ�� �̺�Ʈ ����',
+      qualityTitle: 'ǰ�� ��ǥ',
+      qualityDescription: 'ù ��� ������, ���ټ�, ���� ��� �帧�� ������ ���ϴ�.',
+      recentEvents: '�ֱ� �̺�Ʈ',
+      noRecentEvents: '�ֱ� �̺�Ʈ�� ���� �����.',
+      journeyDebug: 'Journey Debug',
+      journeyDescription: '���� ����� ����������Ŭ/�޸� �����Դϴ�.',
+      productBreakdown: '��ǰ ��� ����',
+      costTitle: 'Gemini ��� ����',
+      comparisonTitle: '���� �Ⱓ ��',
+      generatedAt: '���� �ð�',
+      previousRange: '���� �Ⱓ',
+      noData: 'ǥ���� �����Ͱ� ���� �����.',
     };
   }
 
   if (language === 'ja') {
     return {
-      badge: '運営レポート',
-      title: 'データダッシュボード',
-      description: 'ファネル、初回価値到達速度、直近7日の推移と主要シグナルをまとめて確認します。',
-      loading: 'データダッシュボードを読み込んでいます...',
-      error: 'データダッシュボードを読み込めませんでした。',
-      retry: '再読み込み',
-      totalEvents: '総イベント',
-      avgTimeToValue: '平均初回価値到達',
-      withinTarget: '30秒以内',
-      recentEvents: '最近のイベント',
-      noRecentEvents: 'まだ最近のイベントはありません。',
-      dailyInsightsSourceLabel: '本日のインサイト元',
-      dailyInsightsSourceDesc: '現在のホームインサイトがGemini応答か高速fallbackかを表示します。',
-      dailyInsightsSourceModel: 'Gemini モデル',
-      dailyInsightsSourceFallback: '高速 Fallback',
-      dailyInsightsSourceUnavailable: '未取得',
-      metricShare: '共有',
-      metricInviteOpen: '招待リンク開封',
-      metricInstallFromInvite: '招待経由インストール',
-      metricD1Retention: 'D1 継続率',
-      metricInviteRewardClaimed: '招待報酬クレーム',
-      metricInviteRewardGranted: '招待報酬付与',
-      metricInviteRewardDuplicate: '重複報酬ブロック',
-      metricInviteRewardSelfBlocked: 'セルフ招待ブロック',
-      metricInviteRewardFailed: '招待報酬失敗',
-      metricFirstReadingSuccess: '初回鑑定成功',
-      metricFirstReadingFailure: '初回鑑定失敗',
-      metricCoinSpent: 'コイン消費',
-      metricAdRewardGranted: '広告報酬付与',
-      metricSceneChange: 'シーン変更',
-      metricMiniAppOpen: 'ミニアプリ起動',
-      metricOnboardingViews: 'オンボーディング閲覧',
-      metricOnboardingCompletes: 'オンボーディング完了',
-      coinSpendByContext: 'コイン消費箇所',
-      adRewardsByPlacement: '広告報酬配置',
-      miniAppsByApp: 'ミニアプリ分布',
-      scenesById: 'シーン変更分布',
-      emptyBreakdown: 'まだ詳細データはありません。',
-      funnelTitle: '招待ファネル',
-      funnelDescription: '共有から閲覧、インストール、報酬到達までの流れを確認します。',
-      funnelShare: '共有',
-      funnelInviteOpen: '招待開封',
-      funnelInstall: '招待インストール',
-      funnelReward: '報酬付与',
-      rateShareToOpen: '共有 → 開封',
-      rateOpenToInstall: '開封 → インストール',
-      rateInstallToReward: 'インストール → 報酬',
-      qualityTitle: '品質 & 継続',
-      qualityDescription: '初回結果の品質と継続利用の基礎体力を確認します。',
-      qualityFirstReadingRate: '初回結果成功率',
-      qualityInviteFailureRate: '招待報酬失敗率',
-      qualityActiveDays: 'アクティブ日数',
-      qualityAvgEventsPerDay: 'アクティブ日平均イベント',
-      trendsTitle: '直近7日の推移',
-      trendsDescription: '直近7日間でイベント量がどう動いたかを表示します。',
-      trendsNoData: '直近7日のデータはまだありません。',
-      topSignalsTitle: 'Top Signals',
-      topSignalsDescription: 'いま最も繰り返されている利用パターンです。',
-      topCoinSpendContext: '最も使われたコイン文脈',
-      topMiniApp: '最も開かれたミニアプリ',
-      topScene: '最も選ばれたシーン',
-      topOnboardingViewStep: '最も閲覧されたオンボーディング段階',
-      topOnboardingCompleteStep: '最も完了されたオンボーディング段階',
-      topHottestDay: 'イベントが最も多かった日',
-      noTopSignal: 'まだデータがありません。',
+      badge: 'Launch Report',
+      title: 'Data Dashboard',
+      description: 'Track funnel health, first-value speed, recent trends, and operating metrics in one place.',
+      loading: 'Loading dashboard...',
+      error: 'Could not load the dashboard right now.',
+      retry: 'Retry',
+      totalEvents: 'Total events',
+      avgTimeToValue: 'Avg. time to value',
+      withinTarget: 'Within 30s',
+      dailyInsightsSource: 'Daily insight source',
+      currentRange: 'Current range',
+      compareDelta: 'Vs previous period',
+      funnelTitle: 'Invite funnel',
+      trendTitle: 'Events over time',
+      qualityTitle: 'Quality metrics',
+      qualityDescription: 'Quickly inspect first-result success, retention, and coin usage signals.',
+      recentEvents: 'Recent events',
+      noRecentEvents: 'No recent events yet.',
+      journeyDebug: 'Journey Debug',
+      journeyDescription: 'Current lifecycle and stored memory state.',
+      productBreakdown: 'Product breakdown',
+      costTitle: 'Gemini cost estimate',
+      comparisonTitle: 'Previous-period comparison',
+      generatedAt: 'Generated at',
+      previousRange: 'Previous range',
+      noData: 'No data yet.',
     };
   }
 
   return {
     badge: 'Launch Report',
     title: 'Data Dashboard',
-    description: 'Track funnel health, first-value speed, recent 7-day trends, and product usage signals in one place.',
-    loading: 'Loading data dashboard...',
-    error: 'Could not load the data dashboard right now.',
+    description: 'Track funnel health, first-value speed, recent trends, and operating metrics in one place.',
+    loading: 'Loading dashboard...',
+    error: 'Could not load the dashboard right now.',
     retry: 'Retry',
-    totalEvents: 'Total Events',
-    avgTimeToValue: 'Avg. First Value',
+    totalEvents: 'Total events',
+    avgTimeToValue: 'Avg. time to value',
     withinTarget: 'Within 30s',
-    recentEvents: 'Recent Events',
-    noRecentEvents: 'No recent events recorded yet.',
-    dailyInsightsSourceLabel: 'Daily Insights Source',
-    dailyInsightsSourceDesc: 'Shows whether the current home insight came from Gemini or the fast fallback path.',
-    dailyInsightsSourceModel: 'Gemini Model',
-    dailyInsightsSourceFallback: 'Fast Fallback',
-    dailyInsightsSourceUnavailable: 'Unavailable',
-    metricShare: 'Shares',
-    metricInviteOpen: 'Invite Opens',
-    metricInstallFromInvite: 'Installs from Invite',
-    metricD1Retention: 'D1 Retention',
-    metricInviteRewardClaimed: 'Invite Reward Claims',
-    metricInviteRewardGranted: 'Invite Rewards Granted',
-    metricInviteRewardDuplicate: 'Duplicate Claims Blocked',
-    metricInviteRewardSelfBlocked: 'Self Invites Blocked',
-    metricInviteRewardFailed: 'Invite Reward Failures',
-    metricFirstReadingSuccess: 'First Reading Success',
-    metricFirstReadingFailure: 'First Reading Failures',
-    metricCoinSpent: 'Coins Spent',
-    metricAdRewardGranted: 'Ad Rewards Granted',
-    metricSceneChange: 'Scene Changes',
-    metricMiniAppOpen: 'Mini App Opens',
-    metricOnboardingViews: 'Onboarding Views',
-    metricOnboardingCompletes: 'Onboarding Completions',
-    coinSpendByContext: 'Coin Spend by Context',
-    adRewardsByPlacement: 'Ad Rewards by Placement',
-    miniAppsByApp: 'Mini Apps by App',
-    scenesById: 'Scene Changes by Scene',
-    emptyBreakdown: 'No breakdown data yet.',
-    funnelTitle: 'Invite Funnel',
-    funnelDescription: 'See how far users move from share to open, install, and reward.',
-    funnelShare: 'Shares',
-    funnelInviteOpen: 'Invite Opens',
-    funnelInstall: 'Invite Installs',
-    funnelReward: 'Rewards Granted',
-    rateShareToOpen: 'Share → Open',
-    rateOpenToInstall: 'Open → Install',
-    rateInstallToReward: 'Install → Reward',
-    qualityTitle: 'Quality & Retention',
-    qualityDescription: 'Quickly gauge first-result quality and repeat-usage health.',
-    qualityFirstReadingRate: 'First Reading Success',
-    qualityInviteFailureRate: 'Invite Reward Failure',
-    qualityActiveDays: 'Active Days',
-    qualityAvgEventsPerDay: 'Avg Events / Active Day',
-    trendsTitle: 'Last 7 Days',
-    trendsDescription: 'Shows how event volume moved during the last 7 days.',
-    trendsNoData: 'No 7-day trend data yet.',
-    topSignalsTitle: 'Top Signals',
-    topSignalsDescription: 'The strongest usage patterns happening right now.',
-    topCoinSpendContext: 'Top Coin Spend Context',
-    topMiniApp: 'Top Mini App',
-    topScene: 'Top Scene',
-    topOnboardingViewStep: 'Top Onboarding View Step',
-    topOnboardingCompleteStep: 'Top Onboarding Complete Step',
-    topHottestDay: 'Busiest Day',
-    noTopSignal: 'No data yet.',
+    dailyInsightsSource: 'Daily insight source',
+    currentRange: 'Current range',
+    compareDelta: 'Vs previous period',
+    funnelTitle: 'Invite funnel',
+    trendTitle: 'Events over time',
+    qualityTitle: 'Quality metrics',
+    qualityDescription: 'Quickly inspect first-result success, retention, and coin usage signals.',
+    recentEvents: 'Recent events',
+    noRecentEvents: 'No recent events yet.',
+    journeyDebug: 'Journey Debug',
+    journeyDescription: 'Current lifecycle and stored memory state.',
+    productBreakdown: 'Product breakdown',
+    costTitle: 'Gemini cost estimate',
+    comparisonTitle: 'Previous-period comparison',
+    generatedAt: 'Generated at',
+    previousRange: 'Previous range',
+    noData: 'No data yet.',
   };
 };
 
-type GeminiCostCopy = {
-  title: string;
-  description: string;
-  runtimeAnnual: string;
-  legacyAnnual: string;
-  annualSavings: string;
-  modeledMonthly10k: string;
-  pricingTitle: string;
-  lifecycleTitle: string;
-  lifecycleDescription: string;
-  monthlyScaleTitle: string;
-  monthlyScaleDescription: string;
-  pricingSource: string;
-  currentRuntime: string;
-  legacyRuntime: string;
-  monthlySavings: string;
-  monthlySavingsShort: string;
+const formatNumber = (value: number) => new Intl.NumberFormat('en-US').format(value);
+
+const formatDurationMs = (value: number, language: AppLanguage) => {
+  const seconds = Math.max(0, Math.round(value / 100) / 10);
+  if (language === 'ko') return `${seconds}��`;
+  return `${seconds}s`;
 };
 
-const buildGeminiCostCopy = (language: AppLanguage): GeminiCostCopy => {
-  if (language === 'ko') {
-    return {
-      title: 'Gemini 비용 추정',
-      description: '현재 기본 런타임, 대표 토큰 실측값, 라이프사이클 가정을 바탕으로 1인당 추정 비용을 계산합니다.',
-      runtimeAnnual: '현재 런타임 연간 / 유저',
-      legacyAnnual: '레거시 연간 / 유저',
-      annualSavings: '연간 절감 / 유저',
-      modeledMonthly10k: '월간 추정 @ 1만 DAU',
-      pricingTitle: '공식 모델 단가',
-      lifecycleTitle: '라이프사이클 비용 곡선',
-      lifecycleDescription: 'daily insights가 Flash-Lite를 우선 사용할 때와, 이전처럼 Flash를 먼저 쓸 때를 비교합니다.',
-      monthlyScaleTitle: 'DAU 월간 비용 추정',
-      monthlyScaleDescription: '365일 모델링을 기준으로 1천 / 1만 / 10만 DAU 월 비용을 추정합니다.',
-      pricingSource: '가격 출처',
-      currentRuntime: '현재 런타임',
-      legacyRuntime: '레거시',
-      monthlySavings: '월 절감',
-      monthlySavingsShort: '절감',
-    };
-  }
+const formatPercent = (value: number, digits = 0) => `${(Math.max(0, value) * 100).toFixed(digits)}%`;
 
-  if (language === 'ja') {
-    return {
-      title: 'Gemini コスト推定',
-      description: '現在のデフォルト実行構成、代表トークン実測値、ライフサイクル仮定をもとに 1ユーザーあたりの推定費用を計算します。',
-      runtimeAnnual: '現行ランタイム 年間 / ユーザー',
-      legacyAnnual: 'レガシー 年間 / ユーザー',
-      annualSavings: '年間削減 / ユーザー',
-      modeledMonthly10k: '月間推定 @ 1万 DAU',
-      pricingTitle: '公式モデル単価',
-      lifecycleTitle: 'ライフサイクル別コスト曲線',
-      lifecycleDescription: 'daily insights が Flash-Lite を優先する現在の構成と、従来の Flash 優先構成を比較します。',
-      monthlyScaleTitle: 'DAU 月間コスト推定',
-      monthlyScaleDescription: '365日モデルを基準に 1千 / 1万 / 10万 DAU の月間費用を推定します。',
-      pricingSource: '価格ソース',
-      currentRuntime: 'Current Runtime',
-      legacyRuntime: 'Legacy',
-      monthlySavings: '月間削減',
-      monthlySavingsShort: '削減',
-    };
-  }
-
-  return {
-    title: 'Gemini Cost Estimate',
-    description: 'Models 1-user cloud cost from the current default runtime mix, representative token footprints, and lifecycle-stage usage assumptions.',
-    runtimeAnnual: 'Current Runtime / User / Year',
-    legacyAnnual: 'Legacy / User / Year',
-    annualSavings: 'Savings / User / Year',
-    modeledMonthly10k: 'Modeled Monthly @ 10k DAU',
-    pricingTitle: 'Official Model Pricing',
-    lifecycleTitle: 'Lifecycle Cost Curve',
-    lifecycleDescription: 'Compares the optimized daily-insights path against the older insights-on-Flash behavior.',
-    monthlyScaleTitle: 'Monthly Cost by DAU',
-    monthlyScaleDescription: 'Estimated monthly spend at 1k / 10k / 100k DAU using the 365-day lifecycle mix.',
-    pricingSource: 'Pricing Source',
-    currentRuntime: 'Current Runtime',
-    legacyRuntime: 'Legacy',
-    monthlySavings: 'Monthly Savings',
-    monthlySavingsShort: 'Savings',
-  };
-};
-
-const formatUnlockedAt = (value: string, language: AppLanguage) => {
+const formatDateTime = (value: string, language: AppLanguage) => {
+  if (!value) return '-';
   try {
-    return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : language === 'ja' ? 'ja-JP' : 'ko-KR', {
+    const locale = language === 'ko' ? 'ko-KR' : language === 'ja' ? 'ja-JP' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -380,39 +167,49 @@ const formatUnlockedAt = (value: string, language: AppLanguage) => {
   }
 };
 
-const formatDurationMs = (value: number, language: AppLanguage) => {
-  const seconds = Math.max(0, Math.round(value / 100) / 10);
-  if (language === 'ja') return `${seconds}秒`;
-  if (language === 'en') return `${seconds}s`;
-  return `${seconds}초`;
-};
-
-const formatPercent = (value: number, digits = 0) => `${(Math.max(0, value) * 100).toFixed(digits)}%`;
-
-const formatUsd = (value: number, maximumFractionDigits = 4) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: Math.min(2, maximumFractionDigits),
-    maximumFractionDigits,
-  }).format(value);
-
-const formatDayLabel = (dateKey: string, language: AppLanguage) => {
+const formatDateLabel = (dateKey: string, language: AppLanguage) => {
   try {
-    return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : language === 'ja' ? 'ja-JP' : 'ko-KR', {
-      month: 'short',
-      day: 'numeric',
-    }).format(new Date(`${dateKey}T00:00:00.000Z`));
+    const locale = language === 'ko' ? 'ko-KR' : language === 'ja' ? 'ja-JP' : 'en-US';
+    return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(new Date(`${dateKey}T00:00:00.000Z`));
   } catch {
     return dateKey;
   }
 };
 
-const summarizeEventPayload = (payload: Record<string, unknown>) => {
-  const keys = Object.keys(payload || {});
-  if (keys.length === 0) return '';
+const formatUsd = (value: number, digits = 4) => new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: Math.min(2, digits),
+  maximumFractionDigits: digits,
+}).format(value);
+
+const summarizePayload = (payload: Record<string, unknown>) => {
   const text = JSON.stringify(payload);
-  return text.length > 96 ? `${text.slice(0, 93)}...` : text;
+  return text.length > 120 ? `${text.slice(0, 117)}...` : text;
+};
+
+const deltaTone = (value: number) => {
+  if (value > 0) return 'text-emerald-500';
+  if (value < 0) return 'text-rose-500';
+  return 'text-slate-400';
+};
+
+const renderKeyValueRows = (record: Record<string, number>, emptyLabel: string, isDark: boolean) => {
+  const entries = Object.entries(record).sort((left, right) => right[1] - left[1]);
+  if (entries.length === 0) {
+    return <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{emptyLabel}</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {entries.slice(0, 6).map(([key, value]) => (
+        <div key={key} className={`flex items-center justify-between rounded-2xl px-3 py-2 ${isDark ? 'bg-slate-900/70' : 'bg-slate-50'}`}>
+          <span className={`truncate text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{key}</span>
+          <span className={`ml-3 text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatNumber(value)}</span>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export const DataDashboardPanel = ({
@@ -427,18 +224,7 @@ export const DataDashboardPanel = ({
 }: {
   report: LaunchAnalyticsReport | null;
   dailyInsightsSource?: 'model' | 'fallback';
-  journeyDebug?: {
-    profileId: string;
-    profileName: string;
-    memoryQuality: string;
-    journeySummary: string;
-    recentSummary: string;
-    conversationDigest: string;
-    updatedAt: string;
-    lifecycleStage: string;
-    lifecycleMode: string;
-    daysSinceFirstReading?: number;
-  } | null;
+  journeyDebug?: JourneyDebugSnapshot | null;
   loading: boolean;
   error: string | null;
   onRetry: () => void;
@@ -446,481 +232,316 @@ export const DataDashboardPanel = ({
   isDark: boolean;
 }) => {
   const copy = buildDashboardCopy(language);
-  const geminiCostCopy = buildGeminiCostCopy(language);
   const geminiCost = buildGeminiCostDashboardData(language);
-
-  const metrics = report
-    ? [
-        { label: copy.metricShare, value: report.counts.share },
-        { label: copy.metricInviteOpen, value: report.counts.invite_open },
-        { label: copy.metricInstallFromInvite, value: report.counts.install_from_invite },
-        { label: copy.metricD1Retention, value: report.counts.d1_retention },
-        { label: copy.metricInviteRewardClaimed, value: report.counts.invite_reward_claimed },
-        { label: copy.metricInviteRewardGranted, value: report.counts.invite_reward_granted },
-        { label: copy.metricInviteRewardDuplicate, value: report.counts.invite_reward_duplicate },
-        { label: copy.metricInviteRewardSelfBlocked, value: report.counts.invite_reward_self_blocked },
-        { label: copy.metricInviteRewardFailed, value: report.counts.invite_reward_claim_failed },
-        { label: copy.metricFirstReadingSuccess, value: report.counts.first_reading_success },
-        { label: copy.metricFirstReadingFailure, value: report.counts.first_reading_failure },
-        { label: copy.metricCoinSpent, value: report.counts.coin_spent },
-        { label: copy.metricAdRewardGranted, value: report.counts.ad_reward_granted },
-        { label: copy.metricSceneChange, value: report.counts.scene_change },
-        { label: copy.metricMiniAppOpen, value: report.counts.mini_app_open },
-        { label: copy.metricOnboardingViews, value: report.counts.onboarding_step_view },
-        { label: copy.metricOnboardingCompletes, value: report.counts.onboarding_step_complete },
-      ]
-    : [];
-
-  const breakdownSections = report
-    ? [
-        { title: copy.coinSpendByContext, values: report.productHealth.coinSpendByContext },
-        { title: copy.adRewardsByPlacement, values: report.productHealth.adRewardsByPlacement },
-        { title: copy.miniAppsByApp, values: report.productHealth.miniAppOpenByApp },
-        { title: copy.scenesById, values: report.productHealth.sceneChangeByScene },
-      ]
-    : [];
-
-  const funnelStages = report
-    ? [
-        { label: copy.funnelShare, value: report.funnel.shareCount },
-        { label: copy.funnelInviteOpen, value: report.funnel.inviteOpenCount },
-        { label: copy.funnelInstall, value: report.funnel.installCount },
-        { label: copy.funnelReward, value: report.funnel.rewardGrantedCount },
-      ]
-    : [];
-
-  const funnelRates = report
-    ? [
-        { label: copy.rateShareToOpen, value: formatPercent(report.funnel.shareToOpenRate) },
-        { label: copy.rateOpenToInstall, value: formatPercent(report.funnel.openToInstallRate) },
-        { label: copy.rateInstallToReward, value: formatPercent(report.funnel.installToRewardRate) },
-      ]
-    : [];
-
-  const qualityCards = report
-    ? [
-        { label: copy.qualityFirstReadingRate, value: formatPercent(report.quality.firstReadingSuccessRate) },
-        { label: copy.qualityInviteFailureRate, value: formatPercent(report.quality.inviteRewardFailureRate) },
-        { label: copy.qualityActiveDays, value: String(report.quality.activeDays) },
-        { label: copy.qualityAvgEventsPerDay, value: String(report.quality.averageEventsPerActiveDay) },
-      ]
-    : [];
-
-  const trendMax = report ? Math.max(1, ...report.trends.eventsByDay.map((item) => item.count || 0)) : 1;
-  const trendData =
-    report?.trends.eventsByDay.map((item) => ({
-      ...item,
-      label: formatDayLabel(item.dateKey, language),
-    })) ?? [];
-
-  const topSignals = report
-    ? [
-        {
-          label: copy.topCoinSpendContext,
-          value: report.topSignals.topCoinSpendContext.key || copy.noTopSignal,
-          count: report.topSignals.topCoinSpendContext.count,
-        },
-        {
-          label: copy.topMiniApp,
-          value: report.topSignals.topMiniApp.key || copy.noTopSignal,
-          count: report.topSignals.topMiniApp.count,
-        },
-        {
-          label: copy.topScene,
-          value: report.topSignals.topScene.key || copy.noTopSignal,
-          count: report.topSignals.topScene.count,
-        },
-        {
-          label: copy.topOnboardingViewStep,
-          value: report.topSignals.topOnboardingViewStep.key || copy.noTopSignal,
-          count: report.topSignals.topOnboardingViewStep.count,
-        },
-        {
-          label: copy.topOnboardingCompleteStep,
-          value: report.topSignals.topOnboardingCompletionStep.key || copy.noTopSignal,
-          count: report.topSignals.topOnboardingCompletionStep.count,
-        },
-        {
-          label: copy.topHottestDay,
-          value: report.topSignals.hottestDay.key ? formatDayLabel(report.topSignals.hottestDay.key, language) : copy.noTopSignal,
-          count: report.topSignals.hottestDay.count,
-        },
-      ]
-    : [];
-
-  const dailyInsightsSourceValue =
-    dailyInsightsSource === 'model'
-      ? copy.dailyInsightsSourceModel
-      : dailyInsightsSource === 'fallback'
-        ? copy.dailyInsightsSourceFallback
-        : copy.dailyInsightsSourceUnavailable;
 
   if (loading) {
     return (
-      <div className={`rounded-[24px] border p-6 text-center ${isDark ? 'border-slate-700 bg-slate-800/50 text-slate-300' : 'border-slate-100 bg-slate-50 text-slate-600'}`}>
-        <RefreshCw size={18} className="mx-auto mb-3 animate-spin text-emerald-500" />
-        <p className="text-sm font-bold">{copy.loading}</p>
+      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 text-center">
+        <TimerReset className={`h-8 w-8 animate-spin ${isDark ? 'text-emerald-300' : 'text-emerald-500'}`} />
+        <p className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{copy.loading}</p>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !report) {
     return (
-      <div className={`rounded-[24px] border p-6 text-center ${isDark ? 'border-red-900/50 bg-red-950/30 text-red-200' : 'border-red-100 bg-red-50 text-red-500'}`}>
-        <p className="mb-4 text-sm font-bold">{error || copy.error}</p>
-        <Button onClick={onRetry} className="!rounded-2xl !bg-slate-900 !px-5 !py-3 !text-white">
-          {copy.retry}
-        </Button>
+      <div className={`rounded-[28px] border p-6 text-center ${isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-200 bg-slate-50'}`}>
+        <p className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{error || copy.error}</p>
+        <div className="mt-4 flex justify-center">
+          <Button onClick={onRetry} variant="secondary" icon={<RefreshCw size={16} />}>
+            {copy.retry}
+          </Button>
+        </div>
       </div>
     );
   }
 
-  if (!report) {
-    return null;
-  }
+  const summaryCards = [
+    { label: copy.totalEvents, value: formatNumber(report.totalEvents) },
+    { label: copy.avgTimeToValue, value: formatDurationMs(report.timeToFirstValue.averageMs, language) },
+    { label: copy.withinTarget, value: formatPercent(report.timeToFirstValue.withinTargetRate) },
+    { label: copy.dailyInsightsSource, value: dailyInsightsSource === 'fallback' ? 'fallback' : dailyInsightsSource === 'model' ? 'model' : 'n/a' },
+    { label: copy.currentRange, value: report.range?.label || '-' },
+  ];
+
+  const comparisonCards = report.comparison.enabled && report.comparison.deltas
+    ? [
+        { label: copy.totalEvents, value: report.comparison.deltas.totalEvents, suffix: '' },
+        { label: copy.avgTimeToValue, value: report.comparison.deltas.averageMs, suffix: 'ms' },
+        { label: copy.withinTarget, value: report.comparison.deltas.withinTargetRate * 100, suffix: 'pp' },
+        { label: 'Coins spent', value: report.comparison.deltas.coinSpent, suffix: '' },
+      ]
+    : [];
+
+  const funnelData = [
+    { step: 'Share', count: report.funnel.shareCount },
+    { step: 'Open', count: report.funnel.inviteOpenCount },
+    { step: 'Install', count: report.funnel.installCount },
+    { step: 'Reward', count: report.funnel.rewardGrantedCount },
+  ];
+
+  const trendData = report.comparison.enabled && report.comparison.trends.length > 0
+    ? report.comparison.trends.map((item, index) => ({
+        label: formatDateLabel(item.currentDateKey || item.previousDateKey || String(index + 1), language),
+        current: item.currentCount,
+        previous: item.previousCount,
+      }))
+    : report.trends.eventsByDay.map((item) => ({
+        label: formatDateLabel(item.dateKey, language),
+        current: item.count,
+        previous: 0,
+      }));
+
+  const breakdownSections = [
+    { title: 'Coin spend contexts', values: report.productHealth.coinSpendByContext },
+    { title: 'Ad reward placements', values: report.productHealth.adRewardsByPlacement },
+    { title: 'Mini apps opened', values: report.productHealth.miniAppOpenByApp },
+    { title: 'Scenes changed', values: report.productHealth.sceneChangeByScene },
+  ];
+
+  const journeyRows = journeyDebug ? [
+    ['Profile', journeyDebug.profileName],
+    ['Stage', journeyDebug.lifecycleStage],
+    ['Mode', journeyDebug.lifecycleMode],
+    ['Memory quality', journeyDebug.memoryQuality],
+    ['Days since first reading', String(journeyDebug.daysSinceFirstReading ?? '-')],
+    ['Updated at', formatDateTime(journeyDebug.updatedAt, language)],
+  ] : [];
 
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
-          <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.totalEvents}</p>
-          <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{report.totalEvents}</p>
-        </div>
-        <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
-          <div className="flex items-center gap-2">
-            <TimerReset size={14} className="text-emerald-500" />
-            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.avgTimeToValue}</p>
-          </div>
-          <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatDurationMs(report.timeToFirstValue.averageMs, language)}</p>
-        </div>
-        <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
-          <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.withinTarget}</p>
-          <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatPercent(report.timeToFirstValue.withinTargetRate)}</p>
-        </div>
-        <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
-          <div className="flex items-center gap-2">
-            <BarChart3 size={14} className="text-emerald-500" />
-            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.dailyInsightsSourceLabel}</p>
-          </div>
-          <p className={`mt-3 text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{dailyInsightsSourceValue}</p>
-          <p className={`mt-2 text-xs font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.dailyInsightsSourceDesc}</p>
-        </div>
-      </div>
-
-      <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
-        <div className="mb-4">
-          <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.funnelTitle}</p>
-          <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.funnelDescription}</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className={`min-w-0 rounded-[24px] border p-3 ${isDark ? 'border-slate-700 bg-slate-950/50' : 'border-slate-100 bg-white'}`}>
-            <div className="h-52">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={funnelStages}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} vertical={false} />
-                  <XAxis dataKey="label" tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill={isDark ? '#34D399' : '#10B981'} radius={[10, 10, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            {funnelRates.map((rate) => (
-              <div key={rate.label} className={`rounded-[22px] border p-4 ${isDark ? 'border-emerald-900/40 bg-emerald-950/20' : 'border-emerald-100 bg-emerald-50/80'}`}>
-                <p className={`text-xs font-bold ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{rate.label}</p>
-                <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{rate.value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        <div className={`min-w-0 rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
-          <div className="mb-4">
-            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.qualityTitle}</p>
-            <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.qualityDescription}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {qualityCards.map((metric) => (
-              <div key={metric.label} className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-white'}`}>
-                <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{metric.label}</p>
-                <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{metric.value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
-          <div className="mb-4">
-            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.trendsTitle}</p>
-            <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.trendsDescription}</p>
-          </div>
-
-          {trendData.every((item) => item.count === 0) ? (
-            <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.trendsNoData}</p>
-          ) : (
-            <div className={`min-w-0 rounded-[24px] border p-3 ${isDark ? 'border-slate-700 bg-slate-950/50' : 'border-slate-100 bg-white'}`}>
-              <div className="h-52">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} vertical={false} />
-                    <XAxis dataKey="label" tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} domain={[0, trendMax]} />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="count" stroke={isDark ? '#34D399' : '#10B981'} fill={isDark ? 'rgba(52, 211, 153, 0.22)' : 'rgba(16, 185, 129, 0.18)'} strokeWidth={3} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
-        <div className="mb-4">
-          <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.topSignalsTitle}</p>
-          <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.topSignalsDescription}</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
-          {topSignals.map((signal) => (
-            <div key={signal.label} className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{signal.label}</p>
-              <p className={`mt-2 text-sm font-black leading-snug ${isDark ? 'text-white' : 'text-slate-900'}`}>{signal.value}</p>
-              <p className={`mt-2 text-[11px] font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>{signal.count}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
-        <div className="mb-4">
-          <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{geminiCostCopy.title}</p>
-          <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.description}</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-emerald-900/40 bg-emerald-950/20' : 'border-emerald-100 bg-emerald-50/80'}`}>
-            <p className={`text-xs font-bold ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{geminiCostCopy.runtimeAnnual}</p>
-            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.runtimeAnnualCostPerUser)}</p>
-          </div>
-          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-            <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.legacyAnnual}</p>
-            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.legacyAnnualCostPerUser)}</p>
-          </div>
-          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-amber-900/40 bg-amber-950/20' : 'border-amber-100 bg-amber-50/80'}`}>
-            <p className={`text-xs font-bold ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>{geminiCostCopy.annualSavings}</p>
-            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.annualSavingsPerUser)}</p>
-            <p className={`mt-1 text-[11px] font-bold ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>{formatPercent(geminiCost.annualSavingsRate, 1)}</p>
-          </div>
-          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-cyan-900/40 bg-cyan-950/20' : 'border-cyan-100 bg-cyan-50/80'}`}>
-            <p className={`text-xs font-bold ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{geminiCostCopy.modeledMonthly10k}</p>
-            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.modeledMonthlyCostAt10kDau, 0)}</p>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
-          {geminiCost.pricingCards.map((card) => (
-            <div key={card.model} className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{card.model}</p>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <span className={`text-[11px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Input</span>
-                <span className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(card.inputRateUsdPerMillion, 2)} / 1M</span>
-              </div>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <span className={`text-[11px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Output</span>
-                <span className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(card.outputRateUsdPerMillion, 2)} / 1M</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/50' : 'border-white/80 bg-white'}`}>
-            <div className="mb-3">
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{geminiCostCopy.lifecycleTitle}</p>
-              <p className={`mt-1 text-[11px] font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.lifecycleDescription}</p>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={geminiCost.stageCostRows}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} vertical={false} />
-                  <XAxis dataKey="label" tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => formatUsd(Number(value), 4)} />
-                  <Tooltip formatter={(value: number) => formatUsd(Number(value), 4)} />
-                  <Bar dataKey="runtimeDailyCost" name={geminiCostCopy.currentRuntime} fill={isDark ? '#34D399' : '#10B981'} radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="legacyDailyCost" name={geminiCostCopy.legacyRuntime} fill={isDark ? '#94A3B8' : '#64748B'} radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/50' : 'border-white/80 bg-white'}`}>
-            <div className="mb-3">
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{geminiCostCopy.monthlyScaleTitle}</p>
-              <p className={`mt-1 text-[11px] font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.monthlyScaleDescription}</p>
-            </div>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={geminiCost.monthlyScaleRows}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} vertical={false} />
-                  <XAxis dataKey="dau" tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}k`} />
-                  <YAxis tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => formatUsd(Number(value), 0)} />
-                  <Tooltip formatter={(value: number) => formatUsd(Number(value), 0)} />
-                  <Bar dataKey="runtimeMonthlyCost" name={geminiCostCopy.currentRuntime} fill={isDark ? '#22D3EE' : '#0891B2'} radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="legacyMonthlyCost" name={geminiCostCopy.legacyRuntime} fill={isDark ? '#94A3B8' : '#94A3B8'} radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
-          {geminiCost.monthlyScaleRows.map((row) => (
-            <div key={row.dau} className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{row.dau.toLocaleString('en-US')} DAU</p>
-              <p className={`mt-2 text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(row.runtimeMonthlyCost, 0)}</p>
-              <p className={`mt-1 text-[11px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{geminiCostCopy.legacyRuntime}: {formatUsd(row.legacyMonthlyCost, 0)}</p>
-              <p className={`mt-2 text-[11px] font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>{geminiCostCopy.monthlySavingsShort}: {formatUsd(row.monthlySavings, 0)}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className={`mt-4 rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{geminiCostCopy.pricingSource}</p>
-            <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCost.pricingSourceLabel}</p>
-          </div>
-          <p className={`mt-2 text-[11px] font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCost.note}</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => (
-          <div key={metric.label} className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-white'}`}>
-            <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{metric.label}</p>
-            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{metric.value}</p>
+    <div className="space-y-8">
+      <div className="grid gap-4 md:grid-cols-5">
+        {summaryCards.map((card) => (
+          <div key={card.label} className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-200 bg-slate-50/80'}`}>
+            <p className={`text-[11px] font-black uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{card.label}</p>
+            <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{card.value}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-        {breakdownSections.map((section) => {
-          const entries = Object.entries(section.values || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
-
-          return (
-            <div key={section.title} className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{section.title}</p>
-              {entries.length === 0 ? (
-                <p className={`mt-3 text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.emptyBreakdown}</p>
-              ) : (
-                <div className="mt-3 space-y-2">
-                  {entries.map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between gap-3">
-                      <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{key}</span>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black ${isDark ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'}`}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
+      <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className={`text-[11px] font-black uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.generatedAt}</p>
+            <p className={`mt-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{formatDateTime(report.generatedAt, language)}</p>
+          </div>
+          {report.comparison.enabled && report.comparison.previousRange ? (
+            <div>
+              <p className={`text-[11px] font-black uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.previousRange}</p>
+              <p className={`mt-2 text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{report.comparison.previousRange.label}</p>
             </div>
-          );
-        })}
+          ) : null}
+        </div>
       </div>
 
-      {journeyDebug && (
-        <div className={`rounded-[28px] border p-5 ${isDark ? 'border-amber-900/40 bg-amber-950/15' : 'border-amber-100 bg-amber-50/80'}`}>
-          <div className="mb-4">
-            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-amber-300/70' : 'text-amber-700/70'}`}>Journey Memory Debug</p>
-            <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-              Current lifecycle and long-arc memory snapshot for the active profile.
-            </p>
+      {comparisonCards.length > 0 ? (
+        <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp className={`h-4 w-4 ${isDark ? 'text-emerald-300' : 'text-emerald-500'}`} />
+            <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.comparisonTitle}</h2>
           </div>
-
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
-            <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Profile</p>
-              <p className={`mt-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{journeyDebug.profileName || journeyDebug.profileId}</p>
-              <p className={`mt-1 text-[11px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{journeyDebug.profileId}</p>
-            </div>
-            <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Lifecycle</p>
-              <p className={`mt-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{journeyDebug.lifecycleStage}</p>
-              <p className={`mt-1 text-[11px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                {journeyDebug.lifecycleMode}
-                {typeof journeyDebug.daysSinceFirstReading === 'number' ? ` · day ${journeyDebug.daysSinceFirstReading + 1}` : ''}
-              </p>
-            </div>
-            <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Memory Quality</p>
-              <p className={`mt-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{journeyDebug.memoryQuality}</p>
-              <p className={`mt-1 text-[11px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{formatUnlockedAt(journeyDebug.updatedAt, language)}</p>
-            </div>
-            <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Journey Summary Status</p>
-              <p className={`mt-2 text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {journeyDebug.journeySummary ? 'Available' : 'Empty'}
-              </p>
-              <p className={`mt-1 text-[11px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                {journeyDebug.journeySummary ? `${journeyDebug.journeySummary.length} chars` : 'Waiting for richer history'}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
-            <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Recent Summary</p>
-              <p className={`mt-2 text-sm font-medium leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                {journeyDebug.recentSummary || 'No recent summary yet.'}
-              </p>
-            </div>
-            <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Conversation Digest</p>
-              <p className={`mt-2 text-sm font-medium leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                {journeyDebug.conversationDigest || 'No long-thread digest yet.'}
-              </p>
-            </div>
-            <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
-              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Journey Summary</p>
-              <p className={`mt-2 text-sm font-medium leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                {journeyDebug.journeySummary || 'Journey summary will appear once the user builds enough layered history.'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.recentEvents}</p>
-            <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatUnlockedAt(report.generatedAt, language)}</p>
-          </div>
-          <div className={`rounded-full px-3 py-1 text-xs font-black ${isDark ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-700 shadow-sm'}`}>
-            {report.recentEvents.length}
-          </div>
-        </div>
-
-        {report.recentEvents.length === 0 ? (
-          <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.noRecentEvents}</p>
-        ) : (
-          <div className="space-y-3">
-            {report.recentEvents.map((event, index) => (
-              <div key={`${event.name}-${event.timestamp}-${index}`} className={`rounded-[20px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/70' : 'border-slate-100 bg-white'}`}>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className={`text-xs font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{event.name}</span>
-                  <span className={`text-[11px] font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatUnlockedAt(event.timestamp, language)}</span>
-                </div>
-                <p className={`text-xs font-medium leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{summarizeEventPayload(event.payload)}</p>
+          <div className="grid gap-4 md:grid-cols-4">
+            {comparisonCards.map((item) => (
+              <div key={item.label} className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-950/70' : 'border-slate-100 bg-slate-50'}`}>
+                <p className={`text-xs font-black uppercase tracking-[0.14em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{item.label}</p>
+                <p className={`mt-2 text-2xl font-black ${deltaTone(item.value)}`}>{item.value > 0 ? '+' : ''}{item.value}{item.suffix}</p>
+                <p className={`mt-1 text-xs ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.compareDelta}</p>
               </div>
             ))}
           </div>
-        )}
+        </div>
+      ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_1fr]">
+        <section className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+          <div className="mb-4 flex items-center gap-2">
+            <BarChart3 className={`h-4 w-4 ${isDark ? 'text-emerald-300' : 'text-emerald-500'}`} />
+            <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.funnelTitle}</h2>
+          </div>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={funnelData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
+                <XAxis dataKey="step" stroke={isDark ? '#94a3b8' : '#64748b'} />
+                <YAxis stroke={isDark ? '#94a3b8' : '#64748b'} allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#10b981" radius={[12, 12, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className={`rounded-2xl px-4 py-3 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]">Share �� Open</p>
+              <p className="mt-1 text-xl font-black">{formatPercent(report.funnel.shareToOpenRate)}</p>
+            </div>
+            <div className={`rounded-2xl px-4 py-3 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]">Open �� Install</p>
+              <p className="mt-1 text-xl font-black">{formatPercent(report.funnel.openToInstallRate)}</p>
+            </div>
+            <div className={`rounded-2xl px-4 py-3 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]">Install �� Reward</p>
+              <p className="mt-1 text-xl font-black">{formatPercent(report.funnel.installToRewardRate)}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+          <div className="mb-4 flex items-center gap-2">
+            <TrendingUp className={`h-4 w-4 ${isDark ? 'text-emerald-300' : 'text-emerald-500'}`} />
+            <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.trendTitle}</h2>
+          </div>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
+                <XAxis dataKey="label" stroke={isDark ? '#94a3b8' : '#64748b'} />
+                <YAxis stroke={isDark ? '#94a3b8' : '#64748b'} allowDecimals={false} />
+                <Tooltip />
+                <Area type="monotone" dataKey="current" stroke="#10b981" fill="#10b981" fillOpacity={0.2} strokeWidth={3} />
+                {report.comparison.enabled ? (
+                  <Area type="monotone" dataKey="previous" stroke="#64748b" fill="#64748b" fillOpacity={0.12} strokeWidth={2} />
+                ) : null}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <section className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+          <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.qualityTitle}</h2>
+          <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.qualityDescription}</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]">First reading success</p>
+              <p className="mt-2 text-2xl font-black">{formatPercent(report.quality.firstReadingSuccessRate)}</p>
+            </div>
+            <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]">Invite reward failure</p>
+              <p className="mt-2 text-2xl font-black">{formatPercent(report.quality.inviteRewardFailureRate)}</p>
+            </div>
+            <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]">Active days</p>
+              <p className="mt-2 text-2xl font-black">{formatNumber(report.quality.activeDays)}</p>
+            </div>
+            <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+              <p className="text-xs font-bold uppercase tracking-[0.14em]">Avg events / active day</p>
+              <p className="mt-2 text-2xl font-black">{report.quality.averageEventsPerActiveDay}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+          <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.productBreakdown}</h2>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {breakdownSections.map((section) => (
+              <div key={section.title} className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-slate-50'}`}>
+                <p className={`mb-3 text-xs font-black uppercase tracking-[0.14em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{section.title}</p>
+                {renderKeyValueRows(section.values, copy.noData, isDark)}
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      <section className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+        <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.costTitle}</h2>
+        <div className="mt-4 grid gap-4 md:grid-cols-4">
+          <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em]">Runtime annual / user</p>
+            <p className="mt-2 text-2xl font-black">{formatUsd(geminiCost.runtimeAnnualCostPerUser)}</p>
+          </div>
+          <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em]">Legacy annual / user</p>
+            <p className="mt-2 text-2xl font-black">{formatUsd(geminiCost.legacyAnnualCostPerUser)}</p>
+          </div>
+          <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em]">Annual savings / user</p>
+            <p className="mt-2 text-2xl font-black text-emerald-500">{formatUsd(geminiCost.annualSavingsPerUser)}</p>
+          </div>
+          <div className={`rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-50'}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em]">Monthly @ 10k DAU</p>
+            <p className="mt-2 text-2xl font-black">{formatUsd(geminiCost.modeledMonthlyCostAt10kDau, 2)}</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-6 xl:grid-cols-[1.1fr_1fr]">
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={geminiCost.stageCostRows.map((row) => ({ label: row.label, runtime: Number(row.runtimeDailyCost.toFixed(4)), legacy: Number(row.legacyDailyCost.toFixed(4)) }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
+                <XAxis dataKey="label" stroke={isDark ? '#94a3b8' : '#64748b'} />
+                <YAxis stroke={isDark ? '#94a3b8' : '#64748b'} />
+                <Tooltip />
+                <Bar dataKey="runtime" fill="#10b981" radius={[10, 10, 0, 0]} />
+                <Bar dataKey="legacy" fill="#94a3b8" radius={[10, 10, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="space-y-3">
+            {geminiCost.monthlyScaleRows.map((row) => (
+              <div key={row.dau} className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-slate-50'}`}>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em]">{formatNumber(row.dau)} DAU</p>
+                    <p className={`mt-1 text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(row.runtimeMonthlyCost, 2)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Legacy {formatUsd(row.legacyMonthlyCost, 2)}</p>
+                    <p className="mt-1 text-sm font-black text-emerald-500">Save {formatUsd(row.monthlySavings, 2)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <section className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+          <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.recentEvents}</h2>
+          <div className="mt-4 space-y-3">
+            {report.recentEvents.length === 0 ? (
+              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.noRecentEvents}</p>
+            ) : report.recentEvents.map((event, index) => (
+              <div key={`${event.name}-${index}`} className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-slate-50'}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{event.name}</p>
+                    <p className={`mt-1 text-xs ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{formatDateTime(event.timestamp, language)}</p>
+                  </div>
+                  <p className={`max-w-[60%] text-right text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{summarizePayload(event.payload)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-200 bg-white'}`}>
+          <h2 className={`text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.journeyDebug}</h2>
+          <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.journeyDescription}</p>
+          {!journeyDebug ? (
+            <p className={`mt-4 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.noData}</p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                {journeyRows.map(([label, value]) => (
+                  <div key={label} className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-slate-50'}`}>
+                    <p className={`text-xs font-black uppercase tracking-[0.14em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{label}</p>
+                    <p className={`mt-2 text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-slate-50'}`}>
+                <p className={`text-xs font-black uppercase tracking-[0.14em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Journey summary</p>
+                <p className={`mt-2 whitespace-pre-wrap text-sm leading-6 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{journeyDebug.journeySummary || copy.noData}</p>
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-slate-50'}`}>
+                <p className={`text-xs font-black uppercase tracking-[0.14em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Conversation digest</p>
+                <p className={`mt-2 whitespace-pre-wrap text-sm leading-6 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{journeyDebug.conversationDigest || journeyDebug.recentSummary || copy.noData}</p>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

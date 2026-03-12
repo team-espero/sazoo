@@ -19,7 +19,7 @@ export function createEventStore(logPath) {
       await mkdir(directory, { recursive: true });
       await appendFile(resolvedPath, `${JSON.stringify(event)}\n`, 'utf8');
     },
-    async summarize() {
+    async summarize(options = {}) {
       let raw = '';
       try {
         raw = await readFile(resolvedPath, 'utf8');
@@ -35,7 +35,7 @@ export function createEventStore(logPath) {
         .map((line) => line.trim())
         .filter(Boolean);
       const events = lines.map(safeParseLine).filter(Boolean);
-      return buildAnalyticsReport(events);
+      return buildAnalyticsReport(events, options);
     },
   };
 }

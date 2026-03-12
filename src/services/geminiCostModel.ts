@@ -155,22 +155,22 @@ const getStageLabel = (stage: LifecycleCostBucketId, language: GeminiDashboardLa
       days181to365: 'Days 181-365',
     },
     ko: {
-      day1: '1일차',
-      days2to7: '2-7일차',
-      days8to14: '8-14일차',
-      days15to28: '15-28일차',
-      days29to60: '29-60일차',
-      days61to180: '61-180일차',
-      days181to365: '181-365일차',
+      day1: '\u0031\uC77C\uCC28',
+      days2to7: '\u0032-\u0037\uC77C\uCC28',
+      days8to14: '\u0038-\u0031\u0034\uC77C\uCC28',
+      days15to28: '\u0031\u0035-\u0032\u0038\uC77C\uCC28',
+      days29to60: '\u0032\u0039-\u0036\u0030\uC77C\uCC28',
+      days61to180: '\u0036\u0031-\u0031\u0038\u0030\uC77C\uCC28',
+      days181to365: '\u0031\u0038\u0031-\u0033\u0036\u0035\uC77C\uCC28',
     },
     ja: {
-      day1: '1日目',
-      days2to7: '2-7日目',
-      days8to14: '8-14日目',
-      days15to28: '15-28日目',
-      days29to60: '29-60日目',
-      days61to180: '61-180日目',
-      days181to365: '181-365日目',
+      day1: '\u0031\u65E5\u76EE',
+      days2to7: '\u0032-\u0037\u65E5\u76EE',
+      days8to14: '\u0038-\u0031\u0034\u65E5\u76EE',
+      days15to28: '\u0031\u0035-\u0032\u0038\u65E5\u76EE',
+      days29to60: '\u0032\u0039-\u0036\u0030\u65E5\u76EE',
+      days61to180: '\u0036\u0031-\u0031\u0038\u0030\u65E5\u76EE',
+      days181to365: '\u0031\u0038\u0031-\u0033\u0036\u0035\u65E5\u76EE',
     },
   };
 
@@ -178,17 +178,17 @@ const getStageLabel = (stage: LifecycleCostBucketId, language: GeminiDashboardLa
 };
 
 const getPricingSourceLabel = (language: GeminiDashboardLanguage) => {
-  if (language === 'ko') return '공식 기준: Gemini API pricing';
-  if (language === 'ja') return '公式基準: Gemini API pricing';
+  if (language === 'ko') return '\uACF5\uC2DD \uAE30\uC900: Gemini API pricing';
+  if (language === 'ja') return '\u516C\u5F0F\u57FA\u6E96: Gemini API pricing';
   return 'Official source: Gemini API pricing';
 };
 
 const getNote = (language: GeminiDashboardLanguage) => {
   if (language === 'ko') {
-    return '대표 토큰 실측값과 현재 기본 런타임 가정을 기준으로 계산한 추정치입니다. Current Runtime은 daily insights가 Flash-Lite를 우선 사용하는 최적화 적용 상태를 뜻합니다.';
+    return '\uB300\uD45C \uD504\uB86C\uD504\uD2B8 \uD1A0\uD070 \uC2E4\uCE21\uAC12\uACFC \uD604\uC7AC \uAE30\uBCF8 \uB7F0\uD0C0\uC784 \uAD6C\uC131\uC744 \uBC14\uD0D5\uC73C\uB85C \uACC4\uC0B0\uD55C \uCD94\uC815\uCE58\uC785\uB2C8\uB2E4. Current Runtime\uC740 daily insights\uAC00 Flash-Lite\uB97C \uC6B0\uC120 \uC0AC\uC6A9\uD558\uB294 \uCD5C\uC801\uD654 \uACBD\uB85C\uB97C \uBC18\uC601\uD569\uB2C8\uB2E4.';
   }
   if (language === 'ja') {
-    return '代表的なトークン実測値と現在のデフォルト実行構成をもとにした推定値です。Current Runtime は daily insights が Flash-Lite を優先する最適化後の状態を示します。';
+    return '\u4EE3\u8868\u7684\u306A\u30D7\u30ED\u30F3\u30D7\u30C8\u306E\u30C8\u30FC\u30AF\u30F3\u5B9F\u6E2C\u5024\u3068\u73FE\u5728\u306E\u30E9\u30F3\u30BF\u30A4\u30E0\u69CB\u6210\u3092\u57FA\u6E96\u306B\u3057\u305F\u63A8\u5B9A\u5024\u3067\u3059\u3002Current Runtime \u306B\u306F daily insights \u304C Flash-Lite \u3092\u512A\u5148\u3059\u308B\u6700\u9069\u5316\u30D1\u30B9\u304C\u53CD\u6620\u3055\u308C\u3066\u3044\u307E\u3059\u3002';
   }
   return 'Estimated from representative prompt token counts and the current default runtime mix. Current Runtime reflects the optimized daily-insights path that prioritizes Flash-Lite.';
 };
