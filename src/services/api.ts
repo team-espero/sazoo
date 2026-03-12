@@ -182,6 +182,7 @@ export interface LaunchAnalyticsReport {
     invite_reward_claimed: number;
     invite_reward_granted: number;
     invite_reward_duplicate: number;
+    invite_reward_self_blocked: number;
     invite_reward_claim_failed: number;
     first_reading_success: number;
     first_reading_failure: number;
@@ -191,6 +192,21 @@ export interface LaunchAnalyticsReport {
     ad_reward_granted: number;
     scene_change: number;
     mini_app_open: number;
+  };
+  funnel: {
+    shareCount: number;
+    inviteOpenCount: number;
+    installCount: number;
+    rewardGrantedCount: number;
+    shareToOpenRate: number;
+    openToInstallRate: number;
+    installToRewardRate: number;
+  };
+  quality: {
+    firstReadingSuccessRate: number;
+    inviteRewardFailureRate: number;
+    activeDays: number;
+    averageEventsPerActiveDay: number;
   };
   timeToFirstValue: {
     samples: number;
@@ -207,6 +223,38 @@ export interface LaunchAnalyticsReport {
     adRewardsByPlacement: Record<string, number>;
     miniAppOpenByApp: Record<string, number>;
     sceneChangeByScene: Record<string, number>;
+  };
+  trends: {
+    eventsByDay: Array<{
+      dateKey: string;
+      count: number;
+    }>;
+  };
+  topSignals: {
+    topCoinSpendContext: {
+      key: string;
+      count: number;
+    };
+    topMiniApp: {
+      key: string;
+      count: number;
+    };
+    topScene: {
+      key: string;
+      count: number;
+    };
+    topOnboardingViewStep: {
+      key: string;
+      count: number;
+    };
+    topOnboardingCompletionStep: {
+      key: string;
+      count: number;
+    };
+    hottestDay: {
+      key: string;
+      count: number;
+    };
   };
   recentEvents: Array<{
     name: string;
