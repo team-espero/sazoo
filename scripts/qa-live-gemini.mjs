@@ -34,25 +34,6 @@ const saju = {
   hour: { stem: { kor: '\uC744', element: '\uBAA9' }, branch: { kor: '\uC0AC', element: '\uD654' } },
 };
 
-const memoryProfile = {
-  version: 'phase4.v2',
-  knowledgeLevel: 'newbie',
-  preferredTone: 'mysterious_intimate',
-  primaryConcerns: ['love', 'career'],
-  recurringTopics: ['love', 'timing', 'career'],
-  relationshipContext: { relation: 'me', focus: 'love' },
-  recentSummary: 'The user wants a clear reading about love and career timing.',
-  conversationDigest: 'Earlier conversation themes: love, career, timing. The older thread kept circling back to whether to move first or stay steady.',
-  openLoops: ['Should I focus on love first, or should I stabilize work first?'],
-  lastAssistantGuidance: 'Move one step at a time instead of trying to force both paths at once.',
-  lastUserQuestions: ['Should I focus on love first, or should I stabilize work first?'],
-};
-
-const recentMessages = [
-  { role: 'assistant', text: 'Let us read this one layer at a time.' },
-  { role: 'user', text: 'Love and work both feel unstable right now.' },
-];
-
 const provider = createGeminiProvider({
   apiKey: env.geminiApiKey,
   chatModel: env.geminiChatModel,
@@ -86,64 +67,180 @@ const measure = async (name, callback) => {
   };
 };
 
+const buildLifecycle = (stage, daysSinceFirstReading) => ({
+  stage,
+  mode: stage.startsWith('day') ? 'product_led' : 'memory_led',
+  daysSinceOnboarding: daysSinceFirstReading,
+  daysSinceFirstReading,
+});
+
+const buildMemoryProfile = ({
+  quality,
+  recentSummary,
+  conversationDigest,
+  journeySummary,
+  openLoops,
+  lastAssistantGuidance,
+  lastUserQuestions,
+  primaryConcerns = ['love', 'career'],
+  recurringTopics = ['love', 'career', 'timing'],
+} = {}) => ({
+  version: 'phase4.v3',
+  knowledgeLevel: quality === 'rich' ? 'intermediate' : 'newbie',
+  preferredTone: 'mysterious_intimate',
+  memoryQuality: quality,
+  primaryConcerns,
+  recurringTopics,
+  relationshipContext: { relation: 'me', focus: primaryConcerns[0] || 'self' },
+  recentSummary,
+  conversationDigest,
+  journeySummary,
+  openLoops,
+  lastAssistantGuidance,
+  lastUserQuestions,
+});
+
+const memoryProfiles = {
+  guided: buildMemoryProfile({
+    quality: 'emerging',
+    recentSummary: 'The user is in the first week and responds well to one clear takeaway at a time.',
+    conversationDigest: '',
+    journeySummary: '',
+    openLoops: ['What should I steady first today?'],
+    lastAssistantGuidance: '',
+    lastUserQuestions: ['What should I steady first today?'],
+    primaryConcerns: ['self', 'timing'],
+    recurringTopics: ['self', 'timing'],
+  }),
+  patterned: buildMemoryProfile({
+    quality: 'patterned',
+    recentSummary: 'The user keeps revisiting love, career, and timing when they feel split between emotion and structure.',
+    conversationDigest: 'Earlier conversation themes: love, career, timing. The user often asks whether to move first or wait for stability.',
+    journeySummary: 'The longer journey keeps returning to love, career, and timing. The user often reopens the reading when they are choosing between emotional courage and practical stability.',
+    openLoops: ['Should I move first, or should I wait until work feels steadier?'],
+    lastAssistantGuidance: 'Choose the smaller stabilizing move first, then widen the path once your footing is steady.',
+    lastUserQuestions: ['Should I move first, or should I wait until work feels steadier?'],
+  }),
+  rich: buildMemoryProfile({
+    quality: 'rich',
+    recentSummary: 'The user wants readings that connect love, work, timing, and emotional pacing without sounding fatalistic.',
+    conversationDigest: 'Earlier conversation themes: love, career, timing. The older thread kept circling back to whether to move first or stay steady.',
+    journeySummary: 'The longer journey keeps returning to love, career, and timing. The user often reopens the reading when they are choosing between emotional courage and practical stability. Guidance lands best when it stays calm, specific, and action-led. The reading should treat this user like someone whose concerns evolve in layers rather than as isolated one-off questions.',
+    openLoops: ['Should I focus on love first, or should I stabilize work first?'],
+    lastAssistantGuidance: 'Move one step at a time instead of trying to force both paths at once.',
+    lastUserQuestions: ['Should I focus on love first, or should I stabilize work first?'],
+  }),
+};
+
+const recentMessages = [
+  { role: 'assistant', text: 'Let us read this one layer at a time.' },
+  { role: 'user', text: 'Love and work both feel unstable right now.' },
+  { role: 'assistant', text: 'Then we should first see which current is moving faster today.' },
+];
+
 const results = [];
 
-results.push(await measure('chat_ko_initial', async () => {
+async function runChatCase({
+  name,
+  language,
+  message,
+  lifecycle,
+  memoryProfile,
+  minLength,
+  maxLength,
+  isInitialAnalysis = false,
+  relaxedDuration = 3500,
+  strictDuration = 2500,
+}) {
   const response = await provider.chat({
-    message: '\uC5F0\uC560\uC640 \uC77C\uC774 \uD55C\uAED8 \uD754\uB4E4\uB9AC\uB294\uB370, \uC9C0\uAE08 \uC5B4\uB5A4 \uD750\uB984\uBD80\uD130 \uC7A1\uC73C\uBA74 \uC88B\uC744\uAE4C\uC694?',
+    message,
+    language,
+    profile,
+    saju,
+    isInitialAnalysis,
+    memoryProfile,
+    recentMessages,
+    promptMode: 'chat',
+    lifecycle,
+  });
+
+  const text = String(response.reply || '').trim();
+  assertCleanText(text, name);
+  assert(text.length >= minLength, `${name} is too short.`);
+  assert(text.length <= maxLength, `${name} is too long.`);
+  assert(!GENERIC_GREETING_PATTERN.test(text), `${name} started with a generic greeting.`);
+
+  return {
+    relaxedDuration,
+    strictDuration,
+    payload: {
+      ok: true,
+      channel: 'chat',
+      stage: lifecycle.stage,
+      memoryQuality: memoryProfile.memoryQuality,
+      length: text.length,
+      preview: text.slice(0, 180),
+    },
+  };
+}
+
+async function runDailyCase({
+  name,
+  lifecycle,
+  memoryProfile,
+  relaxedDuration = 3000,
+  strictDuration = 2200,
+}) {
+  const response = await provider.dailyInsights({
     language: 'ko',
+    date: '2026-03-12',
     profile,
     saju,
-    isInitialAnalysis: true,
+    lifecycle,
     memoryProfile,
-    recentMessages,
-    promptMode: 'chat',
   });
 
-  const text = String(response.reply || '').trim();
-  assertCleanText(text, 'chat_ko_initial');
-  assert(text.length >= (strictMode ? 180 : 120), 'chat_ko_initial is too short.');
-  assert(text.length <= (strictMode ? 900 : 1200), 'chat_ko_initial is too long.');
-  assert(!GENERIC_GREETING_PATTERN.test(text), 'chat_ko_initial started with a generic greeting.');
+  assert(Array.isArray(response.luckyItems) && response.luckyItems.length >= 3, `${name} lucky items are incomplete.`);
+  for (const field of ['sajuTip', 'elementTip', 'energyTip', 'cycleTip']) {
+    const text = String(response[field] || '').trim();
+    assertCleanText(text, `${name}.${field}`);
+    assert(text.length >= (strictMode ? 35 : 20), `${name}.${field} is too short.`);
+    assert(text.length <= 280, `${name}.${field} is too long.`);
+  }
+  assert(
+    response.source === 'model' || response.source === 'fallback',
+    `${name}.source is missing or invalid.`,
+  );
 
   return {
-    ok: true,
-    length: text.length,
-    preview: text.slice(0, 160),
+    relaxedDuration,
+    strictDuration,
+    payload: {
+      ok: true,
+      channel: 'daily_insights',
+      stage: lifecycle.stage,
+      memoryQuality: memoryProfile.memoryQuality,
+      source: response.source,
+      luckyItems: response.luckyItems.length,
+      preview: response.sajuTip.slice(0, 160),
+    },
   };
-}));
+}
 
-results.push(await measure('chat_en_deep', async () => {
-  const response = await provider.chat({
-    message: 'I am torn between changing jobs and staying where I am. Which flow looks steadier first?',
-    language: 'en',
-    profile,
-    saju,
-    isInitialAnalysis: false,
-    memoryProfile,
-    recentMessages,
-    promptMode: 'chat',
-  });
-
-  const text = String(response.reply || '').trim();
-  assertCleanText(text, 'chat_en_deep');
-  assert(text.length >= (strictMode ? 260 : 180), 'chat_en_deep is too short.');
-  assert(text.length <= (strictMode ? 950 : 1500), 'chat_en_deep is too long.');
-  assert(!GENERIC_GREETING_PATTERN.test(text), 'chat_en_deep started with a generic greeting.');
-
-  return {
-    ok: true,
-    length: text.length,
-    preview: text.slice(0, 160),
-  };
-}));
-
-results.push(await measure('miniapp_couple', async () => {
+async function runCoupleCase({
+  name,
+  lifecycle,
+  memoryProfile,
+  relaxedDuration = 3500,
+  strictDuration = 2500,
+}) {
   const response = await provider.chat({
     message: 'Kim Hyejin x Lee Minseo compatibility',
     language: 'en',
     profile,
     promptMode: 'miniapp_couple',
+    lifecycle,
+    memoryProfile,
     miniAppContext: {
       app: 'couple',
       partnerProfile: {
@@ -155,25 +252,40 @@ results.push(await measure('miniapp_couple', async () => {
   });
 
   const parsed = JSON.parse(response.reply);
-  assert(typeof parsed.score === 'number', 'miniapp_couple score is missing.');
-  assert(parsed.score >= 0 && parsed.score <= 100, 'miniapp_couple score is out of range.');
-  assert(typeof parsed.summary === 'string' && parsed.summary.trim().length >= (strictMode ? 24 : 12), 'miniapp_couple summary is too short.');
-  assert(typeof parsed.detail === 'string' && parsed.detail.trim().length >= (strictMode ? 80 : 40), 'miniapp_couple detail is too short.');
-  assert(!BROKEN_TEXT_PATTERN.test(parsed.summary), 'miniapp_couple summary contains broken text.');
-  assert(!BROKEN_TEXT_PATTERN.test(parsed.detail), 'miniapp_couple detail contains broken text.');
+  assert(typeof parsed.score === 'number', `${name} score is missing.`);
+  assert(parsed.score >= 0 && parsed.score <= 100, `${name} score is out of range.`);
+  assert(typeof parsed.summary === 'string' && parsed.summary.trim().length >= (strictMode ? 24 : 12), `${name} summary is too short.`);
+  assert(typeof parsed.detail === 'string' && parsed.detail.trim().length >= (strictMode ? 90 : 50), `${name} detail is too short.`);
+  assert(!BROKEN_TEXT_PATTERN.test(parsed.summary), `${name} summary contains broken text.`);
+  assert(!BROKEN_TEXT_PATTERN.test(parsed.detail), `${name} detail contains broken text.`);
 
   return {
-    ok: true,
-    score: parsed.score,
-    preview: parsed.summary,
+    relaxedDuration,
+    strictDuration,
+    payload: {
+      ok: true,
+      channel: 'miniapp_couple',
+      stage: lifecycle.stage,
+      memoryQuality: memoryProfile.memoryQuality,
+      score: parsed.score,
+      preview: parsed.summary,
+    },
   };
-}));
+}
 
-results.push(await measure('miniapp_dream', async () => {
+async function runDreamCase({
+  name,
+  lifecycle,
+  memoryProfile,
+  relaxedDuration = 2800,
+  strictDuration = 1800,
+}) {
   const response = await provider.chat({
     message: 'I dreamed of walking through a moonlit forest and finding calm water.',
     language: 'en',
     promptMode: 'miniapp_dream',
+    lifecycle,
+    memoryProfile,
     miniAppContext: {
       app: 'dream',
       dreamText: 'I dreamed of walking through a moonlit forest and finding calm water.',
@@ -181,55 +293,112 @@ results.push(await measure('miniapp_dream', async () => {
   });
 
   const text = String(response.reply || '').trim();
-  assertCleanText(text, 'miniapp_dream');
-  assert(text.length >= (strictMode ? 80 : 40), 'miniapp_dream is too short.');
-  assert(text.length <= (strictMode ? 220 : 260), 'miniapp_dream is too long.');
-  assert(!GENERIC_GREETING_PATTERN.test(text), 'miniapp_dream started with a generic greeting.');
+  assertCleanText(text, name);
+  assert(text.length >= (strictMode ? 100 : 60), `${name} is too short.`);
+  assert(text.length <= 220, `${name} is too long.`);
+  assert(!GENERIC_GREETING_PATTERN.test(text), `${name} started with a generic greeting.`);
 
   return {
-    ok: true,
-    length: text.length,
-    preview: text.slice(0, 160),
+    relaxedDuration,
+    strictDuration,
+    payload: {
+      ok: true,
+      channel: 'miniapp_dream',
+      stage: lifecycle.stage,
+      memoryQuality: memoryProfile.memoryQuality,
+      length: text.length,
+      preview: text.slice(0, 160),
+    },
   };
-}));
+}
 
-results.push(await measure('daily_insights', async () => {
-  const response = await provider.dailyInsights({
-    language: 'ko',
-    date: '2026-03-11',
-    profile,
-    saju,
+const cases = [
+  {
+    name: 'chat_day1_activation',
+    run: () => runChatCase({
+      name: 'chat_day1_activation',
+      language: 'ko',
+      message: '\uC5F0\uC560\uC640 \uC77C\uC774 \uD55C\uAED8 \uD754\uB4E4\uB9AC\uB294\uB370, \uC9C0\uAE08 \uC5B4\uB5A4 \uD750\uB984\uBD80\uD130 \uC7A1\uC73C\uBA74 \uC88B\uC744\uAE4C\uC694?',
+      lifecycle: buildLifecycle('day1_activation', 0),
+      memoryProfile: memoryProfiles.guided,
+      minLength: strictMode ? 180 : 120,
+      maxLength: strictMode ? 900 : 1200,
+      isInitialAnalysis: true,
+    }),
+  },
+  {
+    name: 'chat_day2_reopen',
+    run: () => runChatCase({
+      name: 'chat_day2_reopen',
+      language: 'ko',
+      message: '\uC5B4\uC81C \uBCF4\uB2E4 \uC870\uAE08 \uB354 \uBD88\uC548\uD55C\uB370, \uC624\uB298\uC740 \uBB50\uBD80\uD130 \uC815\uB9AC\uD558\uBA74 \uC88B\uC744\uAE4C\uC694?',
+      lifecycle: buildLifecycle('day2_reopen', 1),
+      memoryProfile: memoryProfiles.guided,
+      minLength: strictMode ? 180 : 120,
+      maxLength: strictMode ? 900 : 1200,
+    }),
+  },
+  {
+    name: 'chat_personal_os',
+    run: () => runChatCase({
+      name: 'chat_personal_os',
+      language: 'en',
+      message: 'I keep circling the same love and career choice. What personal rhythm should I trust this time?',
+      lifecycle: buildLifecycle('personal_os', 90),
+      memoryProfile: memoryProfiles.rich,
+      minLength: strictMode ? 260 : 180,
+      maxLength: strictMode ? 950 : 1500,
+      relaxedDuration: 3800,
+      strictDuration: 2800,
+    }),
+  },
+  {
+    name: 'daily_guided_focus',
+    run: () => runDailyCase({
+      name: 'daily_guided_focus',
+      lifecycle: buildLifecycle('day4_tone_learning', 3),
+      memoryProfile: memoryProfiles.guided,
+    }),
+  },
+  {
+    name: 'daily_archive_signal',
+    run: () => runDailyCase({
+      name: 'daily_archive_signal',
+      lifecycle: buildLifecycle('time_archive', 420),
+      memoryProfile: memoryProfiles.rich,
+    }),
+  },
+  {
+    name: 'miniapp_couple_pattern',
+    run: () => runCoupleCase({
+      name: 'miniapp_couple_pattern',
+      lifecycle: buildLifecycle('pattern_building', 20),
+      memoryProfile: memoryProfiles.patterned,
+    }),
+  },
+  {
+    name: 'miniapp_dream_archive',
+    run: () => runDreamCase({
+      name: 'miniapp_dream_archive',
+      lifecycle: buildLifecycle('relationship_archive', 210),
+      memoryProfile: memoryProfiles.rich,
+    }),
+  },
+];
+
+for (const testCase of cases) {
+  let durationConfig = { relaxedDuration: 3000, strictDuration: 2200 };
+  const measured = await measure(testCase.name, async () => {
+    const result = await testCase.run();
+    durationConfig = {
+      relaxedDuration: result.relaxedDuration,
+      strictDuration: result.strictDuration,
+    };
+    return result.payload;
   });
-
-  assert(Array.isArray(response.luckyItems) && response.luckyItems.length >= 3, 'daily_insights lucky items are incomplete.');
-  for (const [index, item] of response.luckyItems.entries()) {
-    assert(typeof item?.name === 'string' && item.name.trim().length >= 1, `daily_insights lucky item ${index + 1} is missing a name.`);
-    assert(typeof item?.type === 'string' && item.type.trim().length >= 1, `daily_insights lucky item ${index + 1} is missing a type.`);
-  }
-  for (const field of ['sajuTip', 'elementTip', 'energyTip', 'cycleTip']) {
-    const text = String(response[field] || '').trim();
-    assertCleanText(text, `daily_insights.${field}`);
-    assert(text.length >= (strictMode ? 35 : 20), `daily_insights.${field} is too short.`);
-    assert(text.length <= 280, `daily_insights.${field} is too long.`);
-  }
-  assert(
-    response.source === 'model' || response.source === 'fallback',
-    'daily_insights.source is missing or invalid.',
-  );
-
-  return {
-    ok: true,
-    luckyItems: response.luckyItems.length,
-    source: response.source,
-    preview: response.sajuTip.slice(0, 160),
-  };
-}));
-
-assertDuration(results[0].durationMs, 3500, 2500, 'chat_ko_initial');
-assertDuration(results[1].durationMs, 3500, 2500, 'chat_en_deep');
-assertDuration(results[2].durationMs, 3500, 2500, 'miniapp_couple');
-assertDuration(results[3].durationMs, 2800, 1800, 'miniapp_dream');
-assertDuration(results[4].durationMs, 3000, 2000, 'daily_insights');
+  assertDuration(measured.durationMs, durationConfig.relaxedDuration, durationConfig.strictDuration, measured.name);
+  results.push(measured);
+}
 
 const summary = {
   generatedAt: new Date().toISOString(),

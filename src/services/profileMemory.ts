@@ -1,10 +1,11 @@
 ﻿import { api, type AppLanguage, type UserProfile } from './api';
 import { KEYS, storage } from './storage';
 
-export const PROFILE_MEMORY_VERSION = 'phase4.v2';
+export const PROFILE_MEMORY_VERSION = 'phase4.v3';
 
 export type MemoryKnowledgeLevel = 'newbie' | 'intermediate' | 'expert';
 export type MemoryPreferredTone = 'mysterious_intimate';
+export type MemoryQuality = 'seed' | 'emerging' | 'patterned' | 'rich';
 
 export type MemoryTopic =
   | 'love'
@@ -21,6 +22,7 @@ export type ProgressiveProfileMemory = {
   profileId: string;
   knowledgeLevel: MemoryKnowledgeLevel;
   preferredTone: MemoryPreferredTone;
+  memoryQuality: MemoryQuality;
   primaryConcerns: string[];
   recurringTopics: Array<{
     topic: string;
@@ -33,6 +35,7 @@ export type ProgressiveProfileMemory = {
   } | null;
   recentSummary: string;
   conversationDigest: string;
+  journeySummary: string;
   openLoops: string[];
   lastAssistantGuidance: string;
   lastUserQuestions: string[];
@@ -43,6 +46,7 @@ export type PromptMemoryProfile = {
   version: string;
   knowledgeLevel: MemoryKnowledgeLevel;
   preferredTone: MemoryPreferredTone;
+  memoryQuality?: MemoryQuality;
   primaryConcerns: string[];
   recurringTopics: string[];
   relationshipContext?: {
@@ -51,6 +55,7 @@ export type PromptMemoryProfile = {
   } | null;
   recentSummary?: string;
   conversationDigest?: string;
+  journeySummary?: string;
   openLoops?: string[];
   lastAssistantGuidance?: string;
   lastUserQuestions?: string[];
@@ -74,6 +79,13 @@ const MAX_TOPICS = 5;
 const MAX_QUESTIONS = 3;
 const MAX_OPEN_LOOPS = 4;
 const MAX_SUMMARY_LENGTH = 260;
+const MAX_JOURNEY_SUMMARY_LENGTH = 520;
+const MEMORY_QUALITY_ORDER: Record<MemoryQuality, number> = {
+  seed: 0,
+  emerging: 1,
+  patterned: 2,
+  rich: 3,
+};
 
 const unique = <T,>(values: T[]) => [...new Set(values.filter(Boolean))];
 const normalizeText = (value: string) => value.replace(/\s+/g, ' ').trim();
@@ -85,6 +97,10 @@ const ellipsize = (value: string, maxLength: number) => {
   }
   return `${normalized.slice(0, Math.max(0, maxLength - 1)).trim()}...`;
 };
+
+const chooseHigherQuality = (left: MemoryQuality, right: MemoryQuality): MemoryQuality => (
+  MEMORY_QUALITY_ORDER[right] > MEMORY_QUALITY_ORDER[left] ? right : left
+);
 
 const isQuestionLike = (message: string) => {
   const normalized = normalizeText(message).toLowerCase();
@@ -122,6 +138,105 @@ const rankTopics = (messages: string[]) => {
       return left[0].localeCompare(right[0]);
     })
     .map(([topic]) => topic);
+};
+
+const resolveMemoryQuality = ({
+  previous,
+  nextTopics,
+  olderDialogueSummary,
+  conversationHistory,
+}: {
+  previous: ProgressiveProfileMemory;
+  nextTopics: string[];
+  olderDialogueSummary: {
+    conversationDigest: string;
+    openLoops: string[];
+    lastAssistantGuidance: string;
+  };
+  conversationHistory: HistoryMessage[];
+}): MemoryQuality => {
+  let signalScore = 0;
+
+  if (nextTopics.length >= 2) signalScore += 1;
+  if ((previous.primaryConcerns || []).length >= 3) signalScore += 1;
+  if ((previous.recurringTopics || []).length >= 3) signalScore += 1;
+  if ((conversationHistory || []).length >= 4) signalScore += 1;
+  if (olderDialogueSummary.conversationDigest) signalScore += 1;
+  if (olderDialogueSummary.openLoops.length >= 1) signalScore += 1;
+  if (olderDialogueSummary.lastAssistantGuidance || previous.lastAssistantGuidance) signalScore += 1;
+  if ((previous.lastUserQuestions || []).length >= 2) signalScore += 1;
+
+  let quality: MemoryQuality = 'seed';
+  if (signalScore >= 2) quality = 'emerging';
+  if (signalScore >= 5) quality = 'patterned';
+  if (signalScore >= 7) quality = 'rich';
+
+  return chooseHigherQuality(previous.memoryQuality || 'seed', quality);
+};
+
+const buildJourneySummary = ({
+  previous,
+  memoryQuality,
+  concern,
+  normalizedQuestion,
+  rankedTopics,
+  olderDialogueSummary,
+}: {
+  previous: ProgressiveProfileMemory;
+  memoryQuality: MemoryQuality;
+  concern?: string | null;
+  normalizedQuestion: string;
+  rankedTopics: string[];
+  olderDialogueSummary: {
+    conversationDigest: string;
+    openLoops: string[];
+    lastAssistantGuidance: string;
+  };
+}) => {
+  if (memoryQuality === 'seed') {
+    return previous.journeySummary || '';
+  }
+
+  const recurringThemes = unique([
+    concern || '',
+    ...rankedTopics,
+    ...(previous.recurringTopics || []).map((item) => item.topic),
+    ...(previous.primaryConcerns || []),
+  ]).slice(0, 4);
+  const focusLabel = recurringThemes.length > 0 ? recurringThemes.join(', ') : 'their current life questions';
+  const relationshipLabel = previous.relationshipContext?.focus || previous.relationshipContext?.relation || '';
+  const dominantOpenLoop = olderDialogueSummary.openLoops[0] || previous.openLoops?.[0] || '';
+  const guidanceAnchor = olderDialogueSummary.lastAssistantGuidance || previous.lastAssistantGuidance || '';
+
+  const parts = [
+    `The longer journey keeps returning to ${focusLabel}.`,
+  ];
+
+  if (memoryQuality === 'emerging') {
+    if (normalizedQuestion) {
+      parts.push(`Right now the user is trying to sort out: ${ellipsize(normalizedQuestion, 140)}.`);
+    }
+    return ellipsize(parts.join(' '), 260);
+  }
+
+  if (relationshipLabel) {
+    parts.push(`This thread is often colored by ${relationshipLabel}.`);
+  }
+
+  if (dominantOpenLoop) {
+    parts.push(`A recurring unresolved angle is: ${ellipsize(dominantOpenLoop, 140)}.`);
+  }
+
+  if (memoryQuality === 'patterned') {
+    return ellipsize(parts.join(' '), 360);
+  }
+
+  if (guidanceAnchor) {
+    parts.push(`Guidance lands best when it stays calm, specific, and action-led, similar to: ${ellipsize(guidanceAnchor, 140)}.`);
+  }
+
+  parts.push('The reading should treat this user like someone whose concerns evolve in layers rather than as isolated one-off questions.');
+  return ellipsize(parts.join(' '), MAX_JOURNEY_SUMMARY_LENGTH);
 };
 
 const summarizeOlderDialogue = ({
@@ -184,11 +299,13 @@ const toPromptMemoryProfile = (memory: ProgressiveProfileMemory): PromptMemoryPr
   version: memory.version || PROFILE_MEMORY_VERSION,
   knowledgeLevel: memory.knowledgeLevel || 'newbie',
   preferredTone: 'mysterious_intimate',
+  memoryQuality: memory.memoryQuality || 'seed',
   primaryConcerns: memory.primaryConcerns.slice(0, MAX_TOPICS),
   recurringTopics: memory.recurringTopics.map((item) => item.topic).slice(0, MAX_TOPICS),
   relationshipContext: memory.relationshipContext || null,
   recentSummary: memory.recentSummary ? ellipsize(memory.recentSummary, MAX_SUMMARY_LENGTH) : '',
   conversationDigest: memory.conversationDigest ? ellipsize(memory.conversationDigest, 420) : '',
+  journeySummary: memory.journeySummary ? ellipsize(memory.journeySummary, MAX_JOURNEY_SUMMARY_LENGTH) : '',
   openLoops: (memory.openLoops || []).slice(0, MAX_OPEN_LOOPS),
   lastAssistantGuidance: memory.lastAssistantGuidance ? ellipsize(memory.lastAssistantGuidance, 220) : '',
   lastUserQuestions: (memory.lastUserQuestions || []).slice(0, MAX_QUESTIONS),
@@ -215,6 +332,7 @@ const buildSeedMemory = ({
     profileId: profile.id,
     knowledgeLevel: (profile.knowledgeLevel || 'newbie') as MemoryKnowledgeLevel,
     preferredTone: 'mysterious_intimate',
+    memoryQuality: 'seed',
     primaryConcerns,
     recurringTopics: primaryConcerns.map((topic) => ({
       topic,
@@ -224,6 +342,7 @@ const buildSeedMemory = ({
     relationshipContext: profile.relation ? { relation: profile.relation } : null,
     recentSummary: '',
     conversationDigest: '',
+    journeySummary: '',
     openLoops: [],
     lastAssistantGuidance: '',
     lastUserQuestions: [],
@@ -337,11 +456,21 @@ export const updateProgressiveProfileMemory = ({
     history: conversationHistory || [],
     concern,
   });
+  const rankedTopics = rankTopics([normalizedQuestion, ...((conversationHistory || [])
+    .filter((item) => item.role === 'user')
+    .map((item) => normalizeText(item.text)))]);
+  const memoryQuality = resolveMemoryQuality({
+    previous,
+    nextTopics,
+    olderDialogueSummary,
+    conversationHistory: conversationHistory || [],
+  });
   const nextMemory: ProgressiveProfileMemory = {
     ...previous,
     version: PROFILE_MEMORY_VERSION,
     knowledgeLevel: (profile.knowledgeLevel || previous.knowledgeLevel || 'newbie') as MemoryKnowledgeLevel,
     preferredTone: 'mysterious_intimate',
+    memoryQuality,
     primaryConcerns: unique([...previous.primaryConcerns, ...nextTopics]).slice(0, MAX_TOPICS),
     recurringTopics: mergeRecurringTopics(previous.recurringTopics || [], nextTopics, nowIso),
     relationshipContext: profile.relation
@@ -357,6 +486,14 @@ export const updateProgressiveProfileMemory = ({
       message: normalizedQuestion,
     }),
     conversationDigest: olderDialogueSummary.conversationDigest || previous.conversationDigest,
+    journeySummary: buildJourneySummary({
+      previous,
+      memoryQuality,
+      concern,
+      normalizedQuestion,
+      rankedTopics,
+      olderDialogueSummary,
+    }) || previous.journeySummary,
     openLoops: olderDialogueSummary.openLoops.length > 0
       ? olderDialogueSummary.openLoops
       : previous.openLoops,
@@ -401,6 +538,7 @@ export const hydrateProgressiveProfileMemory = async (profileId: string) => {
       version: serverMemory.version || PROFILE_MEMORY_VERSION,
       knowledgeLevel: serverMemory.knowledgeLevel || previous.knowledgeLevel,
       preferredTone: serverMemory.preferredTone || previous.preferredTone,
+      memoryQuality: chooseHigherQuality(previous.memoryQuality || 'seed', serverMemory.memoryQuality || 'seed'),
       primaryConcerns: unique(serverMemory.primaryConcerns || previous.primaryConcerns).slice(0, MAX_TOPICS),
       recurringTopics: unique([
         ...(serverMemory.recurringTopics || []),
@@ -413,6 +551,7 @@ export const hydrateProgressiveProfileMemory = async (profileId: string) => {
       relationshipContext: serverMemory.relationshipContext || previous.relationshipContext || null,
       recentSummary: serverMemory.recentSummary || previous.recentSummary,
       conversationDigest: serverMemory.conversationDigest || previous.conversationDigest,
+      journeySummary: serverMemory.journeySummary || previous.journeySummary,
       openLoops: serverMemory.openLoops || previous.openLoops,
       lastAssistantGuidance: serverMemory.lastAssistantGuidance || previous.lastAssistantGuidance,
       lastUserQuestions: serverMemory.lastUserQuestions || previous.lastUserQuestions,
@@ -430,7 +569,7 @@ export const hydrateProgressiveProfileMemory = async (profileId: string) => {
   }
 };
 
-export const getPromptMemoryProfile = (profileId: string, message: string): PromptMemoryProfile | null => {
+export const getPromptMemoryProfile = (profileId: string, message = ''): PromptMemoryProfile | null => {
   const memory = getProgressiveProfileMemory(profileId);
   if (!memory) return null;
 

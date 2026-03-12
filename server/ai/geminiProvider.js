@@ -2,6 +2,7 @@ import { GoogleGenAI } from '@google/genai';
 import { chatResponseSchema, dailyInsightsResponseSchema } from '../schemas/fortuneSchemas.js';
 import { buildChatPrompt } from './prompts/chatPrompt.js';
 import { buildDailyInsightsPrompt } from './prompts/dailyInsightsPrompt.js';
+import { isMiniAppPromptMode, resolvePromptModeSelection } from './prompts/lifecycleModeSelection.js';
 import {
   buildFallbackCoupleReply,
   buildFallbackDailyInsights,
@@ -211,12 +212,12 @@ function buildGenerationConfig(task, modelName) {
   return config;
 }
 
-function isChatReplyGoodEnough(reply, { isInitialAnalysis }) {
+function isChatReplyGoodEnough(reply, { isInitialAnalysis, isEarlyGuidedJourney }) {
   const normalized = String(reply || '').trim();
   if (!normalized) return false;
   if (containsBrokenCharacters(normalized)) return false;
 
-  const minChars = isInitialAnalysis ? 220 : 320;
+  const minChars = isInitialAnalysis || isEarlyGuidedJourney ? 220 : 320;
   return normalized.length >= minChars;
 }
 
@@ -373,8 +374,19 @@ export function createGeminiProvider({ apiKey, chatModel, insightsModel }) {
       memoryProfile,
       recentMessages,
       promptMode = 'chat',
+      lifecycle,
       miniAppContext,
     }) {
+      const isMiniAppMode = isMiniAppPromptMode(promptMode);
+      const promptModeSelection = isMiniAppMode
+        ? null
+        : resolvePromptModeSelection({
+            requestedPromptMode: promptMode,
+            lifecycle,
+            isInitialAnalysis,
+          });
+      const resolvedPromptMode = promptModeSelection?.promptMode || promptMode;
+      const isEarlyGuidedJourney = Boolean(promptModeSelection?.isEarlyGuidedJourney);
       const fallback = promptMode === 'miniapp_couple'
         ? buildFallbackCoupleReply(language, profile, miniAppContext)
         : promptMode === 'miniapp_dream'
@@ -386,21 +398,25 @@ export function createGeminiProvider({ apiKey, chatModel, insightsModel }) {
               containsBrokenCharacters,
             });
       const prompt = promptMode === 'miniapp_couple'
-        ? buildCouplePrompt({ language, profile, miniAppContext })
+        ? buildCouplePrompt({ language, profile, miniAppContext, lifecycle, memoryProfile })
         : promptMode === 'miniapp_dream'
-          ? buildDreamPrompt({ language, miniAppContext })
+          ? buildDreamPrompt({ language, miniAppContext, lifecycle, memoryProfile })
           : buildChatPrompt({
               language,
               message,
               profile,
               saju,
               isInitialAnalysis,
+              promptMode: resolvedPromptMode,
+              lifecycle,
               memoryProfile,
               recentMessages,
             });
-      const task = promptMode === 'chat' && isInitialAnalysis ? 'initial' : 'chat';
-      const requestedModel = isInitialAnalysis ? 'gemini-2.5-flash-lite' : chatModel;
-      const timeoutMs = isInitialAnalysis ? INITIAL_TIMEOUT_MS : CHAT_TIMEOUT_MS;
+      const isInitialTask = !isMiniAppMode && (isInitialAnalysis || resolvedPromptMode === 'day1_activation');
+      const usesGuidedFastPath = !isMiniAppMode && (isInitialTask || isEarlyGuidedJourney);
+      const task = usesGuidedFastPath ? 'initial' : 'chat';
+      const requestedModel = usesGuidedFastPath ? 'gemini-2.5-flash-lite' : chatModel;
+      const timeoutMs = isInitialTask ? INITIAL_TIMEOUT_MS : isEarlyGuidedJourney ? 2600 : CHAT_TIMEOUT_MS;
 
       try {
         const { text } = await generateAcrossModels({
@@ -420,9 +436,9 @@ export function createGeminiProvider({ apiKey, chatModel, insightsModel }) {
               }
               return;
             }
-            const polished = polishChatReply(replyText, language, { isInitialAnalysis }) || fallback.reply;
+            const polished = polishChatReply(replyText, language, { isInitialAnalysis: isInitialTask }) || fallback.reply;
             const reply = normalizeChatReply(polished, fallback.reply).reply;
-            if (!isChatReplyGoodEnough(reply, { isInitialAnalysis })) {
+            if (!isChatReplyGoodEnough(reply, { isInitialAnalysis: isInitialTask, isEarlyGuidedJourney })) {
               throw new Error('Chat reply did not meet quality threshold');
             }
           },
@@ -435,19 +451,26 @@ export function createGeminiProvider({ apiKey, chatModel, insightsModel }) {
           return normalizeChatReply(normalizedText, normalizedText || fallback.reply);
         }
 
-        const polished = polishChatReply(text, language, { isInitialAnalysis }) || fallback.reply;
+        const polished = polishChatReply(text, language, { isInitialAnalysis: isInitialTask }) || fallback.reply;
         return normalizeChatReply(polished, fallback.reply);
       } catch {
         return fallback;
       }
     },
 
-    async dailyInsights({ language, date, profile, saju }) {
+    async dailyInsights({ language, date, profile, saju, lifecycle, memoryProfile }) {
       const fallback = {
         ...buildFallbackDailyInsights(language),
         source: 'fallback',
       };
-      const prompt = buildDailyInsightsPrompt({ language, date, profile, saju });
+      const prompt = buildDailyInsightsPrompt({
+        language,
+        date,
+        profile,
+        saju,
+        lifecycle,
+        memoryProfile,
+      });
 
       try {
         const { text } = await generateAcrossModels({

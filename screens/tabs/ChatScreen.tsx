@@ -5,6 +5,8 @@ import { AppLanguage, useSajuActions, useSajuCurrency, useSajuData, useSajuSetti
 import { Button } from '../../components';
 import { api, ApiError } from '../../src/services/api';
 import { analytics } from '../../src/services/analytics';
+import { resolveRuntimeAssetUrl } from '../../src/services/assetRuntime';
+import { resolveStoredLifecycleContext } from '../../src/services/lifecycleStage';
 import {
     getPromptMemoryProfile,
     hydrateProgressiveProfileMemory,
@@ -73,13 +75,13 @@ const CHAT_COPY: Record<AppLanguage, {
         greeting: "Hello. I'm the Sazoo master who will read your flow with warmth and intuition.",
         onboardingGuide: 'To read your saju more clearly, I need a few details first. Shall we begin gently?',
         hiddenPrompt: 'Based on my saju profile, give me a first reading in a mysterious but intimate tone with clear practical guidance.',
-        insufficientCoins: 'You are out of coins. Watch an ad or recharge to continue.',
+        insufficientCoins: 'You are out of yeopjeon. One full exchange uses 1 coin, so watch an ad or recharge to continue.',
         onboardingButton: 'Enter info and view reading',
         inputPlaceholder: 'Ask anything about your fortune...',
         responseFallback: 'The cosmic signal blurred for a moment. Ask again and I will read it more clearly.',
         networkFallback: 'The connection is wavering for a moment. I can read it again shortly.',
         loadingLabel: 'Reading the weave of your energy...',
-        freeCoinLabel: 'free',
+        freeCoinLabel: 'daily free',
         paidCoinLabel: 'paid',
         suggestions: ['Money luck?', 'Love luck?', 'Career move?', 'Health luck?', 'Relationships?'],
     },
@@ -87,13 +89,13 @@ const CHAT_COPY: Record<AppLanguage, {
         greeting: '안녕하세요. 오늘 당신 곁에서 운명의 결을 함께 읽어드릴 사주 마스터예요.',
         onboardingGuide: '사주를 더 또렷하게 읽으려면 몇 가지 정보가 필요해요. 천천히 알려주실래요?',
         hiddenPrompt: '내 사주 프로필을 바탕으로 첫 해석을 빠르게 전하되, 신비롭고 친밀한 사주 마스터의 말투로 핵심 흐름과 현실적인 조언을 또렷하게 설명해줘.',
-        insufficientCoins: '엽전이 부족합니다. 광고를 보거나 충전 후 다시 시도해주세요.',
+        insufficientCoins: '엽전이 부족해요. 입력 1회와 답변 1회를 묶은 대화 1건에 1개가 사용돼요. 광고를 보거나 충전 후 다시 시도해 주세요.',
         onboardingButton: '정보 입력하고 운세 보기',
         inputPlaceholder: '궁금한 점을 물어보세요...',
         responseFallback: '지금은 별의 결이 잠시 흐려졌어요. 다시 물어주시면 더 또렷하게 읽어드릴게요.',
         networkFallback: '연결의 결이 잠시 흔들렸어요. 숨을 고르고 다시 보면 더 정확하게 읽어드릴 수 있어요.',
         loadingLabel: '기운의 결을 가만히 읽고 있어요...',
-        freeCoinLabel: '무료',
+        freeCoinLabel: '하루 무료',
         paidCoinLabel: '유료',
         suggestions: ['재물운 어때?', '연애운 알려줘', '이직운 봐줘', '건강운은?', '대인관계는?'],
     },
@@ -101,13 +103,13 @@ const CHAT_COPY: Record<AppLanguage, {
         greeting: 'こんにちは。あなたの運命の流れをそっと読み解くSazooマスターです。',
         onboardingGuide: '四柱をもっと澄んだ形で読むために、いくつか情報を教えてください。ゆっくりで大丈夫です。',
         hiddenPrompt: '私の四柱プロフィールをもとに、最初の鑑定を素早く、神秘的で親しみのある口調で、流れと実用的な助言が伝わるように説明してください。',
-        insufficientCoins: 'コインが足りません。広告視聴またはチャージ後にお試しください。',
+        insufficientCoins: '葉銭が足りません。入力1回と返答1回を1会話として1枚を使います。広告視聴またはチャージ後にお試しください。',
         onboardingButton: '情報を入力して鑑定を見る',
         inputPlaceholder: '気になることを入力してください...',
         responseFallback: '今は波動が少し揺らいでいます。もう一度聞いていただければ、もっと澄んで読めます。',
         networkFallback: 'つながりが少し揺れています。少し置いてから読むと、より正確にお伝えできます。',
         loadingLabel: '気の流れを静かに読んでいます...',
-        freeCoinLabel: '無料',
+        freeCoinLabel: '1日無料',
         paidCoinLabel: '有料',
         suggestions: ['金運は？', '恋愛運は？', '転職運は？', '健康運は？', '対人運は？'],
     },
@@ -378,6 +380,9 @@ const ChatScreen = ({ onNavigate, onRequestOnboarding }: { onNavigate: (tab: str
     const { setPendingMessage, useCoin, refundCoin, canUseCoin, markInitialAnalysisDone } = useSajuActions();
 
     const copy = CHAT_COPY[language as AppLanguage] ?? CHAT_COPY.ko;
+    const greetingCharacterSrc = resolveRuntimeAssetUrl('/webp/greeting2.webp');
+    const readingAnimationSrc = resolveRuntimeAssetUrl('/webp/reading_saju_pink.webp');
+    const idleMotionSrc = resolveRuntimeAssetUrl('/webp/idle motion.webp');
     const [input, setInput] = useState('');
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -443,12 +448,14 @@ const ChatScreen = ({ onNavigate, onRequestOnboarding }: { onNavigate: (tab: str
 
         try {
             const memoryProfile = getPromptMemoryProfile(sajuState.profile.id, copy.hiddenPrompt);
+            const lifecycle = resolveStoredLifecycleContext();
             const response = await api.ai.chat({
                 message: copy.hiddenPrompt,
                 language,
                 profile: sajuState.profile,
                 saju: sajuState.saju,
                 isInitialAnalysis: true,
+                lifecycle,
                 memoryProfile,
                 recentMessages: [{ role: 'assistant', text: localInitialReading }],
             });
@@ -525,12 +532,14 @@ const ChatScreen = ({ onNavigate, onRequestOnboarding }: { onNavigate: (tab: str
         setIsLoading(true);
 
         try {
+            const lifecycle = resolveStoredLifecycleContext();
             const response = await api.ai.chat({
                 message: textToSend,
                 language,
                 profile: sajuState.profile,
                 saju: sajuState.saju,
                 isInitialAnalysis: isHiddenUserMessage,
+                lifecycle,
                 memoryProfile,
                 recentMessages,
             });
@@ -645,7 +654,7 @@ const ChatScreen = ({ onNavigate, onRequestOnboarding }: { onNavigate: (tab: str
             <div className="pointer-events-none absolute inset-x-0 top-[22%] z-0 flex justify-center sm:top-[20%]">
                 {!sajuState.isOnboardingComplete ? (
                     <img
-                        src="/webp/greeting2.webp"
+                        src={greetingCharacterSrc}
                         className="w-[82%] max-w-[360px] object-contain drop-shadow-2xl"
                         alt="Greeting character"
                     />
@@ -656,7 +665,7 @@ const ChatScreen = ({ onNavigate, onRequestOnboarding }: { onNavigate: (tab: str
                             {isLoading ? (
                                 <motion.img
                                     key="loading-animation"
-                                    src="/webp/reading_saju_pink.webp"
+                                    src={readingAnimationSrc}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.2 }}
@@ -666,7 +675,7 @@ const ChatScreen = ({ onNavigate, onRequestOnboarding }: { onNavigate: (tab: str
                             ) : isIdleMotionEnabled ? (
                                 <motion.img
                                     key="idle-motion"
-                                    src="/webp/idle motion.webp"
+                                    src={idleMotionSrc}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.2 }}

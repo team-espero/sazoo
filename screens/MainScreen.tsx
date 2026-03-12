@@ -5,7 +5,9 @@ import { FixedHeader, BottomNavigation } from '../components';
 import { AppLanguage, useSajuActions, useSajuData, useSajuSettings } from '../context';
 import { analytics } from '../src/services/analytics';
 import { api, ApiError, type ShareCardMetadata } from '../src/services/api';
+import { useAuth } from '../src/auth/AuthProvider';
 import { auth } from '../src/config/firebase';
+import { claimWelcomeZodiacGift, type WelcomeZodiacGiftReward } from '../src/services/homeRewards';
 import { clearPendingInvite, getPendingInvite, resolveInviteTargetTab, type InvitePayload } from '../src/services/invite';
 import { getOrCreateInstallationId, persistInviteRewardResult } from '../src/services/inviteRewards';
 
@@ -132,6 +134,40 @@ const INVITE_RESTORE_COPY: Record<AppLanguage, {
         rewardDuplicate: 'すでに受け取った招待なので、報酬は再付与していません。',
         rewardSelfBlocked: '自分の招待リンクを開いたため、画面は復元されますが報酬は付与されません。',
         cta: '復元された画面を開く',
+    },
+};
+
+const WELCOME_GIFT_COPY: Record<AppLanguage, {
+    eyebrow: string;
+    title: string;
+    body: string;
+    giftLabel: string;
+    notificationLabel: string;
+    cta: string;
+}> = {
+    en: {
+        eyebrow: 'Welcome gift',
+        title: 'Your welcome gift has arrived.',
+        body: 'We unlocked a zodiac-themed 3D asset for you. You can find it in the home scene picker and notification history.',
+        giftLabel: 'Gifted asset',
+        notificationLabel: 'Added to notifications',
+        cta: 'Open home',
+    },
+    ko: {
+        eyebrow: '환영 선물',
+        title: '환영의 선물이 도착했어요.',
+        body: '띠에 맞는 3D 에셋을 선물로 해금했어요. 홈 화면 배경 선택과 알림 내역에서 바로 확인할 수 있어요.',
+        giftLabel: '선물 받은 에셋',
+        notificationLabel: '알림 내역에도 저장했어요',
+        cta: '홈에서 보기',
+    },
+    ja: {
+        eyebrow: 'ウェルカムギフト',
+        title: 'ウェルカムギフトが届きました。',
+        body: '干支に合わせた3Dアセットをプレゼントとして解放しました。ホームのシーン選択と通知履歴で確認できます。',
+        giftLabel: '受け取ったアセット',
+        notificationLabel: '通知履歴にも保存しました',
+        cta: 'ホームで見る',
     },
 };
 
@@ -328,6 +364,73 @@ const InviteRestoreModal = ({
     );
 };
 
+const WelcomeGiftModal = ({
+    reward,
+    onClose,
+    language = 'ko',
+}: {
+    reward: WelcomeZodiacGiftReward | null;
+    onClose: () => void;
+    language?: AppLanguage;
+}) => {
+    const copy = WELCOME_GIFT_COPY[language as AppLanguage] ?? WELCOME_GIFT_COPY.ko;
+    const zodiacGiftCaption = language === 'en'
+        ? `${reward?.zodiacName || ''} zodiac welcome gift`
+        : language === 'ja'
+            ? `${reward?.zodiacName || ''}のウェルカムギフト`
+            : `${reward?.zodiacName || ''}띠 전용 환영 선물`;
+
+    return (
+        <AnimatePresence>
+            {reward && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-[111] flex items-center justify-center px-6 safe-pad-x"
+                >
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                        onClick={onClose}
+                    />
+                    <motion.div
+                        initial={{ scale: 0.92, y: 24, opacity: 0 }}
+                        animate={{ scale: 1, y: 0, opacity: 1 }}
+                        exit={{ scale: 0.96, y: 8, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+                        className="relative z-10 w-full max-w-sm overflow-hidden rounded-[28px] border border-white/80 bg-white/92 p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)]"
+                    >
+                        <p className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500">{copy.eyebrow}</p>
+                        <h3 className="mb-3 text-2xl font-black leading-tight text-slate-900">{copy.title}</h3>
+                        <p className="mb-6 text-sm font-medium leading-relaxed text-slate-500">{copy.body}</p>
+                        <div className="space-y-3 rounded-[24px] bg-slate-50 p-4">
+                            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{copy.giftLabel}</p>
+                                <p className="mt-2 text-base font-black leading-snug text-slate-900">{reward.modelName}</p>
+                                <p className="mt-1 text-sm font-medium text-slate-500">{zodiacGiftCaption}</p>
+                            </div>
+                            <div className="rounded-2xl bg-slate-900 px-4 py-3">
+                                <p className="text-sm font-black text-[#98FF98]">{copy.notificationLabel}</p>
+                                <p className="mt-1 text-xs font-medium leading-relaxed text-white/80">{reward.notification.body}</p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="mt-6 w-full rounded-2xl bg-gradient-to-r from-[#84fab0] to-[#8fd3f4] py-4 text-base font-black text-slate-900 shadow-lg shadow-[#84fab0]/30"
+                        >
+                            {copy.cta}
+                        </button>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
+
 const OnboardingModal = ({ isOpen, onComplete }: any) => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -369,10 +472,12 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
     const [showOnboardingModal, setShowOnboardingModal] = useState(false);
     const [inviteRewardState, setInviteRewardState] = useState<any>(null);
     const [inviteRestoreState, setInviteRestoreState] = useState<RestoredInviteContext | null>(null);
+    const [welcomeGiftState, setWelcomeGiftState] = useState<WelcomeZodiacGiftReward | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
-    const { sajuState } = useSajuData();
+    const { sajuState, profiles } = useSajuData();
     const { completeOnboarding, grantPaidCoins } = useSajuActions();
     const { language = 'ko' } = useSajuSettings();
+    const { status: authStatus, session } = useAuth();
 
     const [isPending] = useTransition();
     const mainContentStyle = activeTab !== 'chat'
@@ -415,6 +520,43 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
     }, [sajuState.isOnboardingComplete, showOnboardingModal]);
 
     useEffect(() => {
+        if (activeTab !== 'home') {
+            return;
+        }
+
+        if (!sajuState.isOnboardingComplete || authStatus !== 'authenticated' || !session?.userId) {
+            return;
+        }
+
+        const primaryProfile = profiles.find((profile) => profile.relation === 'me') || sajuState.profile;
+        const reward = claimWelcomeZodiacGift({
+            userId: session.userId,
+            birthYear: primaryProfile.birthDate.year,
+            profileName: primaryProfile.name,
+            language,
+        });
+
+        if (!reward) {
+            return;
+        }
+
+        analytics.track('welcome_zodiac_gift_unlocked', {
+            modelId: reward.modelId,
+            modelName: reward.modelName,
+            zodiacName: reward.zodiacName,
+        });
+        setWelcomeGiftState(reward);
+    }, [
+        activeTab,
+        authStatus,
+        language,
+        profiles,
+        sajuState.isOnboardingComplete,
+        sajuState.profile,
+        session?.userId,
+    ]);
+
+    useEffect(() => {
         let cancelled = false;
 
         const applyPendingInvite = async () => {
@@ -439,7 +581,7 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
             try {
                 const claimResult = await api.invites.claimReward({
                     installationId: getOrCreateInstallationId(),
-                    userId: auth?.currentUser?.uid || undefined,
+                    userId: session?.userId || auth?.currentUser?.uid || undefined,
                     language,
                     invite: resolvedInvite,
                 });
@@ -494,7 +636,7 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
         return () => {
             cancelled = true;
         };
-    }, [grantPaidCoins, sajuState.isOnboardingComplete, setActiveTab]);
+    }, [grantPaidCoins, language, sajuState.isOnboardingComplete, session?.userId, setActiveTab]);
 
     useEffect(() => {
         let rafId: number | null = null;
@@ -565,6 +707,11 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
             <InviteRestoreModal
                 restore={inviteRestoreState}
                 onClose={() => setInviteRestoreState(null)}
+                language={language}
+            />
+            <WelcomeGiftModal
+                reward={welcomeGiftState}
+                onClose={() => setWelcomeGiftState(null)}
                 language={language}
             />
             <OnboardingModal isOpen={showOnboardingModal} onComplete={handleOnboardingComplete} />

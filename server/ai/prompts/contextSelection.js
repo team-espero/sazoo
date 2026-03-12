@@ -1,12 +1,12 @@
 const TOPIC_KEYWORDS = {
-  love: ['love', 'romance', 'dating', 'partner', '연애', '사랑', '호감', '썸', '결혼', '恋愛', '好き', '交際'],
-  wealth: ['wealth', 'money', 'finance', 'salary', 'investment', '재물', '돈', '수입', '투자', '사업', '金運', 'お金', '投資'],
-  career: ['career', 'job', 'work', 'business', 'promotion', '진로', '직장', '이직', '사업', '승진', '仕事', '転職', '昇進'],
-  health: ['health', 'body', 'sleep', 'stress', '건강', '몸', '수면', '스트레스', '회복', '健康', '体調', '睡眠'],
-  relationships: ['relationship', 'people', 'friend', 'colleague', '대인관계', '인간관계', '친구', '동료', '対人関係', '友人', '同僚'],
-  family: ['family', 'parent', 'child', '가족', '부모', '자녀', '家庭', '家族', '親', '子ども'],
-  self: ['myself', 'mind', 'identity', 'confidence', '불안', '마음', '자신감', '자존감', '自己', '不安', '気持ち'],
-  timing: ['when', 'timing', 'today', 'month', 'year', '언제', '시기', '오늘', '이번 달', '올해', 'いつ', '時期', '今日'],
+  love: ['love', 'romance', 'dating', 'partner', 'crush', '연애', '사랑', '호감', '恋愛', '恋', '相手'],
+  wealth: ['wealth', 'money', 'finance', 'salary', 'investment', '재물', '돈', '수입', '금전', '金運', 'お金'],
+  career: ['career', 'job', 'work', 'business', 'promotion', '진로', '직장', '이직', '사업', '승진', '仕事', '転職'],
+  health: ['health', 'body', 'sleep', 'stress', 'wellness', '건강', '수면', '회복', '健康', '体調'],
+  relationships: ['relationship', 'people', 'friend', 'colleague', 'social', '인간관계', '친구', '동료', '人間関係', '友人'],
+  family: ['family', 'parent', 'child', 'home', '가족', '부모', '자녀', '家族', '親'],
+  self: ['myself', 'mind', 'identity', 'confidence', 'anxiety', '불안', '마음', '자신감', '自分', '不安'],
+  timing: ['when', 'timing', 'today', 'month', 'year', '언제', '시기', '오늘', '이번 달', '올해', 'いつ', '時期'],
 };
 
 const MAX_MEMORY_TOPICS = 4;
@@ -49,6 +49,7 @@ export function buildMemoryContextBlock(memoryProfile, message) {
     `Memory version: ${memoryProfile.version || 'unknown'}`,
     `Knowledge level: ${memoryProfile.knowledgeLevel || 'newbie'}`,
     `Preferred tone: ${memoryProfile.preferredTone || 'mysterious_intimate'}`,
+    `Memory quality: ${memoryProfile.memoryQuality || 'seed'}`,
   ];
 
   if (relevantTopics.length > 0) {
@@ -69,6 +70,10 @@ export function buildMemoryContextBlock(memoryProfile, message) {
 
   if (memoryProfile.conversationDigest) {
     lines.push(`Older dialogue digest: ${ellipsize(memoryProfile.conversationDigest, 420)}`);
+  }
+
+  if (memoryProfile.journeySummary) {
+    lines.push(`Long-arc journey summary: ${ellipsize(memoryProfile.journeySummary, 520)}`);
   }
 
   if (Array.isArray(memoryProfile.openLoops) && memoryProfile.openLoops.length > 0) {
