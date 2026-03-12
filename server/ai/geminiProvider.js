@@ -32,8 +32,8 @@ const CHAT_MODEL_CANDIDATES = [
 ];
 
 const INSIGHT_MODEL_CANDIDATES = [
-  'gemini-2.5-flash-lite',
   'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-flash-latest',
   'gemini-2.5-pro',
 ];
@@ -186,7 +186,7 @@ function buildCandidateList(task, requestedModel) {
   }
 
   if (task === 'insights') {
-    return unique([requested, ...INSIGHT_MODEL_CANDIDATES]);
+    return unique([...INSIGHT_MODEL_CANDIDATES, requested]);
   }
 
   return unique([requested, ...CHAT_MODEL_CANDIDATES]);
