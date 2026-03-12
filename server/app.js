@@ -49,6 +49,75 @@ const toChatSummarySnapshot = (memoryProfile) => ({
   updatedAt: new Date().toISOString(),
 });
 
+const normalizeEmail = (value) => (
+  typeof value === 'string' && value.trim()
+    ? value.trim().toLowerCase()
+    : ''
+);
+
+const parseBooleanFlag = (value) => (
+  value === true
+  || value === 'true'
+  || value === '1'
+  || value === 1
+  || value === 'previous'
+);
+
+const buildDashboardAccessResult = (env, { accessKey, operatorEmail } = {}) => {
+  const configured = Boolean(env.dashboardAccessKey);
+  const normalizedEmail = normalizeEmail(operatorEmail);
+  const requireEmail = Array.isArray(env.dashboardAllowedEmails) && env.dashboardAllowedEmails.length > 0;
+
+  if (!configured) {
+    return {
+      allowed: env.nodeEnv !== 'production',
+      configured: false,
+      requireEmail,
+      reason: env.nodeEnv === 'production' ? 'dashboard_not_configured' : 'dashboard_open_in_dev',
+    };
+  }
+
+  if (!accessKey || String(accessKey).trim() !== env.dashboardAccessKey) {
+    return {
+      allowed: false,
+      configured: true,
+      requireEmail,
+      reason: 'invalid_access_key',
+    };
+  }
+
+  if (requireEmail && !normalizedEmail) {
+    return {
+      allowed: false,
+      configured: true,
+      requireEmail,
+      reason: 'operator_email_required',
+    };
+  }
+
+  if (requireEmail && !env.dashboardAllowedEmails.includes(normalizedEmail)) {
+    return {
+      allowed: false,
+      configured: true,
+      requireEmail,
+      reason: 'operator_email_not_allowed',
+    };
+  }
+
+  return {
+    allowed: true,
+    configured: true,
+    requireEmail,
+    reason: 'authorized',
+  };
+};
+
+const parseAnalyticsQuery = (query = {}) => ({
+  from: typeof query.from === 'string' && query.from.trim() ? query.from.trim() : undefined,
+  to: typeof query.to === 'string' && query.to.trim() ? query.to.trim() : undefined,
+  comparePrevious: parseBooleanFlag(query.compare),
+});
+
 const mapKnownError = (error) => {
   const message = typeof error?.message === 'string' ? error.message : 'Unexpected error';
   const code = typeof error?.code === 'string' ? error.code : '';
@@ -229,6 +298,10 @@ export function createApp({ env, aiProvider }) {
         kakaoConfigured: Boolean(env.kakaoRestApiKey),
         kakaoRedirectUriCount: Array.isArray(env.kakaoAllowedRedirectUris) ? env.kakaoAllowedRedirectUris.length : 0,
       },
+      dashboard: {
+        configured: Boolean(env.dashboardAccessKey),
+        requireEmail: Array.isArray(env.dashboardAllowedEmails) ? env.dashboardAllowedEmails.length > 0 : false,
+      },
     });
   });
 
@@ -252,9 +325,33 @@ export function createApp({ env, aiProvider }) {
     }
   });
 
-  app.get(`${env.apiPrefix}/client-events/report`, async (_req, res) => {
+  app.post(`${env.apiPrefix}/dashboard/access/verify`, (req, res) => {
+    const access = buildDashboardAccessResult(env, req.body || {});
+    res.status(access.allowed ? 200 : access.configured ? 403 : 503).json({
+      data: access,
+    });
+  });
+
+  app.get(`${env.apiPrefix}/client-events/report`, async (req, res) => {
     try {
-      const data = await env.eventStore.summarize();
+      const access = buildDashboardAccessResult(env, {
+        accessKey: req.get('x-dashboard-access-key'),
+        operatorEmail: req.get('x-dashboard-operator-email'),
+      });
+
+      if (!access.allowed) {
+        res.status(access.configured ? 403 : 503).json({
+          error: {
+            code: access.configured ? 'DASHBOARD_ACCESS_DENIED' : 'DASHBOARD_NOT_CONFIGURED',
+            message: access.configured
+              ? 'Dashboard access is denied.'
+              : 'Dashboard access is not configured yet.',
+          },
+        });
+        return;
+      }
+
+      const data = await env.eventStore.summarize(parseAnalyticsQuery(req.query));
       res.status(200).json({ data });
     } catch (error) {
       res.status(500).json({
@@ -447,26 +544,6 @@ export function createApp({ env, aiProvider }) {
     try {
       const payload = unlockUpsertRequestSchema.parse(req.body);
       const data = await env.unlockStore.upsertSpecialReport(payload, payload.report);
-      res.status(200).json({ data });
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.post(`${env.apiPrefix}/share-cards/metadata/state`, async (req, res, next) => {
-    try {
-      const payload = shareMetadataStateRequestSchema.parse(req.body);
-      const data = await env.shareMetadataStore.getMetadata(payload.inviteId);
-      res.status(200).json({ data });
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.post(`${env.apiPrefix}/share-cards/metadata/upsert`, async (req, res, next) => {
-    try {
-      const payload = shareMetadataUpsertRequestSchema.parse(req.body);
-      const data = await env.shareMetadataStore.upsertMetadata(payload, payload.metadata);
       res.status(200).json({ data });
     } catch (error) {
       next(error);

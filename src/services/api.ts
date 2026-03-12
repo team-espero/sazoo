@@ -173,6 +173,12 @@ export interface WalletRewardedAdResponse {
 
 export interface LaunchAnalyticsReport {
   generatedAt: string;
+  range: {
+    from: string;
+    to: string;
+    days: number;
+    label: string;
+  } | null;
   totalEvents: number;
   counts: {
     share: number;
@@ -261,6 +267,60 @@ export interface LaunchAnalyticsReport {
     timestamp: string;
     payload: Record<string, unknown>;
   }>;
+  comparison: {
+    enabled: boolean;
+    previousRange: {
+      from: string;
+      to: string;
+      days: number;
+      label: string;
+    } | null;
+    summary: {
+      totalEvents: number;
+      averageMs: number;
+      withinTargetRate: number;
+      firstReadingSuccessRate: number;
+      shareToOpenRate: number;
+      openToInstallRate: number;
+      installToRewardRate: number;
+      coinSpent: number;
+      miniAppOpen: number;
+      sceneChange: number;
+    } | null;
+    deltas: {
+      totalEvents: number;
+      averageMs: number;
+      withinTargetRate: number;
+      firstReadingSuccessRate: number;
+      shareToOpenRate: number;
+      openToInstallRate: number;
+      installToRewardRate: number;
+      coinSpent: number;
+      miniAppOpen: number;
+      sceneChange: number;
+    } | null;
+    trends: Array<{
+      currentDateKey: string;
+      previousDateKey: string;
+      currentCount: number;
+      previousCount: number;
+    }>;
+  };
+}
+
+export interface DashboardAccessStatus {
+  allowed: boolean;
+  configured: boolean;
+  requireEmail: boolean;
+  reason: string;
+}
+
+export interface LaunchReportFilters {
+  from?: string;
+  to?: string;
+  comparePrevious?: boolean;
+  accessKey?: string;
+  operatorEmail?: string | null;
 }
 
 export interface KakaoExchangeResponse {
@@ -317,6 +377,11 @@ type ApiEnvelope<T> = {
     code?: string;
     message?: string;
   };
+};
+
+type RequestOptions = {
+  headers?: Record<string, string>;
+  query?: Record<string, string | number | boolean | undefined | null>;
 };
 
 const RETRYABLE_ERROR_CODES = new Set(['TIMEOUT', 'NETWORK_ERROR', 'OFFLINE']);
@@ -483,26 +548,46 @@ async function postJson<TResponse, TRequest = unknown>(
   endpointPath: string,
   body: TRequest,
   attempt = 0,
+  options?: RequestOptions,
 ): Promise<TResponse> {
-  return requestJson<TResponse, TRequest>('POST', endpointPath, body, attempt);
+  return requestJson<TResponse, TRequest>('POST', endpointPath, body, attempt, options);
 }
 
 async function getJson<TResponse>(
   endpointPath: string,
   attempt = 0,
+  options?: RequestOptions,
 ): Promise<TResponse> {
-  return requestJson<TResponse>('GET', endpointPath, undefined, attempt);
+  return requestJson<TResponse>('GET', endpointPath, undefined, attempt, options);
 }
+
+const buildQueryString = (query?: RequestOptions['query']) => {
+  if (!query) {
+    return '';
+  }
+
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined || value === null || value === '') {
+      continue;
+    }
+    params.set(key, String(value));
+  }
+
+  const serialized = params.toString();
+  return serialized ? `?${serialized}` : '';
+};
 
 async function requestJson<TResponse, TRequest = unknown>(
   method: 'GET' | 'POST',
   endpointPath: string,
   body?: TRequest,
   attempt = 0,
+  options: RequestOptions = {},
 ): Promise<TResponse> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), clientEnv.apiTimeoutMs);
-  const url = `${clientEnv.apiBaseUrl}${endpointPath}`;
+  const url = `${clientEnv.apiBaseUrl}${endpointPath}${buildQueryString(options.query)}`;
 
   try {
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
@@ -511,7 +596,10 @@ async function requestJson<TResponse, TRequest = unknown>(
 
     const response = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {}),
+      },
       body: method === 'GET' ? undefined : JSON.stringify(body),
       signal: controller.signal,
     });
@@ -1050,8 +1138,30 @@ export const api = {
     },
   },
   analytics: {
-    getLaunchReport: async () => {
-      return getJson<LaunchAnalyticsReport>('/client-events/report');
+    verifyDashboardAccess: async (
+      accessKey: string,
+      operatorEmail?: string | null,
+    ) => {
+      return postJson<DashboardAccessStatus, { accessKey: string; operatorEmail?: string | null }>(
+        '/dashboard/access/verify',
+        {
+          accessKey,
+          operatorEmail,
+        },
+      );
+    },
+    getLaunchReport: async (filters: LaunchReportFilters = {}) => {
+      return getJson<LaunchAnalyticsReport>('/client-events/report', 0, {
+        query: {
+          from: filters.from,
+          to: filters.to,
+          compare: filters.comparePrevious ? 'previous' : undefined,
+        },
+        headers: {
+          'x-dashboard-access-key': filters.accessKey || '',
+          'x-dashboard-operator-email': filters.operatorEmail || '',
+        },
+      });
     },
   },
   cache: {

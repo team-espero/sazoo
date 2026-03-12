@@ -58,7 +58,7 @@ export function createPostgresEventStore(databaseUrl) {
         [String(event?.name || 'unknown'), JSON.stringify(event)],
       );
     },
-    async summarize() {
+    async summarize(options = {}) {
       await ready;
       const { rows } = await db.query(
         `
@@ -71,7 +71,7 @@ export function createPostgresEventStore(databaseUrl) {
       const events = rows
         .map((row) => normalizeEventRecord(row.event_json, row.received_at))
         .filter(Boolean);
-      return buildAnalyticsReport(events);
+      return buildAnalyticsReport(events, options);
     },
   };
 }
