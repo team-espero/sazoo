@@ -51,12 +51,48 @@ export interface ChatRequest {
   profile?: UserProfile;
   saju?: unknown;
   isInitialAnalysis?: boolean;
-  promptMode?: 'chat' | 'miniapp_couple' | 'miniapp_dream';
+  promptMode?:
+    | 'chat'
+    | 'day1_activation'
+    | 'day2_reopen'
+    | 'day3_question_habit'
+    | 'day4_tone_learning'
+    | 'day5_discovery'
+    | 'day6_pattern_preview'
+    | 'day7_weekly_wrap'
+    | 'pattern_building'
+    | 'decision_support'
+    | 'personal_os'
+    | 'relationship_archive'
+    | 'time_archive'
+    | 'ongoing_private_reading'
+    | 'miniapp_couple'
+    | 'miniapp_dream';
+  lifecycle?: {
+    stage?:
+      | 'day1_activation'
+      | 'day2_reopen'
+      | 'day3_question_habit'
+      | 'day4_tone_learning'
+      | 'day5_discovery'
+      | 'day6_pattern_preview'
+      | 'day7_weekly_wrap'
+      | 'pattern_building'
+      | 'decision_support'
+      | 'personal_os'
+      | 'relationship_archive'
+      | 'time_archive';
+    mode?: 'product_led' | 'memory_led';
+    daysSinceOnboarding?: number;
+    daysSinceFirstReading?: number;
+    consecutiveVisitDays?: number;
+  };
   miniAppContext?: Record<string, unknown>;
   memoryProfile?: {
     version: string;
     knowledgeLevel: 'newbie' | 'intermediate' | 'expert';
     preferredTone: 'mysterious_intimate';
+    memoryQuality?: 'seed' | 'emerging' | 'patterned' | 'rich';
     primaryConcerns: string[];
     recurringTopics: string[];
     relationshipContext?: {
@@ -65,6 +101,7 @@ export interface ChatRequest {
     } | null;
     recentSummary?: string;
     conversationDigest?: string;
+    journeySummary?: string;
     openLoops?: string[];
     lastAssistantGuidance?: string;
     lastUserQuestions?: string[];
@@ -84,6 +121,8 @@ export interface DailyInsightsRequest {
   date?: string;
   profile?: UserProfile;
   saju?: unknown;
+  lifecycle?: ChatRequest['lifecycle'];
+  memoryProfile?: ChatRequest['memoryProfile'];
 }
 
 export interface InviteClaimRequest {
@@ -182,6 +221,7 @@ export interface LaunchAnalyticsReport {
     invite_reward_claimed: number;
     invite_reward_granted: number;
     invite_reward_duplicate: number;
+    invite_reward_self_blocked: number;
     invite_reward_claim_failed: number;
     first_reading_success: number;
     first_reading_failure: number;
@@ -191,6 +231,21 @@ export interface LaunchAnalyticsReport {
     ad_reward_granted: number;
     scene_change: number;
     mini_app_open: number;
+  };
+  funnel: {
+    shareCount: number;
+    inviteOpenCount: number;
+    installCount: number;
+    rewardGrantedCount: number;
+    shareToOpenRate: number;
+    openToInstallRate: number;
+    installToRewardRate: number;
+  };
+  quality: {
+    firstReadingSuccessRate: number;
+    inviteRewardFailureRate: number;
+    activeDays: number;
+    averageEventsPerActiveDay: number;
   };
   timeToFirstValue: {
     samples: number;
@@ -207,6 +262,38 @@ export interface LaunchAnalyticsReport {
     adRewardsByPlacement: Record<string, number>;
     miniAppOpenByApp: Record<string, number>;
     sceneChangeByScene: Record<string, number>;
+  };
+  trends: {
+    eventsByDay: Array<{
+      dateKey: string;
+      count: number;
+    }>;
+  };
+  topSignals: {
+    topCoinSpendContext: {
+      key: string;
+      count: number;
+    };
+    topMiniApp: {
+      key: string;
+      count: number;
+    };
+    topScene: {
+      key: string;
+      count: number;
+    };
+    topOnboardingViewStep: {
+      key: string;
+      count: number;
+    };
+    topOnboardingCompletionStep: {
+      key: string;
+      count: number;
+    };
+    hottestDay: {
+      key: string;
+      count: number;
+    };
   };
   recentEvents: Array<{
     name: string;

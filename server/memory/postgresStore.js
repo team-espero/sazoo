@@ -11,21 +11,36 @@ const NAMESPACE = 'profile_memory';
 const MAX_TOPICS = 5;
 const MAX_QUESTIONS = 3;
 const MAX_OPEN_LOOPS = 4;
+const MAX_JOURNEY_SUMMARY = 520;
+const MEMORY_QUALITY_ORDER = {
+  seed: 0,
+  emerging: 1,
+  patterned: 2,
+  rich: 3,
+};
 
 const unique = (values) => [...new Set((values || []).filter(Boolean))];
 const normalizeText = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const normalizeQuestions = (values) => unique((values || []).map((value) => normalizeText(value))).slice(0, MAX_QUESTIONS);
 const normalizeOpenLoops = (values) => unique((values || []).map((value) => normalizeText(value))).slice(0, MAX_OPEN_LOOPS);
+const normalizeMemoryQuality = (value) => (Object.prototype.hasOwnProperty.call(MEMORY_QUALITY_ORDER, value) ? value : 'seed');
+const pickHigherMemoryQuality = (left, right) => (
+  MEMORY_QUALITY_ORDER[normalizeMemoryQuality(right)] > MEMORY_QUALITY_ORDER[normalizeMemoryQuality(left)]
+    ? normalizeMemoryQuality(right)
+    : normalizeMemoryQuality(left)
+);
 
 const createEmptyMemory = () => ({
-  version: 'phase4.v2',
+  version: 'phase4.v3',
   knowledgeLevel: 'newbie',
   preferredTone: 'mysterious_intimate',
+  memoryQuality: 'seed',
   primaryConcerns: [],
   recurringTopics: [],
   relationshipContext: null,
   recentSummary: '',
   conversationDigest: '',
+  journeySummary: '',
   openLoops: [],
   lastAssistantGuidance: '',
   lastUserQuestions: [],
@@ -38,6 +53,7 @@ const normalizeSnapshot = (value) => {
     version: normalizeText(value?.version) || base.version,
     knowledgeLevel: value?.knowledgeLevel || base.knowledgeLevel,
     preferredTone: value?.preferredTone || base.preferredTone,
+    memoryQuality: normalizeMemoryQuality(value?.memoryQuality || base.memoryQuality),
     primaryConcerns: unique((value?.primaryConcerns || []).map((item) => normalizeText(item))).slice(0, MAX_TOPICS),
     recurringTopics: unique((value?.recurringTopics || []).map((item) => normalizeText(item))).slice(0, MAX_TOPICS),
     relationshipContext: value?.relationshipContext?.relation
@@ -48,6 +64,7 @@ const normalizeSnapshot = (value) => {
       : null,
     recentSummary: normalizeText(value?.recentSummary || '').slice(0, 320),
     conversationDigest: normalizeText(value?.conversationDigest || '').slice(0, 420),
+    journeySummary: normalizeText(value?.journeySummary || '').slice(0, MAX_JOURNEY_SUMMARY),
     openLoops: normalizeOpenLoops(value?.openLoops || []),
     lastAssistantGuidance: normalizeText(value?.lastAssistantGuidance || '').slice(0, 220),
     lastUserQuestions: normalizeQuestions(value?.lastUserQuestions || []),
@@ -63,11 +80,13 @@ const mergeSnapshots = (left, right) => {
     version: safeRight.version || safeLeft.version,
     knowledgeLevel: safeRight.knowledgeLevel || safeLeft.knowledgeLevel,
     preferredTone: safeRight.preferredTone || safeLeft.preferredTone,
+    memoryQuality: pickHigherMemoryQuality(safeLeft.memoryQuality, safeRight.memoryQuality),
     primaryConcerns: unique([...safeRight.primaryConcerns, ...safeLeft.primaryConcerns]).slice(0, MAX_TOPICS),
     recurringTopics: unique([...safeRight.recurringTopics, ...safeLeft.recurringTopics]).slice(0, MAX_TOPICS),
     relationshipContext: safeRight.relationshipContext || safeLeft.relationshipContext || null,
     recentSummary: safeRight.recentSummary || safeLeft.recentSummary || '',
     conversationDigest: safeRight.conversationDigest || safeLeft.conversationDigest || '',
+    journeySummary: safeRight.journeySummary || safeLeft.journeySummary || '',
     openLoops: unique([...safeRight.openLoops, ...safeLeft.openLoops]).slice(0, MAX_OPEN_LOOPS),
     lastAssistantGuidance: safeRight.lastAssistantGuidance || safeLeft.lastAssistantGuidance || '',
     lastUserQuestions: unique([...safeRight.lastUserQuestions, ...safeLeft.lastUserQuestions]).slice(0, MAX_QUESTIONS),

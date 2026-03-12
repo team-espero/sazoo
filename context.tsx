@@ -13,6 +13,8 @@ import { getAuthSession, subscribeToAuthSession } from './src/services/authSessi
 import { analytics } from './src/services/analytics';
 import { CURRENCY_WINDOW_MS, DAILY_FREE_YEOPJEON, MAX_REWARDED_ADS_PER_DAY, YEOPJEON_STARTER_BUNDLE } from './src/services/currencyCatalog';
 import { getUnlockedSpecialReports } from './src/services/inviteRewards';
+import { resolveStoredLifecycleContext } from './src/services/lifecycleStage';
+import { getPromptMemoryProfile } from './src/services/profileMemory';
 import { storage, KEYS } from './src/services/storage';
 
 export type UserTier = 'FREE' | 'BASIC' | 'PREMIUM';
@@ -476,6 +478,9 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
   const completeOnboarding = useCallback(() => {
     setSajuState((prev) => ({ ...prev, isOnboardingComplete: true }));
     storage.set(KEYS.ONBOARDING_STATUS, true);
+    if (!storage.get(KEYS.ONBOARDING_COMPLETED_AT, null)) {
+      storage.set(KEYS.ONBOARDING_COMPLETED_AT, Date.now());
+    }
     void persistUserStateSafely({ onboardingComplete: true });
   }, [persistUserStateSafely]);
 
@@ -498,11 +503,20 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
     if (currentState.lastDailyInsightsDate === today && currentState.dailyInsights) return;
 
     try {
+      const lifecycle = resolveStoredLifecycleContext();
+      const memoryProfile = currentState.profile?.id
+        ? getPromptMemoryProfile(
+            currentState.profile.id,
+            currentState.concern || 'daily insight focus',
+          )
+        : null;
       const insights = await api.ai.generateDailyInsights({
         language: languageRef.current,
         date: today,
         profile: currentState.profile,
         saju: currentState.saju,
+        lifecycle,
+        memoryProfile,
       });
 
       if (!isValidDailyInsightsPayload(insights)) {
@@ -630,6 +644,9 @@ export const SajuProvider = ({ children }: { children: React.ReactNode }) => {
   const markInitialAnalysisDone = useCallback(() => {
     setSajuState((prev) => ({ ...prev, initialAnalysisDone: true }));
     storage.set(KEYS.INITIAL_ANALYSIS_DONE, true);
+    if (!storage.get(KEYS.FIRST_READING_COMPLETED_AT, null)) {
+      storage.set(KEYS.FIRST_READING_COMPLETED_AT, Date.now());
+    }
   }, []);
 
   useEffect(() => {

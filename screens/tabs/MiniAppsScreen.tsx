@@ -5,6 +5,8 @@ import { Button, InputField, ProfileAvatar } from '../../components';
 import { AppLanguage, useSajuActions, useSajuCurrency, useSajuData, useSajuSettings } from '../../context';
 import { api } from '../../src/services/api';
 import { analytics } from '../../src/services/analytics';
+import { resolveStoredLifecycleContext } from '../../src/services/lifecycleStage';
+import { getPromptMemoryProfile } from '../../src/services/profileMemory';
 
 const MINI_COPY: Record<AppLanguage, any> = {
     en: {
@@ -254,6 +256,11 @@ const CoupleMatchingApp = ({ onBack, appLanguage }: any) => {
                 profile: currentUser,
                 saju: { currentUser, partner },
                 promptMode: 'miniapp_couple',
+                lifecycle: resolveStoredLifecycleContext(),
+                memoryProfile: getPromptMemoryProfile(
+                    currentUser.id,
+                    `${currentUser.name} and ${partner.name} relationship compatibility`,
+                ),
                 miniAppContext: {
                     app: 'couple',
                     partnerProfile: partner,
@@ -424,6 +431,7 @@ const CoupleMatchingApp = ({ onBack, appLanguage }: any) => {
 };
 
 const DreamInterpretationApp = ({ onBack, appLanguage }: any) => {
+    const { sajuState } = useSajuData();
     const { currency } = useSajuCurrency();
     const { useCoin, canUseCoin } = useSajuActions();
     const [dream, setDream] = useState('');
@@ -454,7 +462,14 @@ const DreamInterpretationApp = ({ onBack, appLanguage }: any) => {
             const apiCall = api.ai.chat({
                 message: dream,
                 language: appLanguage as AppLanguage,
+                profile: sajuState.profile,
+                saju: sajuState.saju,
                 promptMode: 'miniapp_dream',
+                lifecycle: resolveStoredLifecycleContext(),
+                memoryProfile: getPromptMemoryProfile(
+                    sajuState.profile.id,
+                    dream,
+                ),
                 miniAppContext: {
                     app: 'dream',
                     dreamText: dream,

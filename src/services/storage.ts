@@ -47,6 +47,8 @@ export const KEYS = {
     ANALYTICS_EVENTS: 'analytics_events_v1',
     APP_INSTALL_AT: 'app_install_at',
     APP_LAST_OPEN_AT: 'app_last_open_at',
+    ONBOARDING_COMPLETED_AT: 'onboarding_completed_at_v1',
+    FIRST_READING_COMPLETED_AT: 'first_reading_completed_at_v1',
     INSTALLATION_ID: 'installation_id_v1',
     D1_RETENTION_TRACKED: 'd1_retention_tracked',
     PENDING_INVITE: 'pending_invite_v1',

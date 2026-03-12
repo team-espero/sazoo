@@ -6,21 +6,36 @@ import { openLaunchDatabase } from '../db/launchDb.js';
 const MAX_TOPICS = 5;
 const MAX_QUESTIONS = 3;
 const MAX_OPEN_LOOPS = 4;
+const MAX_JOURNEY_SUMMARY = 520;
+const MEMORY_QUALITY_ORDER = {
+  seed: 0,
+  emerging: 1,
+  patterned: 2,
+  rich: 3,
+};
 
 const unique = (values) => [...new Set((values || []).filter(Boolean))];
 const normalizeText = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const normalizeQuestions = (values) => unique((values || []).map((value) => normalizeText(value))).slice(0, MAX_QUESTIONS);
 const normalizeOpenLoops = (values) => unique((values || []).map((value) => normalizeText(value))).slice(0, MAX_OPEN_LOOPS);
+const normalizeMemoryQuality = (value) => (Object.prototype.hasOwnProperty.call(MEMORY_QUALITY_ORDER, value) ? value : 'seed');
+const pickHigherMemoryQuality = (left, right) => (
+  MEMORY_QUALITY_ORDER[normalizeMemoryQuality(right)] > MEMORY_QUALITY_ORDER[normalizeMemoryQuality(left)]
+    ? normalizeMemoryQuality(right)
+    : normalizeMemoryQuality(left)
+);
 
 const createEmptyMemory = () => ({
-  version: 'phase4.v2',
+  version: 'phase4.v3',
   knowledgeLevel: 'newbie',
   preferredTone: 'mysterious_intimate',
+  memoryQuality: 'seed',
   primaryConcerns: [],
   recurringTopics: [],
   relationshipContext: null,
   recentSummary: '',
   conversationDigest: '',
+  journeySummary: '',
   openLoops: [],
   lastAssistantGuidance: '',
   lastUserQuestions: [],
@@ -33,6 +48,7 @@ const normalizeSnapshot = (value) => {
     version: normalizeText(value?.version) || base.version,
     knowledgeLevel: value?.knowledgeLevel || base.knowledgeLevel,
     preferredTone: value?.preferredTone || base.preferredTone,
+    memoryQuality: normalizeMemoryQuality(value?.memoryQuality || base.memoryQuality),
     primaryConcerns: unique((value?.primaryConcerns || []).map((item) => normalizeText(item))).slice(0, MAX_TOPICS),
     recurringTopics: unique((value?.recurringTopics || []).map((item) => normalizeText(item))).slice(0, MAX_TOPICS),
     relationshipContext: value?.relationshipContext?.relation
@@ -43,6 +59,7 @@ const normalizeSnapshot = (value) => {
       : null,
     recentSummary: normalizeText(value?.recentSummary || '').slice(0, 320),
     conversationDigest: normalizeText(value?.conversationDigest || '').slice(0, 420),
+    journeySummary: normalizeText(value?.journeySummary || '').slice(0, MAX_JOURNEY_SUMMARY),
     openLoops: normalizeOpenLoops(value?.openLoops || []),
     lastAssistantGuidance: normalizeText(value?.lastAssistantGuidance || '').slice(0, 220),
     lastUserQuestions: normalizeQuestions(value?.lastUserQuestions || []),
@@ -58,11 +75,13 @@ const mergeSnapshots = (left, right) => {
     version: safeRight.version || safeLeft.version,
     knowledgeLevel: safeRight.knowledgeLevel || safeLeft.knowledgeLevel,
     preferredTone: safeRight.preferredTone || safeLeft.preferredTone,
+    memoryQuality: pickHigherMemoryQuality(safeLeft.memoryQuality, safeRight.memoryQuality),
     primaryConcerns: unique([...safeRight.primaryConcerns, ...safeLeft.primaryConcerns]).slice(0, MAX_TOPICS),
     recurringTopics: unique([...safeRight.recurringTopics, ...safeLeft.recurringTopics]).slice(0, MAX_TOPICS),
     relationshipContext: safeRight.relationshipContext || safeLeft.relationshipContext || null,
     recentSummary: safeRight.recentSummary || safeLeft.recentSummary || '',
     conversationDigest: safeRight.conversationDigest || safeLeft.conversationDigest || '',
+    journeySummary: safeRight.journeySummary || safeLeft.journeySummary || '',
     openLoops: unique([...safeRight.openLoops, ...safeLeft.openLoops]).slice(0, MAX_OPEN_LOOPS),
     lastAssistantGuidance: safeRight.lastAssistantGuidance || safeLeft.lastAssistantGuidance || '',
     lastUserQuestions: unique([...safeRight.lastUserQuestions, ...safeLeft.lastUserQuestions]).slice(0, MAX_QUESTIONS),
@@ -101,11 +120,13 @@ const ensureSchema = (db) => {
       version TEXT NOT NULL,
       knowledge_level TEXT NOT NULL,
       preferred_tone TEXT NOT NULL,
+      memory_quality TEXT NOT NULL DEFAULT 'seed',
       primary_concerns_json TEXT NOT NULL,
       recurring_topics_json TEXT NOT NULL,
       relationship_context_json TEXT NOT NULL,
       recent_summary TEXT NOT NULL,
       conversation_digest TEXT NOT NULL,
+      journey_summary TEXT NOT NULL DEFAULT '',
       open_loops_json TEXT NOT NULL,
       last_assistant_guidance TEXT NOT NULL,
       last_user_questions_json TEXT NOT NULL,
@@ -116,6 +137,17 @@ const ensureSchema = (db) => {
     CREATE INDEX IF NOT EXISTS idx_profile_memory_records_owner_updated
       ON profile_memory_records(owner_key, updated_at DESC);
   `);
+
+  const columns = db.prepare(`PRAGMA table_info(profile_memory_records)`).all();
+  const hasColumn = (columnName) => columns.some((column) => column.name === columnName);
+
+  if (!hasColumn('memory_quality')) {
+    db.exec(`ALTER TABLE profile_memory_records ADD COLUMN memory_quality TEXT NOT NULL DEFAULT 'seed'`);
+  }
+
+  if (!hasColumn('journey_summary')) {
+    db.exec(`ALTER TABLE profile_memory_records ADD COLUMN journey_summary TEXT NOT NULL DEFAULT ''`);
+  }
 };
 
 const readJson = (value, fallback) => {
@@ -128,8 +160,8 @@ const readJson = (value, fallback) => {
 
 const loadSnapshot = (db, ownerKey, profileId) => {
   const row = db.prepare(`
-    SELECT version, knowledge_level, preferred_tone, primary_concerns_json, recurring_topics_json,
-           relationship_context_json, recent_summary, conversation_digest, open_loops_json,
+    SELECT version, knowledge_level, preferred_tone, memory_quality, primary_concerns_json, recurring_topics_json,
+           relationship_context_json, recent_summary, conversation_digest, journey_summary, open_loops_json,
            last_assistant_guidance, last_user_questions_json, updated_at
     FROM profile_memory_records
     WHERE owner_key = ? AND profile_id = ?
@@ -141,11 +173,13 @@ const loadSnapshot = (db, ownerKey, profileId) => {
     version: row.version,
     knowledgeLevel: row.knowledge_level,
     preferredTone: row.preferred_tone,
+    memoryQuality: row.memory_quality,
     primaryConcerns: readJson(row.primary_concerns_json, []),
     recurringTopics: readJson(row.recurring_topics_json, []),
     relationshipContext: readJson(row.relationship_context_json, null),
     recentSummary: row.recent_summary,
     conversationDigest: row.conversation_digest,
+    journeySummary: row.journey_summary,
     openLoops: readJson(row.open_loops_json, []),
     lastAssistantGuidance: row.last_assistant_guidance,
     lastUserQuestions: readJson(row.last_user_questions_json, []),
@@ -162,20 +196,22 @@ const persistSnapshot = (db, ownerKey, identity, profileId, snapshot) => {
   db.prepare(`
     INSERT INTO profile_memory_records (
       owner_key, profile_id, installation_id, user_id, version, knowledge_level, preferred_tone,
-      primary_concerns_json, recurring_topics_json, relationship_context_json, recent_summary,
-      conversation_digest, open_loops_json, last_assistant_guidance, last_user_questions_json, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      memory_quality, primary_concerns_json, recurring_topics_json, relationship_context_json, recent_summary,
+      conversation_digest, journey_summary, open_loops_json, last_assistant_guidance, last_user_questions_json, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(owner_key, profile_id) DO UPDATE SET
       installation_id = excluded.installation_id,
       user_id = excluded.user_id,
       version = excluded.version,
       knowledge_level = excluded.knowledge_level,
       preferred_tone = excluded.preferred_tone,
+      memory_quality = excluded.memory_quality,
       primary_concerns_json = excluded.primary_concerns_json,
       recurring_topics_json = excluded.recurring_topics_json,
       relationship_context_json = excluded.relationship_context_json,
       recent_summary = excluded.recent_summary,
       conversation_digest = excluded.conversation_digest,
+      journey_summary = excluded.journey_summary,
       open_loops_json = excluded.open_loops_json,
       last_assistant_guidance = excluded.last_assistant_guidance,
       last_user_questions_json = excluded.last_user_questions_json,
@@ -188,11 +224,13 @@ const persistSnapshot = (db, ownerKey, identity, profileId, snapshot) => {
     normalized.version,
     normalized.knowledgeLevel,
     normalized.preferredTone,
+    normalized.memoryQuality,
     JSON.stringify(normalized.primaryConcerns),
     JSON.stringify(normalized.recurringTopics),
     JSON.stringify(normalized.relationshipContext || null),
     normalized.recentSummary,
     normalized.conversationDigest,
+    normalized.journeySummary,
     JSON.stringify(normalized.openLoops),
     normalized.lastAssistantGuidance,
     JSON.stringify(normalized.lastUserQuestions),
