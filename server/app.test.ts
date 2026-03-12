@@ -26,6 +26,13 @@ const env = {
     upsertSpecialReport: async (_identity: unknown, report: any) => report,
     promoteToUser: async (_identity: unknown, snapshot: any) => snapshot || [],
   },
+  authIdentityStore: {
+    listIdentities: async () => [],
+    upsertIdentity: async (_identity: unknown, record: any) => ({
+      ...record,
+      updatedAt: new Date().toISOString(),
+    }),
+  },
   chatSummaryStore: {
     getSummary: async (_identity: unknown, _profileId: string, snapshot: any) => snapshot || {
       recentSummary: '',
@@ -67,7 +74,78 @@ const env = {
     promoteToUser: async () => ['me'],
   },
   walletStore: {
+    getWallet: async () => ({
+      freeCoins: 3,
+      lastRefillTime: Date.now(),
+      freeCoinsExpireAt: Date.now() + 86400000,
+      paidCoins: 0,
+      adsWatchedToday: 0,
+      lastAdResetTime: Date.now(),
+      totalCoinsUsed: 0,
+    }),
+    getLedger: async () => ([{
+      id: 'ledger_1',
+      kind: 'earned_from_daily',
+      amount: 3,
+      source: 'free',
+      metadata: { reason: 'free_pool_refill' },
+      balanceAfter: { freeCoins: 3, paidCoins: 0, totalCoinsUsed: 0 },
+      createdAt: new Date().toISOString(),
+    }]),
+    spend: async () => ({
+      wallet: {
+        freeCoins: 2,
+        lastRefillTime: Date.now(),
+        freeCoinsExpireAt: Date.now() + 86400000,
+        paidCoins: 0,
+        adsWatchedToday: 0,
+        lastAdResetTime: Date.now(),
+        totalCoinsUsed: 1,
+      },
+      source: 'free',
+    }),
+    refund: async () => ({
+      wallet: {
+        freeCoins: 3,
+        lastRefillTime: Date.now(),
+        freeCoinsExpireAt: Date.now() + 86400000,
+        paidCoins: 0,
+        adsWatchedToday: 0,
+        lastAdResetTime: Date.now(),
+        totalCoinsUsed: 0,
+      },
+      refundedSource: 'free',
+    }),
     purchaseBundle: async () => ({}),
+    credit: async () => ({
+      wallet: {
+        freeCoins: 3,
+        lastRefillTime: Date.now(),
+        freeCoinsExpireAt: Date.now() + 86400000,
+        paidCoins: 1,
+        adsWatchedToday: 0,
+        lastAdResetTime: Date.now(),
+        totalCoinsUsed: 0,
+      },
+      amount: 1,
+      reason: 'manual_adjustment',
+    }),
+    claimRewardedAd: async () => ({
+      status: 'claimed',
+      wallet: {
+        freeCoins: 3,
+        lastRefillTime: Date.now(),
+        freeCoinsExpireAt: Date.now() + 86400000,
+        paidCoins: 1,
+        adsWatchedToday: 1,
+        lastAdResetTime: Date.now(),
+        totalCoinsUsed: 0,
+      },
+      remainingAdsToday: 4,
+      provider: 'DARO',
+      rewardAmount: 1,
+      rewardClaimId: 'reward_1',
+    }),
     claimVerifiedPurchase: async () => ({
       status: 'verified',
       creditedCoins: 3,
@@ -97,6 +175,10 @@ const env = {
       purchaseToken: 'token_123456789012',
       metadata: { acknowledged: true },
     }),
+  },
+  shareMetadataStore: {
+    getMetadata: async (inviteId: string) => ({ inviteId }),
+    upsertMetadata: async (_identity: unknown, metadata: any) => metadata,
   },
 };
 
@@ -157,6 +239,17 @@ describe('server app', () => {
     expect(response.body.data.provider).toBe('google_play');
   });
 
+  it('returns wallet ledger entries', async () => {
+    const response = await request(app).post('/api/v1/wallet/ledger').send({
+      installationId: 'install_test_1234',
+      limit: 10,
+    });
+
+    expect(response.status).toBe(200);
+    expect(Array.isArray(response.body.data)).toBe(true);
+    expect(response.body.data[0].kind).toBe('earned_from_daily');
+  });
+
   it('returns server-backed profile memory state', async () => {
     const response = await request(app).post('/api/v1/memory/profile/state').send({
       installationId: 'install_test_1234',
@@ -173,6 +266,44 @@ describe('server app', () => {
     expect(response.status).toBe(200);
     expect(response.body.data.version).toBe('phase4.v2');
     expect(response.body.data.primaryConcerns).toContain('love');
+  });
+
+  it('upserts auth identity records', async () => {
+    const response = await request(app).post('/api/v1/auth/identities/upsert').send({
+      installationId: 'install_test_1234',
+      userId: 'firebase_uid_1234',
+      identity: {
+        provider: 'google',
+        providerAccountId: 'firebase_uid_1234',
+        displayName: 'Tester',
+        email: 'tester@example.com',
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.provider).toBe('google');
+    expect(response.body.data.providerAccountId).toBe('firebase_uid_1234');
+  });
+
+  it('upserts share metadata records', async () => {
+    const response = await request(app).post('/api/v1/share-cards/metadata/upsert').send({
+      installationId: 'install_test_1234',
+      metadata: {
+        inviteId: 'invite_1234',
+        source: 'daily_fortune',
+        targetTab: 'home',
+        inviterName: 'Tester',
+        previewTitle: 'Shared comparison',
+        previewSummary: 'A shared result is waiting.',
+        comparisonSummary: 'Your timing complements each other.',
+        shareUrl: 'https://sazoo.vercel.app/?invite=abc',
+        language: 'ko',
+      },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.inviteId).toBe('invite_1234');
+    expect(response.body.data.source).toBe('daily_fortune');
   });
 
   it('promotes installation state into a user-backed record', async () => {

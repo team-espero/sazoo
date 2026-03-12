@@ -11,6 +11,7 @@ import {
 } from './utils';
 import { useSajuData, useSajuSettings } from './context';
 import { analytics } from './src/services/analytics';
+import { api } from './src/services/api';
 import { buildInviteLink, createInvitePayload } from './src/services/invite';
 
 /* -------------------------------------------------------------------------- */
@@ -587,6 +588,16 @@ export const DailyFortuneCard = ({ onViewFullFortune }: any) => {
       comparisonSummary: comparisonCopy.summaryText,
     });
     const inviteLink = buildInviteLink(invitePayload);
+
+    try {
+      await api.shareCards.upsertMetadata({
+        ...invitePayload,
+        shareUrl: inviteLink,
+        language,
+      });
+    } catch (error) {
+      console.warn('Failed to persist share metadata before sharing.', error);
+    }
 
     // 1. Create a container for the hidden element
     const container = document.createElement('div');

@@ -322,6 +322,13 @@ export function createWalletStore(databaseUrl) {
       await ready;
       return db.withTransaction((client) => resolveWallet(identity, snapshot, client));
     },
+    async getLedger(identity, limit = 50) {
+      await ready;
+      return db.withTransaction(async (client) => {
+        const wallet = await resolveWallet(identity, null, client);
+        return wallet.ledger.slice(0, limit);
+      });
+    },
     async spend(identity, context = 'generic') {
       return mutateWallet(identity, async (client) => {
         const currentWallet = await resolveWallet(identity, null, client);

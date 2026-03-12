@@ -1,11 +1,13 @@
-﻿import React, { useState, useEffect } from 'react';
-import { UserCog, CreditCard, Palette, Sun, Moon, BellRing, HelpCircle, FileText, ChevronRight, LogOut, Sparkles, Plus, Check, X, Crown, Users, Briefcase, Lock, Gift, Clock3, BarChart3, RefreshCw, TimerReset } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { UserCog, CreditCard, Palette, Sun, Moon, BellRing, HelpCircle, FileText, ChevronRight, LogOut, Sparkles, Plus, Check, X, Crown, Users, Briefcase, Lock, Gift, Clock3, BarChart3, RefreshCw, TimerReset, Chrome, MessageCircle, ShieldCheck } from 'lucide-react';
 import { JellyToggle, Button, InputField, ProfileAvatar } from '../../components';
 import CurrencyManagementCard from '../../components/CurrencyManagementCard';
 import { AppLanguage, useSajuActions, useSajuData, useSajuSettings } from '../../context';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useAuth } from '../../src/auth/AuthProvider';
 import { getUnlockedSpecialReports, type SpecialReportUnlock } from '../../src/services/inviteRewards';
 import { api, type LaunchAnalyticsReport } from '../../src/services/api';
+
 
 const PROFILE_COPY: Record<AppLanguage, any> = {
     en: {
@@ -43,38 +45,34 @@ const PROFILE_COPY: Record<AppLanguage, any> = {
         faq: 'FAQ',
         terms: 'Terms',
         signOut: 'Sign Out',
+        guestTitle: 'Guest Mode',
+        guestBody: 'Your reading stays on this device for now. Sign in when you want to sync and keep it.',
+        linkedTitle: 'Connected Account',
+        linkedBody: 'Your guest profile is merged into this account and stays synced across sessions.',
+        loginWithGoogle: 'Connect Google',
+        loginWithKakao: 'Connect Kakao',
+        authRetryHint: 'If a login window closes or a domain is missing, you can retry here.',
+        kakaoSetupHint: 'Add the Kakao JavaScript key and allowed domains to enable it.',
+        signedInAs: 'Signed in as',
+        providerGoogle: 'Google',
+        providerKakao: 'Kakao',
+        signOutSuccess: 'Signed out. You can keep using Sazoo as a guest.',
         freePlan: 'Free Plan',
         version: 'Version 3.1.0 (Multi-Profile)',
-        relationLabels: { family: 'Family', friend: 'Friend', lover: 'Lover', colleague: 'Colleague', me: 'Me' },
+        relationLabels: {
+            family: 'Family',
+            friend: 'Friend',
+            lover: 'Lover',
+            colleague: 'Colleague',
+            me: 'Me',
+        },
         specialReports: 'Special Reports',
         specialReportsDesc: 'Invite rewards and comparison reports you unlocked.',
         noSpecialReports: 'No unlocked reports yet. Invite links will appear here after you open them.',
         reportTypeInvite: 'Invite Comparison',
         unlockedAt: 'Unlocked',
-        viewReport: 'View Report',
-        reportDetailTitle: 'Report Detail',
         reportSummary: 'Summary',
         reportSourceId: 'Source Invite ID',
-        launchMetrics: 'Launch Metrics',
-        launchMetricsDesc: 'Track invite funnel, first value speed, and recent client events.',
-        launchMetricsTitle: 'Launch Metrics',
-        launchMetricsLoading: 'Loading launch metrics...',
-        launchMetricsError: 'Could not load launch metrics right now.',
-        launchMetricsRetry: 'Retry',
-        totalEvents: 'Total Events',
-        recentEvents: 'Recent Events',
-        noRecentEvents: 'No recent events recorded yet.',
-        avgTimeToValue: 'Avg. First Value',
-        withinTarget: 'Within 30s',
-        metricShare: 'Shares',
-        metricInviteOpen: 'Invite Opens',
-        metricInstallFromInvite: 'Installs from Invite',
-        metricD1Retention: 'D1 Retention',
-        metricInviteRewardClaimed: 'Invite Rewards Claimed',
-        metricInviteRewardDuplicate: 'Duplicate Claims Blocked',
-        metricInviteRewardFailed: 'Invite Reward Failures',
-        metricFirstReadingSuccess: 'First Reading Success',
-        metricFirstReadingFailure: 'First Reading Failures',
     },
     ko: {
         settings: '설정',
@@ -92,11 +90,11 @@ const PROFILE_COPY: Record<AppLanguage, any> = {
         day: '일',
         birthTime: '태어난 시간',
         unknownTime: '태어난 시간을 몰라요',
-        createProfile: '프로필 생성',
+        createProfile: '프로필 만들기',
         saveChanges: '변경사항 저장',
-        unlockTitle: '더 많은 슬롯 열기',
-        unlockBody1: '가족, 친구들의 운세를 함께 관리해보세요.',
-        unlockBody2: '플랜을 업그레이드하면 슬롯을 확장할 수 있어요.',
+        unlockTitle: '슬롯 더 열기',
+        unlockBody1: '가족과 친구의 운세까지 함께 관리해보세요.',
+        unlockBody2: '플랜을 업그레이드하면 더 많은 프로필을 추가할 수 있어요.',
         basic: 'Basic (5 슬롯) - $2.99',
         premium: 'Premium (무제한) - $9.99',
         maybeLater: '나중에 할게요',
@@ -105,49 +103,45 @@ const PROFILE_COPY: Record<AppLanguage, any> = {
         support: '지원',
         editProfileItem: '프로필 수정',
         subscription: '구독 관리',
-        subscriptionManage: '구독 관리 페이지로 이동',
-        theme: '테마 설정',
-        notifications: '알림 설정',
+        subscriptionManage: '구독 설정 열기',
+        theme: '테마',
+        notifications: '알림',
         faq: '자주 묻는 질문',
         terms: '이용약관',
         signOut: '로그아웃',
+        guestTitle: '게스트 모드',
+        guestBody: '현재 정보는 이 기기에 안전하게 저장돼요. 원할 때 로그인해서 그대로 이어갈 수 있어요.',
+        linkedTitle: '연결된 계정',
+        linkedBody: '게스트 프로필이 계정과 연결되어 세션이 바뀌어도 이어집니다.',
+        loginWithGoogle: '구글 연결',
+        loginWithKakao: '카카오 연결',
+        authRetryHint: '로그인 창이 닫히거나 도메인 설정이 빠졌다면 여기서 다시 시도할 수 있어요.',
+        kakaoSetupHint: '카카오 JavaScript 키와 허용 도메인을 연결하면 바로 사용할 수 있어요.',
+        signedInAs: '로그인한 계정',
+        providerGoogle: 'Google',
+        providerKakao: 'Kakao',
+        signOutSuccess: '로그아웃되었어요. 이제 게스트 모드로 계속 사용할 수 있어요.',
         freePlan: '무료 플랜',
         version: '버전 3.1.0 (멀티 프로필)',
-        relationLabels: { family: '가족', friend: '친구', lover: '연인', colleague: '동료', me: '나' },
+        relationLabels: {
+            family: '가족',
+            friend: '친구',
+            lover: '연인',
+            colleague: '동료',
+            me: '나',
+        },
         specialReports: '특수 리포트',
-        specialReportsDesc: '초대 보상으로 해금된 비교 리포트를 여기서 확인할 수 있어요.',
-        noSpecialReports: '아직 해금된 리포트가 없어요. 초대 링크를 열면 이곳에 자동으로 쌓입니다.',
+        specialReportsDesc: '초대 보상으로 열어 둔 비교 리포트를 여기서 확인해요.',
+        noSpecialReports: '아직 열어 둔 리포트가 없어요. 초대 링크를 열면 여기에서 볼 수 있어요.',
         reportTypeInvite: '초대 비교 리포트',
         unlockedAt: '해금 시각',
-        viewReport: '리포트 보기',
-        reportDetailTitle: '리포트 상세',
         reportSummary: '요약',
         reportSourceId: '초대 ID',
-        launchMetrics: '운영 리포트',
-        launchMetricsDesc: '공유 퍼널, 첫 가치 도달 속도, 최근 클라이언트 이벤트를 확인해요.',
-        launchMetricsTitle: '운영 리포트',
-        launchMetricsLoading: '운영 리포트를 불러오는 중이에요...',
-        launchMetricsError: '운영 리포트를 불러오지 못했어요.',
-        launchMetricsRetry: '다시 시도',
-        totalEvents: '전체 이벤트',
-        recentEvents: '최근 이벤트',
-        noRecentEvents: '아직 기록된 최근 이벤트가 없어요.',
-        avgTimeToValue: '평균 첫 가치 도달',
-        withinTarget: '30초 이내 달성',
-        metricShare: '공유 수',
-        metricInviteOpen: '초대 링크 열기',
-        metricInstallFromInvite: '초대 설치 전환',
-        metricD1Retention: 'D1 리텐션',
-        metricInviteRewardClaimed: '초대 보상 지급',
-        metricInviteRewardDuplicate: '중복 지급 차단',
-        metricInviteRewardFailed: '초대 보상 실패',
-        metricFirstReadingSuccess: '첫 사주 결과 성공',
-        metricFirstReadingFailure: '첫 사주 결과 실패',
     },
     ja: {
         settings: '設定',
-        switchProfile: 'プロフィール切替',
-        unlockSlots: 'スロットを拡張',
+        switchProfile: 'プロフィール切り替え',
+        unlockSlots: 'スロットを増やす',
         noName: '名前なし',
         meBadge: 'ME',
         addProfile: 'プロフィール追加',
@@ -158,59 +152,55 @@ const PROFILE_COPY: Record<AppLanguage, any> = {
         year: '年',
         month: '月',
         day: '日',
-        birthTime: '出生時刻',
-        unknownTime: '出生時刻が不明',
+        birthTime: '生まれた時間',
+        unknownTime: '生まれた時間が分からない',
         createProfile: 'プロフィール作成',
         saveChanges: '変更を保存',
-        unlockTitle: 'スロットをもっと開放',
-        unlockBody1: '家族や友人の運勢を一緒に管理できます。',
-        unlockBody2: 'プランをアップグレードして枠を増やしましょう。',
-        basic: 'Basic (5枠) - $2.99',
+        unlockTitle: 'スロットを増やす',
+        unlockBody1: '家族や友だちの運勢までまとめて管理できます。',
+        unlockBody2: 'プランをアップグレードすると追加プロフィールを使えます。',
+        basic: 'Basic (5スロット) - $2.99',
         premium: 'Premium (無制限) - $9.99',
-        maybeLater: '後で',
+        maybeLater: 'あとで',
         account: 'アカウント',
         appSettings: 'アプリ設定',
         support: 'サポート',
         editProfileItem: 'プロフィール編集',
         subscription: 'サブスク管理',
-        subscriptionManage: 'サブスク管理ページへ',
+        subscriptionManage: 'サブスク設定を開く',
         theme: 'テーマ',
-        notifications: '通知設定',
+        notifications: '通知',
         faq: 'よくある質問',
         terms: '利用規約',
         signOut: 'ログアウト',
+        guestTitle: 'ゲストモード',
+        guestBody: '今の内容はこの端末に保存されます。必要なときにログインしてそのまま引き継げます。',
+        linkedTitle: '連携済みアカウント',
+        linkedBody: 'ゲストプロフィールはこのアカウントに統合され、次回以降も引き継がれます。',
+        loginWithGoogle: 'Google連携',
+        loginWithKakao: 'Kakao連携',
+        authRetryHint: 'ログイン画面が閉じた時やドメイン設定が足りない時は、ここから再試行できます。',
+        kakaoSetupHint: 'Kakao JavaScriptキーと許可ドメインを設定すると利用できます。',
+        signedInAs: 'ログイン中のアカウント',
+        providerGoogle: 'Google',
+        providerKakao: 'Kakao',
+        signOutSuccess: 'ログアウトしました。ゲストモードで引き続き利用できます。',
         freePlan: '無料プラン',
-        version: 'Version 3.1.0 (Multi-Profile)',
-        relationLabels: { family: '家族', friend: '友達', lover: '恋人', colleague: '同僚', me: '自分' },
+        version: 'バージョン 3.1.0 (マルチプロフィール)',
+        relationLabels: {
+            family: '家族',
+            friend: '友だち',
+            lover: '恋人',
+            colleague: '同僚',
+            me: '自分',
+        },
         specialReports: '特別レポート',
-        specialReportsDesc: '招待報酬として解放された比較レポートをここで確認できます。',
-        noSpecialReports: 'まだ解放されたレポートがありません。招待リンクを開くとここに追加されます。',
+        specialReportsDesc: '招待報酬で解放した比較レポートをここで確認できます。',
+        noSpecialReports: 'まだ解放されたレポートはありません。招待リンクを開くとここに表示されます。',
         reportTypeInvite: '招待比較レポート',
-        unlockedAt: '解放時刻',
-        viewReport: 'レポートを見る',
-        reportDetailTitle: 'レポート詳細',
+        unlockedAt: '解放日時',
         reportSummary: '要約',
-        reportSourceId: '招待ID',
-        launchMetrics: '運用レポート',
-        launchMetricsDesc: '共有ファネル、初回価値到達速度、最近のクライアントイベントを確認できます。',
-        launchMetricsTitle: '運用レポート',
-        launchMetricsLoading: '運用レポートを読み込んでいます...',
-        launchMetricsError: '運用レポートを読み込めませんでした。',
-        launchMetricsRetry: '再試行',
-        totalEvents: '総イベント数',
-        recentEvents: '最近のイベント',
-        noRecentEvents: 'まだ記録されたイベントがありません。',
-        avgTimeToValue: '平均初回価値到達',
-        withinTarget: '30秒以内達成',
-        metricShare: '共有数',
-        metricInviteOpen: '招待リンク起動',
-        metricInstallFromInvite: '招待経由インストール',
-        metricD1Retention: 'D1 リテンション',
-        metricInviteRewardClaimed: '招待報酬付与',
-        metricInviteRewardDuplicate: '重複付与ブロック',
-        metricInviteRewardFailed: '招待報酬失敗',
-        metricFirstReadingSuccess: '初回鑑定成功',
-        metricFirstReadingFailure: '初回鑑定失敗',
+        reportSourceId: '招待 ID',
     },
 };
 
@@ -265,7 +255,7 @@ const ProfileEditModal = ({ isOpen, onClose, isAddMode, initialData, copy }: any
                 minute: isTimeUnknown ? 0 : Number(minute),
                 ampm,
             },
-            calendarType: '양력' as const,
+            calendarType: '?묐젰' as const,
             isTimeUnknown,
         };
 
@@ -475,28 +465,155 @@ const LaunchMetricsModal = ({
 }) => {
     if (!isOpen) return null;
 
-    const metrics = report ? [
-        { label: copy.metricShare, value: report.counts.share },
-        { label: copy.metricInviteOpen, value: report.counts.invite_open },
-        { label: copy.metricInstallFromInvite, value: report.counts.install_from_invite },
-        { label: copy.metricD1Retention, value: report.counts.d1_retention },
-        { label: copy.metricInviteRewardClaimed, value: report.counts.invite_reward_claimed },
-        { label: copy.metricInviteRewardDuplicate, value: report.counts.invite_reward_duplicate },
-        { label: copy.metricInviteRewardFailed, value: report.counts.invite_reward_claim_failed },
-        { label: copy.metricFirstReadingSuccess, value: report.counts.first_reading_success },
-        { label: copy.metricFirstReadingFailure, value: report.counts.first_reading_failure },
-    ] : [];
-    const dailyInsightsSourceLabel = language === 'ko' ? '오늘 인사이트 소스' : language === 'ja' ? '今日のインサイトソース' : 'Daily Insights Source';
-    const dailyInsightsSourceDesc = language === 'ko'
-        ? '현재 홈 인사이트가 Gemini 모델 응답인지 빠른 fallback 경로인지 표시합니다.'
+    const launchCopy = language === 'ko'
+        ? {
+            badge: '운영 리포트',
+            title: '런치 메트릭',
+            description: '초대 퍼널, 첫 가치 도달 속도, 제품 사용 신호를 한 번에 확인합니다.',
+            loading: '런치 메트릭을 불러오는 중이에요...',
+            error: '런치 메트릭을 지금 불러오지 못했어요.',
+            retry: '다시 불러오기',
+            totalEvents: '전체 이벤트',
+            avgTimeToValue: '평균 첫 가치 도달',
+            withinTarget: '30초 이내',
+            recentEvents: '최근 이벤트',
+            noRecentEvents: '아직 기록된 최근 이벤트가 없어요.',
+            dailyInsightsSourceLabel: '오늘 인사이트 소스',
+            dailyInsightsSourceDesc: '현재 홈 인사이트가 Gemini 모델 응답인지 빠른 fallback인지 보여줍니다.',
+            dailyInsightsSourceModel: 'Gemini 모델',
+            dailyInsightsSourceFallback: '빠른 Fallback',
+            dailyInsightsSourceUnavailable: '없음',
+            metricShare: '공유',
+            metricInviteOpen: '초대 링크 열기',
+            metricInstallFromInvite: '초대 설치 전환',
+            metricD1Retention: 'D1 리텐션',
+            metricInviteRewardClaimed: '초대 보상 클레임',
+            metricInviteRewardGranted: '초대 보상 지급',
+            metricInviteRewardDuplicate: '중복 보상 차단',
+            metricInviteRewardFailed: '초대 보상 실패',
+            metricFirstReadingSuccess: '첫 사주 결과 성공',
+            metricFirstReadingFailure: '첫 사주 결과 실패',
+            metricCoinSpent: '코인 소모',
+            metricAdRewardGranted: '광고 보상 지급',
+            metricSceneChange: '씬 변경',
+            metricMiniAppOpen: '미니앱 진입',
+            metricOnboardingViews: '온보딩 조회',
+            metricOnboardingCompletes: '온보딩 완료',
+            coinSpendByContext: '코인 사용 위치',
+            adRewardsByPlacement: '광고 보상 위치',
+            miniAppsByApp: '미니앱 진입 분포',
+            scenesById: '씬 변경 분포',
+            emptyBreakdown: '아직 집계된 세부 항목이 없어요.',
+        }
         : language === 'ja'
-            ? '現在のホームインサイトがGeminiモデル由来か、高速フォールバック由来かを表示します。'
-            : 'Shows whether the current home insight came from Gemini or the fast fallback path.';
+            ? {
+                badge: '運営レポート',
+                title: 'ローンチ指標',
+                description: '招待ファネル、初回価値到達速度、主要な利用シグナルをまとめて確認します。',
+                loading: 'ローンチ指標を読み込んでいます...',
+                error: 'ローンチ指標を読み込めませんでした。',
+                retry: '再読み込み',
+                totalEvents: '総イベント',
+                avgTimeToValue: '平均初回価値到達',
+                withinTarget: '30秒以内',
+                recentEvents: '最近のイベント',
+                noRecentEvents: 'まだ最近のイベントはありません。',
+                dailyInsightsSourceLabel: '本日のインサイト元',
+                dailyInsightsSourceDesc: '現在のホームインサイトがGemini応答か高速fallbackかを表示します。',
+                dailyInsightsSourceModel: 'Gemini モデル',
+                dailyInsightsSourceFallback: '高速 Fallback',
+                dailyInsightsSourceUnavailable: '未取得',
+                metricShare: '共有',
+                metricInviteOpen: '招待リンク開封',
+                metricInstallFromInvite: '招待経由インストール',
+                metricD1Retention: 'D1 継続率',
+                metricInviteRewardClaimed: '招待報酬クレーム',
+                metricInviteRewardGranted: '招待報酬付与',
+                metricInviteRewardDuplicate: '重複報酬ブロック',
+                metricInviteRewardFailed: '招待報酬失敗',
+                metricFirstReadingSuccess: '初回鑑定成功',
+                metricFirstReadingFailure: '初回鑑定失敗',
+                metricCoinSpent: 'コイン消費',
+                metricAdRewardGranted: '広告報酬付与',
+                metricSceneChange: 'シーン変更',
+                metricMiniAppOpen: 'ミニアプリ起動',
+                metricOnboardingViews: 'オンボーディング閲覧',
+                metricOnboardingCompletes: 'オンボーディング完了',
+                coinSpendByContext: 'コイン消費箇所',
+                adRewardsByPlacement: '広告報酬配置',
+                miniAppsByApp: 'ミニアプリ分布',
+                scenesById: 'シーン変更分布',
+                emptyBreakdown: 'まだ詳細データはありません。',
+            }
+            : {
+                badge: 'Launch Report',
+                title: 'Launch Metrics',
+                description: 'Track invite funnel health, first-value speed, and product usage signals in one place.',
+                loading: 'Loading launch metrics...',
+                error: 'Could not load launch metrics right now.',
+                retry: 'Retry',
+                totalEvents: 'Total Events',
+                avgTimeToValue: 'Avg. First Value',
+                withinTarget: 'Within 30s',
+                recentEvents: 'Recent Events',
+                noRecentEvents: 'No recent events recorded yet.',
+                dailyInsightsSourceLabel: 'Daily Insights Source',
+                dailyInsightsSourceDesc: 'Shows whether the current home insight came from Gemini or the fast fallback path.',
+                dailyInsightsSourceModel: 'Gemini Model',
+                dailyInsightsSourceFallback: 'Fast Fallback',
+                dailyInsightsSourceUnavailable: 'Unavailable',
+                metricShare: 'Shares',
+                metricInviteOpen: 'Invite Opens',
+                metricInstallFromInvite: 'Installs from Invite',
+                metricD1Retention: 'D1 Retention',
+                metricInviteRewardClaimed: 'Invite Reward Claims',
+                metricInviteRewardGranted: 'Invite Rewards Granted',
+                metricInviteRewardDuplicate: 'Duplicate Claims Blocked',
+                metricInviteRewardFailed: 'Invite Reward Failures',
+                metricFirstReadingSuccess: 'First Reading Success',
+                metricFirstReadingFailure: 'First Reading Failures',
+                metricCoinSpent: 'Coins Spent',
+                metricAdRewardGranted: 'Ad Rewards Granted',
+                metricSceneChange: 'Scene Changes',
+                metricMiniAppOpen: 'Mini App Opens',
+                metricOnboardingViews: 'Onboarding Views',
+                metricOnboardingCompletes: 'Onboarding Completions',
+                coinSpendByContext: 'Coin Spend by Context',
+                adRewardsByPlacement: 'Ad Rewards by Placement',
+                miniAppsByApp: 'Mini Apps by App',
+                scenesById: 'Scene Changes by Scene',
+                emptyBreakdown: 'No breakdown data yet.',
+            };
+
+    const metrics = report ? [
+        { label: launchCopy.metricShare, value: report.counts.share },
+        { label: launchCopy.metricInviteOpen, value: report.counts.invite_open },
+        { label: launchCopy.metricInstallFromInvite, value: report.counts.install_from_invite },
+        { label: launchCopy.metricD1Retention, value: report.counts.d1_retention },
+        { label: launchCopy.metricInviteRewardClaimed, value: report.counts.invite_reward_claimed },
+        { label: launchCopy.metricInviteRewardGranted, value: report.counts.invite_reward_granted },
+        { label: launchCopy.metricInviteRewardDuplicate, value: report.counts.invite_reward_duplicate },
+        { label: launchCopy.metricInviteRewardFailed, value: report.counts.invite_reward_claim_failed },
+        { label: launchCopy.metricFirstReadingSuccess, value: report.counts.first_reading_success },
+        { label: launchCopy.metricFirstReadingFailure, value: report.counts.first_reading_failure },
+        { label: launchCopy.metricCoinSpent, value: report.counts.coin_spent },
+        { label: launchCopy.metricAdRewardGranted, value: report.counts.ad_reward_granted },
+        { label: launchCopy.metricSceneChange, value: report.counts.scene_change },
+        { label: launchCopy.metricMiniAppOpen, value: report.counts.mini_app_open },
+        { label: launchCopy.metricOnboardingViews, value: report.counts.onboarding_step_view },
+        { label: launchCopy.metricOnboardingCompletes, value: report.counts.onboarding_step_complete },
+    ] : [];
+    const breakdownSections = report ? [
+        { title: launchCopy.coinSpendByContext, values: report.productHealth.coinSpendByContext },
+        { title: launchCopy.adRewardsByPlacement, values: report.productHealth.adRewardsByPlacement },
+        { title: launchCopy.miniAppsByApp, values: report.productHealth.miniAppOpenByApp },
+        { title: launchCopy.scenesById, values: report.productHealth.sceneChangeByScene },
+    ] : [];
     const dailyInsightsSourceValue = dailyInsightsSource === 'model'
-        ? (language === 'ko' ? 'Gemini 모델' : language === 'ja' ? 'Geminiモデル' : 'Gemini Model')
+        ? launchCopy.dailyInsightsSourceModel
         : dailyInsightsSource === 'fallback'
-            ? (language === 'ko' ? '빠른 Fallback' : language === 'ja' ? '高速フォールバック' : 'Fast Fallback')
-            : (language === 'ko' ? '없음' : language === 'ja' ? '未設定' : 'Unavailable');
+            ? launchCopy.dailyInsightsSourceFallback
+            : launchCopy.dailyInsightsSourceUnavailable;
 
     return (
         <div className="fixed inset-0 z-[85] flex items-center justify-center p-4">
@@ -508,15 +625,15 @@ const LaunchMetricsModal = ({
             >
                 <div className={`flex items-start justify-between border-b px-6 py-5 ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
                     <div>
-                        <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-500">{copy.launchMetrics}</p>
-                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{copy.launchMetricsTitle}</h3>
-                        <p className={`mt-1 text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.launchMetricsDesc}</p>
+                        <p className="mb-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-emerald-500">{launchCopy.badge}</p>
+                        <h3 className={`text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{launchCopy.title}</h3>
+                        <p className={`mt-1 text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{launchCopy.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={onRetry}
                             className={`rounded-full p-2 ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-100'}`}
-                            aria-label={copy.launchMetricsRetry}
+                            aria-label={launchCopy.retry}
                         >
                             <RefreshCw size={16} className={loading ? 'animate-spin text-emerald-500' : isDark ? 'text-slate-400' : 'text-slate-500'} />
                         </button>
@@ -530,44 +647,44 @@ const LaunchMetricsModal = ({
                     {loading ? (
                         <div className={`rounded-[24px] border p-6 text-center ${isDark ? 'border-slate-700 bg-slate-800/50 text-slate-300' : 'border-slate-100 bg-slate-50 text-slate-600'}`}>
                             <RefreshCw size={18} className="mx-auto mb-3 animate-spin text-emerald-500" />
-                            <p className="text-sm font-bold">{copy.launchMetricsLoading}</p>
+                            <p className="text-sm font-bold">{launchCopy.loading}</p>
                         </div>
                     ) : error ? (
                         <div className={`rounded-[24px] border p-6 text-center ${isDark ? 'border-red-900/50 bg-red-950/30 text-red-200' : 'border-red-100 bg-red-50 text-red-500'}`}>
-                            <p className="mb-4 text-sm font-bold">{error || copy.launchMetricsError}</p>
+                            <p className="mb-4 text-sm font-bold">{error || launchCopy.error}</p>
                             <Button onClick={onRetry} className="!rounded-2xl !bg-slate-900 !px-5 !py-3 !text-white">
-                                {copy.launchMetricsRetry}
+                                {launchCopy.retry}
                             </Button>
                         </div>
                     ) : report ? (
                         <div className="space-y-5">
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
-                                    <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.totalEvents}</p>
+                                    <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{launchCopy.totalEvents}</p>
                                     <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{report.totalEvents}</p>
                                 </div>
                                 <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
                                     <div className="flex items-center gap-2">
                                         <TimerReset size={14} className="text-emerald-500" />
-                                        <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.avgTimeToValue}</p>
+                                        <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{launchCopy.avgTimeToValue}</p>
                                     </div>
                                     <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatDurationMs(report.timeToFirstValue.averageMs, language)}</p>
                                 </div>
                                 <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
-                                    <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.withinTarget}</p>
+                                    <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{launchCopy.withinTarget}</p>
                                     <p className={`mt-3 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{Math.round(report.timeToFirstValue.withinTargetRate * 100)}%</p>
                                 </div>
                                 <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-100 bg-slate-50/90'}`}>
                                     <div className="flex items-center gap-2">
                                         <BarChart3 size={14} className="text-emerald-500" />
-                                        <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{dailyInsightsSourceLabel}</p>
+                                        <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{launchCopy.dailyInsightsSourceLabel}</p>
                                     </div>
                                     <p className={`mt-3 text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{dailyInsightsSourceValue}</p>
-                                    <p className={`mt-2 text-xs font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{dailyInsightsSourceDesc}</p>
+                                    <p className={`mt-2 text-xs font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{launchCopy.dailyInsightsSourceDesc}</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                                 {metrics.map((metric) => (
                                     <div key={metric.label} className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-white'}`}>
                                         <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{metric.label}</p>
@@ -576,10 +693,34 @@ const LaunchMetricsModal = ({
                                 ))}
                             </div>
 
+                            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                                {breakdownSections.map((section) => {
+                                    const entries = Object.entries(section.values || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+                                    return (
+                                        <div key={section.title} className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-slate-100 bg-white'}`}>
+                                            <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{section.title}</p>
+                                            {entries.length === 0 ? (
+                                                <p className={`mt-3 text-sm font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{launchCopy.emptyBreakdown}</p>
+                                            ) : (
+                                                <div className="mt-3 space-y-2">
+                                                    {entries.map(([key, value]) => (
+                                                        <div key={key} className="flex items-center justify-between gap-3">
+                                                            <span className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{key}</span>
+                                                            <span className={`rounded-full px-3 py-1 text-xs font-black ${isDark ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'}`}>{value}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
                             <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
                                 <div className="mb-4 flex items-center justify-between gap-4">
                                     <div>
-                                        <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.recentEvents}</p>
+                                        <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{launchCopy.recentEvents}</p>
                                         <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{formatUnlockedAt(report.generatedAt, language)}</p>
                                     </div>
                                     <div className={`rounded-full px-3 py-1 text-xs font-black ${isDark ? 'bg-slate-800 text-slate-200' : 'bg-white text-slate-700 shadow-sm'}`}>
@@ -588,7 +729,7 @@ const LaunchMetricsModal = ({
                                 </div>
 
                                 {report.recentEvents.length === 0 ? (
-                                    <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{copy.noRecentEvents}</p>
+                                    <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{launchCopy.noRecentEvents}</p>
                                 ) : (
                                     <div className="space-y-3">
                                         {report.recentEvents.map((event, index) => (
@@ -609,9 +750,7 @@ const LaunchMetricsModal = ({
             </motion.div>
         </div>
     );
-};
-
-const SpecialReportDetailModal = ({
+};const SpecialReportDetailModal = ({
     report,
     isOpen,
     onClose,
@@ -763,6 +902,18 @@ const ProfileScreen = () => {
     const { sajuState, userTier } = useSajuData();
     const { themeMode, language = 'ko' } = useSajuSettings();
     const { setThemeMode } = useSajuActions();
+    const {
+        status: authStatus,
+        session,
+        error: authError,
+        pendingProvider,
+        isGoogleReady,
+        isKakaoReady,
+        signInWithGoogle,
+        signInWithKakao,
+        signOut,
+        clearError,
+    } = useAuth();
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
     const [isSwitcherOpen, setIsSwitcherOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -772,11 +923,22 @@ const ProfileScreen = () => {
     const [launchReportError, setLaunchReportError] = useState<string | null>(null);
     const [specialReports, setSpecialReports] = useState<SpecialReportUnlock[]>([]);
     const [selectedReport, setSelectedReport] = useState<SpecialReportUnlock | null>(null);
+    const [localAuthMessage, setLocalAuthMessage] = useState<string | null>(null);
 
     const currentProfile = sajuState.profile;
     const isMe = currentProfile.id === 'me';
     const isDark = themeMode === 'dark';
     const copy = PROFILE_COPY[language as AppLanguage] ?? PROFILE_COPY.ko;
+    const launchMetricsMenuLabel = language === 'ko'
+        ? '운영 리포트'
+        : language === 'ja'
+            ? '運営レポート'
+            : 'Launch Metrics';
+    const launchMetricsErrorText = language === 'ko'
+        ? '런치 메트릭을 지금 불러오지 못했어요.'
+        : language === 'ja'
+            ? 'ローンチ指標を読み込めませんでした。'
+            : 'Could not load launch metrics right now.';
 
     useEffect(() => {
         const syncReports = async () => {
@@ -815,9 +977,40 @@ const ProfileScreen = () => {
             const report = await api.analytics.getLaunchReport();
             setLaunchReport(report);
         } catch (error) {
-            setLaunchReportError(error instanceof Error ? error.message : copy.launchMetricsError);
+            setLaunchReportError(error instanceof Error ? error.message : launchMetricsErrorText);
         } finally {
             setLaunchReportLoading(false);
+        }
+    };
+
+    const handleGoogleConnect = async () => {
+        clearError();
+        setLocalAuthMessage(null);
+        const result = await signInWithGoogle();
+        if (!result.ok && result.error) {
+            setLocalAuthMessage(result.error);
+        }
+    };
+
+    const handleKakaoConnect = async () => {
+        clearError();
+        setLocalAuthMessage(null);
+        const result = await signInWithKakao();
+        if (!result.ok && result.error) {
+            setLocalAuthMessage(result.error);
+        }
+    };
+
+    const handleSignOut = async () => {
+        clearError();
+        setLocalAuthMessage(null);
+        const result = await signOut();
+        if (result.ok) {
+            setLocalAuthMessage(copy.signOutSuccess);
+            return;
+        }
+        if (result.error) {
+            setLocalAuthMessage(result.error);
         }
     };
 
@@ -855,7 +1048,7 @@ const ProfileScreen = () => {
         {
             title: copy.support,
             items: [
-                { icon: BarChart3, label: copy.launchMetrics, onClick: openLaunchMetrics },
+                { icon: BarChart3, label: launchMetricsMenuLabel, onClick: openLaunchMetrics },
                 { icon: HelpCircle, label: copy.faq, onClick: () => { } },
                 { icon: FileText, label: copy.terms, onClick: () => { } },
             ],
@@ -902,6 +1095,68 @@ const ProfileScreen = () => {
             </motion.div>
 
             <div className="space-y-8">
+                <div>
+                    <h4 className={`text-[10px] font-extrabold uppercase tracking-widest mb-3 ml-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{copy.account}</h4>
+                    <div className={`rounded-[28px] border p-5 shadow-sm ${isDark ? 'border-slate-700/30 bg-slate-900/40' : 'border-white/60 bg-white/70'}`}>
+                        <div className="flex items-start gap-4">
+                            <div className={`rounded-2xl p-3 ${authStatus === 'authenticated'
+                                ? (isDark ? 'bg-emerald-500/15 text-emerald-300' : 'bg-emerald-50 text-emerald-500')
+                                : (isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-500')
+                                }`}>
+                                <ShieldCheck size={18} />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <h4 className={`text-base font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                        {authStatus === 'authenticated' ? copy.linkedTitle : copy.guestTitle}
+                                    </h4>
+                                    {authStatus === 'authenticated' && (
+                                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'bg-slate-800 text-slate-200' : 'bg-slate-100 text-slate-600'}`}>
+                                            {session?.provider === 'kakao' ? copy.providerKakao : copy.providerGoogle}
+                                        </span>
+                                    )}
+                                </div>
+                                <p className={`mt-2 text-sm font-medium leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                                    {authStatus === 'authenticated' ? copy.linkedBody : copy.guestBody}
+                                </p>
+                                {authStatus === 'authenticated' && (
+                                    <p className={`mt-3 text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        {copy.signedInAs}: {session?.email || session?.displayName || session?.userId}
+                                    </p>
+                                )}
+                                {(localAuthMessage || authError) && (
+                                    <p className={`mt-3 text-xs font-bold ${(localAuthMessage && localAuthMessage === copy.signOutSuccess) ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                        {localAuthMessage || authError}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-5 grid grid-cols-1 gap-3">
+                            {authStatus === 'authenticated' ? (
+                                <Button fullWidth onClick={handleSignOut} className="!bg-rose-50 !text-rose-500 !border !border-rose-100" disabled={pendingProvider !== null}>
+                                    <LogOut size={16} />
+                                    <span>{copy.signOut}</span>
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button fullWidth onClick={handleGoogleConnect} variant="google" disabled={!isGoogleReady || pendingProvider !== null}>
+                                        <Chrome size={18} className="absolute left-6 text-slate-600" />
+                                        <span className="text-slate-600">{copy.loginWithGoogle}</span>
+                                    </Button>
+                                    <Button fullWidth onClick={handleKakaoConnect} variant="kakao" disabled={pendingProvider !== null}>
+                                        <MessageCircle fill="#391B1B" size={18} className="absolute left-6 text-[#391B1B]" />
+                                        <span className="text-[#391B1B]">{copy.loginWithKakao}</span>
+                                    </Button>
+                                    <p className={`px-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        {isKakaoReady ? copy.authRetryHint : copy.kakaoSetupHint}
+                                    </p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 {settingsGroups.map((group, idx) => (
                     <div key={idx}>
                         <h4 className={`text-[10px] font-extrabold uppercase tracking-widest mb-3 ml-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{group.title}</h4>
@@ -1015,14 +1270,6 @@ const ProfileScreen = () => {
                 </div>
             </div>
 
-            <button className={`w-full mt-10 p-4 rounded-[24px] border font-bold text-sm flex items-center justify-center space-x-2 transition-all shadow-sm ${isDark
-                ? 'bg-slate-900/30 border-red-900/30 text-red-400 hover:bg-red-900/20'
-                : 'bg-white/50 border-red-100 text-red-400 hover:bg-red-50 hover:border-red-200'
-                }`}>
-                <LogOut size={18} />
-                <span>{copy.signOut}</span>
-            </button>
-
             <div className="text-center mt-6">
                 <span className="text-[10px] text-slate-500 font-medium">{copy.version}</span>
             </div>
@@ -1058,4 +1305,3 @@ const ProfileScreen = () => {
 };
 
 export default ProfileScreen;
-

@@ -35,7 +35,9 @@ This document reflects the **current optimized implementation in the codebase**,
 - Time input supports:
   - known / unknown toggle
   - AM/PM + hour + minute direct input
-- Google login is connected through Firebase when config is valid.
+- Guest mode, Firebase Google login, and Kakao login entry all live in the first onboarding step.
+- Google login uses Firebase popup with redirect fallback for mobile-like environments.
+- Kakao login is wired through the Kakao JavaScript SDK and becomes active when the Kakao JavaScript key and allowed domains are configured.
 - Launch-critical onboarding was shortened by removing the dedicated knowledge-level step.
 - `knowledgeLevel` currently defaults to `newbie` and can be refined later through progressive profiling instead of blocking first value.
 - Onboarding completion flow:
@@ -178,6 +180,9 @@ Current implementation:
 - Slot upgrade modal for tier expansion
 - Special report list for invite-unlocked comparison reports
 - Launch metrics report modal backed by the internal analytics collector
+  - funnel counts: invite open, install attribution, first reading, D1
+  - product health counts: coin spend, ad rewards, scene changes, mini-app opens
+  - breakdowns by onboarding step, coin context, ad placement, mini app, and scene id
 - FAQ / Terms menu stubs
 
 Tier model currently exists in app state:
@@ -316,12 +321,15 @@ Firebase is initialized in:
 
 Current connected feature:
 - Google social login for onboarding
+- Kakao social login through a config-gated SDK path
+- dedicated auth session provider for guest / Google / Kakao mode
 - Firebase Analytics event collection for launch metrics
 
 Current behavior:
 - if Firebase config is incomplete, the app degrades safely
-- social login button becomes unavailable instead of crashing the flow
-- after Firebase login, installation-scoped user state, unlocks, chat summaries, and progressive profile memory are promoted to `userId`-backed records
+- Google social login falls back safely instead of crashing the flow
+- guest users can continue immediately and later merge into an account
+- after Google or Kakao login, installation-scoped user state, unlocks, chat summaries, and progressive profile memory are promoted to `userId`-backed records
 - analytics initialization is skipped safely on unsupported browsers
 - non-production analytics events include `debug_mode` so Firebase DebugView can inspect launch metrics quickly
 - early app-boot analytics events are queued briefly so invite-based launch events are not dropped before Firebase is ready
@@ -457,7 +465,10 @@ The following are implemented but still product-incomplete:
 - `App.tsx`: app shell, viewport sync, error boundary, screen switching
 - `context.tsx`: global state, actions, onboarding, daily insights, coin logic
 - `screens/MainScreen.tsx`: main tab orchestration and onboarding modal flow
-- `screens/OnboardingScreen.tsx`: onboarding steps and Firebase Google login
+- `screens/OnboardingScreen.tsx`: onboarding steps, guest mode entry, Google login, Kakao login entry
+- `src/auth/AuthProvider.tsx`: shared auth session layer for guest, Google, Kakao, logout, and auth errors
+- `src/services/authSession.ts`: app-level auth identity persisted separately from Saju state
+- `src/config/kakao.ts`: Kakao SDK loader and Kakao auth session normalization
 - `screens/tabs/ChatScreen.tsx`: chat flow, first reading, deep reading behavior
 - `screens/tabs/HomeTab.tsx`: home widgets and scene selection
 - `components/HomeScene.tsx`: optimized three.js home scene runtime
@@ -491,6 +502,8 @@ Sazoo is currently implemented as a **mobile-first, AI-assisted saju app** with:
 - split global state
 - Express-backed Gemini integration
 - Firebase-based Google login
+- config-gated Kakao login
+- guest-to-account promotion flow
 - multilingual UI
 
 This document should be treated as the **source of truth for the current implementation baseline**.

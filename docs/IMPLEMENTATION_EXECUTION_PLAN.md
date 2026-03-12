@@ -1,4 +1,4 @@
-# Sazoo v2.1 (Forest) - Detailed Implementation Execution Plan
+﻿# Sazoo v2.1 (Forest) - Detailed Implementation Execution Plan
 
 ## 1. Purpose
 
@@ -617,6 +617,21 @@ Must add:
 
 - share -> open -> install/open -> restore -> reward works reliably
 
+### 9.5 Current Status
+
+Implemented:
+- comparison share card renderer is live and persists canonical share metadata before share
+- invite links support path-based deep links such as `/compare/:token`
+- legacy query-string invite links still resolve for backwards compatibility
+- app boot captures invite links and restores the intended destination automatically for onboarded users
+- restored invite context is shown in a dedicated modal before the recipient continues
+- invite reward claims remain server-authoritative with duplicate-claim protection
+- self-invite abuse is blocked on the server using persisted share ownership metadata
+- Playwright QA covers first open, onboarding, reward claim, duplicate reopen, and restored comparison context
+
+Remaining:
+- extend the same deep-link restoration model into native app install attribution when Android universal/app links are finalized
+
 ---
 
 ## 10. Workstream 7 - Analytics Instrumentation
@@ -668,6 +683,21 @@ Every event should include:
 
 - required launch metrics are observable in one analytics dashboard
 
+### 10.5 Current Status
+
+Implemented:
+- client analytics events persist locally, dispatch to the server collector, and mirror into Firebase Analytics
+- invite funnel events are instrumented end to end from deep-link open through first reading
+- product-health events now cover coin spend, rewarded-ad grants, invite reward grants, Home scene changes, and mini-app opens
+- server launch metrics summary aggregates onboarding steps, time-to-first-value, and product-health breakdowns
+- Profile tab launch metrics modal shows both launch funnel counts and product-health diagnostics, including `dailyInsights.source`
+- event contract and QA checklist are documented in:
+  - `docs/ANALYTICS_EVENT_SPEC.md`
+  - `docs/ANALYTICS_QA_CHECKLIST.md`
+
+Remaining:
+- optional external dashboard mapping beyond Firebase DebugView / internal report view
+
 ---
 
 ## 11. Workstream 8 - Backend And Data Migration
@@ -676,25 +706,37 @@ Every event should include:
 
 Move launch-critical data away from local-only state.
 
-### 11.2 Files To Add
+### 11.1A Current Status
 
-Likely new server structure:
+Implemented:
+- launch DB runtime with PostgreSQL primary and SQLite fallback
+- backend stores for users, auth identities, wallet ledger, invite claims, unlocks, chat summaries, profile memory, and share metadata
+- wallet ledger read endpoint and server-authoritative wallet spending / refund / reward flows
+- frontend cache reconciliation keyed by `userId` or `installationId`
+- local dev seed script for launch-state smoke testing
+
+Remaining:
+- migrate deep link share/invite route payloads into the same canonical backend flow
+- remove any last UI paths that still rely on local mirrored state instead of refreshed backend state
+- add a dedicated ops view for share-card metadata and invite abuse review
+
+### 11.2 Files To Add Or Maintain
+
+Current server structure now includes:
 
 ```txt
-server/routes/
-  authRoutes.js
-  userRoutes.js
-  walletRoutes.js
-  inviteRoutes.js
-
-server/services/
-  authService.js
-  walletService.js
-  inviteService.js
-
 server/db/
-  client.js
-  schema/
+  launchDb.js
+  postgres.js
+
+server/authIdentity/
+server/chat/
+server/invite/
+server/memory/
+server/share/
+server/unlocks/
+server/user/
+server/wallet/
 ```
 
 ### 11.3 Implementation Steps
@@ -703,6 +745,9 @@ server/db/
 
 Recommended:
 - PostgreSQL for structured user/wallet/invite data
+
+Status:
+- done, with Neon / Postgres as durable primary and SQLite as local fallback
 
 #### Step 2. Add schema
 
@@ -714,6 +759,10 @@ Initial tables:
 - unlocks
 - invite_records
 - chat_memory_summary
+- share_card_metadata
+
+Status:
+- done for launch DB and Postgres stores
 
 #### Step 3. Add endpoints
 
@@ -726,6 +775,14 @@ Add:
 - `POST /user/coins/reward`
 - `POST /invite/create`
 - `POST /invite/claim`
+- `POST /wallet/ledger`
+- `POST /auth/identities/state`
+- `POST /auth/identities/upsert`
+- `POST /share-cards/metadata/state`
+- `POST /share-cards/metadata/upsert`
+
+Status:
+- mostly done; remaining work is route consolidation, not capability gaps
 
 #### Step 4. Replace local source of truth
 
@@ -735,15 +792,23 @@ Frontend migration order:
 3. unlocks
 4. invite state
 
+Status:
+- wallet, profile, unlocks, and auth promotion are backend-first
+- local storage remains as a fast mirror and offline fallback only
+
 #### Step 5. Keep local cache
 
 Local storage becomes:
 - cache only
 - never source of truth
 
+Status:
+- implemented with cache owner reconciliation and launch-state invalidation
+
 ### 11.4 Done When
 
 - launch-critical user state survives reinstall and cross-device use
+- backend is the canonical source for wallet, unlocks, promoted auth state, and profile memory
 
 ---
 
@@ -830,7 +895,7 @@ Then:
 
 ---
 
-## 14. Definition Of “Ready To Start Coding”
+## 14. Definition Of ?쏳eady To Start Coding??
 
 A workstream is ready to implement when:
 - target files are identified
@@ -840,3 +905,4 @@ A workstream is ready to implement when:
 - rollout order is fixed
 
 This document is intended to satisfy that bar.
+

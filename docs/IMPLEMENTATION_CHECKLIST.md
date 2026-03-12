@@ -1,4 +1,4 @@
-# Sazoo v2.1 (Forest) - Step-by-Step Implementation Checklist
+﻿# Sazoo v2.1 (Forest) - Step-by-Step Implementation Checklist
 
 ## 0. How To Use This File
 
@@ -300,35 +300,36 @@ Goal: move from prototype-style onboarding to real launch auth flow.
 
 ### 6.1 Firebase Google Login
 
-- [~] Firebase config and Google popup login exist
-- [ ] Finalize Firebase project settings
-- [ ] Add production authorized domains
-- [ ] Connect Google login result to app user state
-- [ ] Persist login state between sessions
-- [ ] Define guest mode vs logged-in mode behavior
-- [ ] Decide guest-to-account merge rule
-- [ ] Add logout flow
-- [ ] Add auth error states and retry UX
+- [x] Firebase config and Google popup / redirect login exist
+- [~] Finalize Firebase project settings
+- [~] Add production authorized domains
+- [x] Connect Google login result to app user state
+- [x] Persist login state between sessions
+- [x] Define guest mode vs logged-in mode behavior
+- [x] Decide guest-to-account merge rule
+- [x] Add logout flow
+- [x] Add auth error states and retry UX
 
 ### 6.2 Kakao Login
 
-- [~] Kakao button exists as UI only
-- [ ] Add Kakao SDK / provider integration
-- [ ] Add Kakao login flow
-- [ ] Normalize Kakao user profile into app auth model
-- [ ] Align Kakao login with Google login state shape
-- [ ] QA domain / redirect flow for web and app
+- [x] Replace Kakao placeholder button with config-gated auth entry
+- [x] Add Kakao SDK / provider integration
+- [~] Add Kakao login flow
+- [x] Normalize Kakao user profile into app auth model
+- [x] Align Kakao login with Google login state shape
+- [~] QA domain / allowed-origin flow for web and app
 
 ### 6.3 Auth Provider / Session Model
 
-- [ ] Add dedicated `AuthProvider`
-- [ ] Store authenticated user session separately from Saju state
-- [ ] Add token refresh strategy if backend auth is introduced
-- [ ] Add account-linked profile sync strategy
+- [x] Add dedicated `AuthProvider`
+- [x] Store authenticated user session separately from Saju state
+- [x] Add token refresh strategy if backend auth is introduced
+- [x] Add account-linked profile sync strategy
 
 Done when:
 - User can continue as guest or login.
-- Google and Kakao both work.
+- Google works in production domains.
+- Kakao works as soon as Kakao JavaScript key and allowed origins are configured.
 - Session state survives reloads and production domains.
 
 ---
@@ -342,35 +343,35 @@ Goal: replace prototype-only persistence with launch-ready data flow.
 - [x] AI proxy endpoints exist
 - [x] Add auth endpoints
 - [x] Add user profile read/write endpoints
-- [ ] Add coin ledger endpoints
+- [x] Add coin ledger endpoints
 - [x] Add unlock state endpoints
 - [x] Add invite / reward endpoints
-- [ ] Add share card metadata endpoints if needed
+- [x] Add share card metadata endpoints if needed
 
 ### 7.2 Database
 
 - [x] Choose final DB:
   - PostgreSQL
   - or MongoDB
-- [~] Create schema for:
+- [x] Create schema for:
   - [x] users
-  - [~] auth identities
+  - [x] auth identities
   - [x] wallet / ledger
   - [x] unlocks
   - [x] invite records
   - [x] chat summaries
   - [x] profile memory
-- [~] Add migration strategy
-- [ ] Add local dev seed data
+- [x] Add migration strategy
+- [x] Add local dev seed data
 
 ### 7.3 Frontend Storage Migration
 
-- [~] AI requests already use backend
+- [x] AI requests already use backend
 - [x] Replace local-only profile persistence
-- [ ] Replace local-only wallet persistence
+- [x] Replace local-only wallet persistence
 - [x] Replace local-only unlock persistence
-- [~] Keep local cache only as a fast mirror
-- [ ] Add cache invalidation rules
+- [x] Keep local cache only as a fast mirror
+- [x] Add cache invalidation rules
 
 Done when:
 - Local storage is no longer the source of truth for launch-critical state.
@@ -381,19 +382,19 @@ Done when:
 
 Goal: finish the social growth loop end to end.
 
-- [ ] Define share card templates:
+- [x] Define share card templates:
   - my result only
   - my result vs friend result
   - invite card
-- [ ] Build share renderer for comparison card
-- [ ] Create invite token format
-- [ ] Create deep link route mapping
-- [ ] Restore exact destination screen after install/open
-- [ ] Restore comparison context after install/open
-- [ ] Add invite reward claim guard
-- [ ] Add anti-abuse checks
-- [ ] QA web open -> install -> reopen -> restore flow
-- [ ] QA app installed -> direct open -> restore flow
+- [x] Build share renderer for comparison card
+- [x] Create invite token format
+- [x] Create deep link route mapping
+- [x] Restore exact destination screen after install/open
+- [x] Restore comparison context after install/open
+- [x] Add invite reward claim guard
+- [x] Add anti-abuse checks
+- [x] QA web open -> install -> reopen -> restore flow
+- [x] QA app installed -> direct open -> restore flow
 
 Done when:
 - Invite flow works reliably across direct open, reinstall, and first install.
@@ -411,7 +412,7 @@ Goal: make launch measurable.
   - `invite_open`
   - `install_from_invite`
   - `d1_retention`
-- [~] Implement product health events:
+- [x] Implement product health events:
   - onboarding_step_view
   - onboarding_complete
   - first_reading_success
@@ -421,8 +422,8 @@ Goal: make launch measurable.
   - invite_reward_granted
   - scene_change
   - mini_app_open
-- [~] Add event payload spec
-- [~] Add analytics QA checklist
+- [x] Add event payload spec
+- [x] Add analytics QA checklist
 - [x] Add server-backed launch metrics summary endpoint
 - [x] Add Profile tab launch metrics modal
 - [x] Add Firebase Analytics event dispatch
@@ -519,9 +520,9 @@ If development starts now, begin with these in order:
 - [x] Connect Vercel preview and production envs
 - [ ] Connect custom production domain when domain is available
 - [x] Finalize Firebase Google auth state handling
-- [ ] Implement Kakao login for real
-- [ ] Define invite deep link route spec
-- [ ] Implement launch event instrumentation
+- [~] Finish Kakao JavaScript key / allowed-origin setup and final QA
+- [x] Define invite deep link route spec
+- [x] Implement launch event instrumentation
 - [ ] Prepare Android release signing and AAB generation
 
 ---
@@ -534,3 +535,4 @@ After every completed item:
 - update `docs/app_feature_guide.md` if behavior changed
 - run QA on the affected flow
 - store screenshots or logs for regression tracking
+

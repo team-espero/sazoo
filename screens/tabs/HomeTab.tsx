@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Wind, Flame, Sun, Star, Droplets, Sparkles, Info, LayoutGrid, Lock, Check } from 'lucide-react';
 import { useSajuActions, useSajuCurrency, useSajuData, useSajuSettings } from '../../context';
 import { GlassCard, CustomRadarChart, DailyFortuneCard, LuckyItems, SajuGrid, LuckyElementCard } from '../../components';
+import { analytics } from '../../src/services/analytics';
 import { heavenlyStems, earthlyBranches } from '../../utils';
 const HomeScene = React.lazy(() => import('../../components/HomeScene'));
 
@@ -469,6 +470,14 @@ const HomeTab = ({ setActiveTab }: any) => {
                                             key={m.id}
                                             onClick={() => {
                                                 if (m.unlocked) {
+                                                    if (currentModelIdx !== idx) {
+                                                        analytics.trackSceneChange({
+                                                            screen: 'home',
+                                                            sceneId: m.id,
+                                                            sceneName: m.name,
+                                                            sceneIndex: idx,
+                                                        });
+                                                    }
                                                     setCurrentModelIdx(idx);
                                                     setIsMenuOpen(false);
                                                     setLockMessage(null);

@@ -1,5 +1,6 @@
 import { mkdir, appendFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { buildAnalyticsReport, emptyAnalyticsReport } from './summary.js';
 
 const safeParseLine = (line) => {
   try {
@@ -8,29 +9,6 @@ const safeParseLine = (line) => {
     return null;
   }
 };
-
-const emptyReport = () => ({
-  generatedAt: new Date().toISOString(),
-  totalEvents: 0,
-  counts: {
-    share: 0,
-    invite_open: 0,
-    install_from_invite: 0,
-    d1_retention: 0,
-    invite_reward_claimed: 0,
-    invite_reward_duplicate: 0,
-    invite_reward_claim_failed: 0,
-    first_reading_success: 0,
-    first_reading_failure: 0,
-  },
-  timeToFirstValue: {
-    samples: 0,
-    averageMs: 0,
-    withinTargetCount: 0,
-    withinTargetRate: 0,
-  },
-  recentEvents: [],
-});
 
 export function createEventStore(logPath) {
   const resolvedPath = path.resolve(logPath);
@@ -47,7 +25,7 @@ export function createEventStore(logPath) {
         raw = await readFile(resolvedPath, 'utf8');
       } catch (error) {
         if (error && error.code === 'ENOENT') {
-          return emptyReport();
+          return emptyAnalyticsReport();
         }
         throw error;
       }
@@ -57,44 +35,7 @@ export function createEventStore(logPath) {
         .map((line) => line.trim())
         .filter(Boolean);
       const events = lines.map(safeParseLine).filter(Boolean);
-
-      const report = emptyReport();
-      report.generatedAt = new Date().toISOString();
-      report.totalEvents = events.length;
-
-      let timeToFirstValueTotal = 0;
-
-      for (const event of events) {
-        if (report.counts[event.name] !== undefined) {
-          report.counts[event.name] += 1;
-        }
-
-        if (event.name === 'time_to_first_value') {
-          const durationMs = Number(event?.payload?.durationMs || 0);
-          const withinTarget = Boolean(event?.payload?.withinTarget);
-          report.timeToFirstValue.samples += 1;
-          report.timeToFirstValue.withinTargetCount += withinTarget ? 1 : 0;
-          timeToFirstValueTotal += durationMs;
-        }
-      }
-
-      if (report.timeToFirstValue.samples > 0) {
-        report.timeToFirstValue.averageMs = Math.round(timeToFirstValueTotal / report.timeToFirstValue.samples);
-        report.timeToFirstValue.withinTargetRate = Number(
-          (report.timeToFirstValue.withinTargetCount / report.timeToFirstValue.samples).toFixed(2),
-        );
-      }
-
-      report.recentEvents = events
-        .slice(-12)
-        .reverse()
-        .map((event) => ({
-          name: event.name,
-          timestamp: event.timestamp || event.receivedAt || '',
-          payload: event.payload || {},
-        }));
-
-      return report;
+      return buildAnalyticsReport(events);
     },
   };
 }

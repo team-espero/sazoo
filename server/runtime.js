@@ -2,6 +2,9 @@ import { createGeminiProvider } from './ai/geminiProvider.js';
 import { createEventStore } from './analytics/eventStore.js';
 import { createPostgresEventStore } from './analytics/postgresEventStore.js';
 import { createApp } from './app.js';
+import { createKakaoAuthService } from './auth/kakaoAuth.js';
+import { createAuthIdentityStore } from './authIdentity/store.js';
+import { createAuthIdentityStore as createPostgresAuthIdentityStore } from './authIdentity/postgresStore.js';
 import { createChatSummaryStore } from './chat/store.js';
 import { createChatSummaryStore as createPostgresChatSummaryStore } from './chat/postgresStore.js';
 import { getServerEnv } from './env.js';
@@ -10,6 +13,8 @@ import { createInviteClaimStore as createPostgresInviteClaimStore } from './invi
 import { createProfileMemoryStore } from './memory/store.js';
 import { createProfileMemoryStore as createPostgresProfileMemoryStore } from './memory/postgresStore.js';
 import { createReceiptVerifier } from './payments/receiptVerifier.js';
+import { createShareMetadataStore } from './share/store.js';
+import { createShareMetadataStore as createPostgresShareMetadataStore } from './share/postgresStore.js';
 import { createUnlockStore } from './unlocks/store.js';
 import { createUnlockStore as createPostgresUnlockStore } from './unlocks/postgresStore.js';
 import { createUserStateStore } from './user/store.js';
@@ -51,6 +56,9 @@ export function getRuntime() {
   const unlockStore = usingDurablePostgres
     ? createPostgresUnlockStore(serverEnv.databaseUrl)
     : createUnlockStore(serverEnv.launchDbPath);
+  const authIdentityStore = usingDurablePostgres
+    ? createPostgresAuthIdentityStore(serverEnv.databaseUrl)
+    : createAuthIdentityStore(serverEnv.launchDbPath);
   const chatSummaryStore = usingDurablePostgres
     ? createPostgresChatSummaryStore(serverEnv.databaseUrl)
     : createChatSummaryStore(serverEnv.launchDbPath);
@@ -59,7 +67,11 @@ export function getRuntime() {
     : createProfileMemoryStore(serverEnv.launchDbPath, {
         migrationSourcePath: serverEnv.profileMemoryDbPath,
       });
+  const shareMetadataStore = usingDurablePostgres
+    ? createPostgresShareMetadataStore(serverEnv.databaseUrl)
+    : createShareMetadataStore(serverEnv.launchDbPath);
   const receiptVerifier = createReceiptVerifier(serverEnv);
+  const kakaoAuthService = createKakaoAuthService(serverEnv);
 
   const app = createApp({
     env: {
@@ -69,9 +81,12 @@ export function getRuntime() {
       walletStore,
       userStateStore,
       unlockStore,
+      authIdentityStore,
       chatSummaryStore,
       profileMemoryStore,
+      shareMetadataStore,
       receiptVerifier,
+      kakaoAuthService,
     },
     aiProvider,
   });
@@ -79,6 +94,19 @@ export function getRuntime() {
   cachedRuntime = {
     serverEnv,
     app,
+    services: {
+      eventStore,
+      inviteClaimStore,
+      walletStore,
+      userStateStore,
+      unlockStore,
+      authIdentityStore,
+      chatSummaryStore,
+      profileMemoryStore,
+      receiptVerifier,
+      kakaoAuthService,
+      shareMetadataStore,
+    },
   };
 
   return cachedRuntime;

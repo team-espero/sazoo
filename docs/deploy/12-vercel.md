@@ -14,6 +14,7 @@
 - `VITE_API_BASE_URL=/api/v1`
 - `VITE_API_TIMEOUT_MS=65000`
 - `VITE_BASE_PATH=/`
+- `VITE_KAKAO_JAVASCRIPT_KEY`
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
 - `VITE_FIREBASE_PROJECT_ID`
@@ -39,15 +40,33 @@
 - `GEMINI_API_KEY` must be added only in Vercel `Environment Variables`
 - never create `VITE_GEMINI_API_KEY`
 - never commit `.env.local`
+- `VITE_KAKAO_JAVASCRIPT_KEY` is a public client key, so it belongs in Vercel client env vars, not server-only secrets
 
 ## Link and deploy
 
 ```powershell
 npx vercel link
+npx vercel env add VITE_KAKAO_JAVASCRIPT_KEY production
+npx vercel env add VITE_KAKAO_JAVASCRIPT_KEY preview
 npx vercel env add GEMINI_API_KEY production
 npx vercel env add GEMINI_API_KEY preview
 npx vercel --prod
 ```
+
+## Env sync helper
+
+If `.env.local` already contains the public Firebase and Kakao values, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/sync-vercel-env.ps1
+```
+
+Current sync behavior:
+
+- syncs client vars to `preview`
+- syncs client vars to `production`
+- syncs `GEMINI_API_KEY` as a sensitive server variable
+- skips missing values instead of overwriting with blanks
 
 ## Preview automation
 

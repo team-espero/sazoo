@@ -1,12 +1,15 @@
 import { clientEnv } from '../config/env';
 import { getFirebaseAnalytics } from '../config/firebase';
+import { getCurrentAuthUserId } from './authSession';
 import { KEYS, storage } from './storage';
 
 export type LaunchEventName =
   | 'share'
   | 'invite_open'
   | 'invite_reward_claimed'
+  | 'invite_reward_granted'
   | 'invite_reward_duplicate'
+  | 'invite_reward_self_blocked'
   | 'invite_reward_claim_failed'
   | 'install_from_invite'
   | 'd1_retention'
@@ -14,7 +17,11 @@ export type LaunchEventName =
   | 'onboarding_step_view'
   | 'onboarding_step_complete'
   | 'first_reading_success'
-  | 'first_reading_failure';
+  | 'first_reading_failure'
+  | 'coin_spent'
+  | 'ad_reward_granted'
+  | 'scene_change'
+  | 'mini_app_open';
 
 export type LaunchEvent = {
   name: LaunchEventName;
@@ -69,6 +76,17 @@ const appendEvent = (event: LaunchEvent) => {
 };
 
 const nowIso = () => new Date().toISOString();
+
+const buildDefaultPayload = () => {
+  const installationId = storage.get(KEYS.INSTALLATION_ID, null) as string | null;
+  const userId = getCurrentAuthUserId();
+
+  return {
+    appEnv: clientEnv.appEnv,
+    installationId: installationId || undefined,
+    userId: userId || undefined,
+  };
+};
 
 const normalizeFirebaseParamKey = (value: string) => value.replace(/[^a-zA-Z0-9_]/g, '_').slice(0, 40) || 'value';
 
@@ -187,7 +205,10 @@ export const analytics = {
     const event = {
       name,
       timestamp: nowIso(),
-      payload,
+      payload: {
+        ...buildDefaultPayload(),
+        ...payload,
+      },
     } satisfies LaunchEvent;
 
     appendEvent(event);
@@ -270,6 +291,26 @@ export const analytics = {
 
   trackFirstReadingFailure(payload: Record<string, unknown> = {}) {
     this.track('first_reading_failure', payload);
+  },
+
+  trackCoinSpent(payload: Record<string, unknown> = {}) {
+    this.track('coin_spent', payload);
+  },
+
+  trackAdRewardGranted(payload: Record<string, unknown> = {}) {
+    this.track('ad_reward_granted', payload);
+  },
+
+  trackInviteRewardGranted(payload: Record<string, unknown> = {}) {
+    this.track('invite_reward_granted', payload);
+  },
+
+  trackSceneChange(payload: Record<string, unknown> = {}) {
+    this.track('scene_change', payload);
+  },
+
+  trackMiniAppOpen(payload: Record<string, unknown> = {}) {
+    this.track('mini_app_open', payload);
   },
 
   getEvents() {

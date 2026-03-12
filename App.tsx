@@ -1,12 +1,14 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from 'react-error-boundary';
 import { GlobalStyles } from './utils';
+import { AuthProvider } from './src/auth/AuthProvider';
 import { SajuProvider, useSajuData, useSajuSettings } from './context';
 import ErrorFallback from './screens/ErrorFallback';
 import IntroScreen from './screens/IntroScreen';
 import LandingScreen from './screens/LandingScreen';
 import MainScreen from './screens/MainScreen';
+import DashboardScreen from './screens/DashboardScreen';
 
 import { BackgroundLayout } from './components/BackgroundLayout';
 import AssetPreloader from './components/AssetPreloader';
@@ -20,6 +22,7 @@ const AppContent = () => {
   const [activeTab, setActiveTab] = useState('chat');
   const { themeMode } = useSajuSettings();
   const { sajuState } = useSajuData();
+  const isDashboardRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard');
 
   useEffect(() => {
     const invitePayload = captureInviteFromLocation();
@@ -46,7 +49,24 @@ const AppContent = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const pendingInvite = getPendingInvite();
+    if (!pendingInvite || !sajuState.isOnboardingComplete || screen !== 'landing') {
+      return;
+    }
+
+    setActiveTab(resolveInviteTargetTab(pendingInvite));
+    setScreen('main');
+  }, [sajuState.isOnboardingComplete, screen]);
+
   const handleIntroComplete = () => {
+    const pendingInvite = getPendingInvite();
+    if (pendingInvite && sajuState.isOnboardingComplete) {
+      setActiveTab(resolveInviteTargetTab(pendingInvite));
+      setScreen('main');
+      return;
+    }
+
     setScreen('landing');
   };
 
@@ -73,13 +93,16 @@ const AppContent = () => {
       <div className="app-shell w-full max-w-[480px] h-dvh-screen min-h-0 bg-white relative overflow-hidden shadow-2xl flex flex-col">
         <BackgroundLayout isDarkMode={themeMode === 'dark'}>
           <AnimatePresence mode='wait'>
-            {screen === 'intro' && (
+            {isDashboardRoute && (
+              <DashboardScreen key="dashboard" />
+            )}
+            {!isDashboardRoute && screen === 'intro' && (
               <IntroScreen key="intro" onComplete={handleIntroComplete} />
             )}
-            {screen === 'landing' && (
+            {!isDashboardRoute && screen === 'landing' && (
               <LandingScreen key="landing" onStart={handleStart} />
             )}
-            {screen === 'main' && (
+            {!isDashboardRoute && screen === 'main' && (
               <MainScreen key="main" activeTab={activeTab} setActiveTab={setActiveTab} />
             )}
           </AnimatePresence>
@@ -116,9 +139,11 @@ export default function App() {
           window.location.reload();
         }}
       >
-        <SajuProvider>
-          <AppContent />
-        </SajuProvider>
+        <AuthProvider>
+          <SajuProvider>
+            <AppContent />
+          </SajuProvider>
+        </AuthProvider>
       </ErrorBoundary>
     </div>
   );

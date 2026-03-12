@@ -180,16 +180,81 @@ export interface LaunchAnalyticsReport {
     install_from_invite: number;
     d1_retention: number;
     invite_reward_claimed: number;
+    invite_reward_granted: number;
     invite_reward_duplicate: number;
+    invite_reward_self_blocked: number;
     invite_reward_claim_failed: number;
     first_reading_success: number;
     first_reading_failure: number;
+    onboarding_step_view: number;
+    onboarding_step_complete: number;
+    coin_spent: number;
+    ad_reward_granted: number;
+    scene_change: number;
+    mini_app_open: number;
+  };
+  funnel: {
+    shareCount: number;
+    inviteOpenCount: number;
+    installCount: number;
+    rewardGrantedCount: number;
+    shareToOpenRate: number;
+    openToInstallRate: number;
+    installToRewardRate: number;
+  };
+  quality: {
+    firstReadingSuccessRate: number;
+    inviteRewardFailureRate: number;
+    activeDays: number;
+    averageEventsPerActiveDay: number;
   };
   timeToFirstValue: {
     samples: number;
     averageMs: number;
     withinTargetCount: number;
     withinTargetRate: number;
+  };
+  onboarding: {
+    viewsByStep: Record<string, number>;
+    completesByStep: Record<string, number>;
+  };
+  productHealth: {
+    coinSpendByContext: Record<string, number>;
+    adRewardsByPlacement: Record<string, number>;
+    miniAppOpenByApp: Record<string, number>;
+    sceneChangeByScene: Record<string, number>;
+  };
+  trends: {
+    eventsByDay: Array<{
+      dateKey: string;
+      count: number;
+    }>;
+  };
+  topSignals: {
+    topCoinSpendContext: {
+      key: string;
+      count: number;
+    };
+    topMiniApp: {
+      key: string;
+      count: number;
+    };
+    topScene: {
+      key: string;
+      count: number;
+    };
+    topOnboardingViewStep: {
+      key: string;
+      count: number;
+    };
+    topOnboardingCompletionStep: {
+      key: string;
+      count: number;
+    };
+    hottestDay: {
+      key: string;
+      count: number;
+    };
   };
   recentEvents: Array<{
     name: string;
@@ -219,7 +284,6 @@ export interface AuthIdentityRecord {
   lastLoginAt: string;
   updatedAt?: string;
 }
-
 export interface ShareCardMetadata {
   inviteId: string;
   source: 'daily_fortune';
@@ -232,6 +296,8 @@ export interface ShareCardMetadata {
   language: AppLanguage;
   createdAt?: string;
   updatedAt?: string;
+  installationId?: string;
+  userId?: string;
 }
 
 export class ApiError extends Error {
@@ -913,8 +979,8 @@ export const api = {
           snapshot,
         },
       );
+      },
     },
-  },
   shareCards: {
     getMetadata: async (inviteId: string) => {
       return postJson<ShareCardMetadata | null, { inviteId: string }>('/share-cards/metadata/state', {

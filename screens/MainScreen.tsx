@@ -4,9 +4,9 @@ import { DashboardSkeleton, ChatSkeleton, ListSkeleton, OnboardingSkeleton } fro
 import { FixedHeader, BottomNavigation } from '../components';
 import { AppLanguage, useSajuActions, useSajuData, useSajuSettings } from '../context';
 import { analytics } from '../src/services/analytics';
-import { api, ApiError } from '../src/services/api';
+import { api, ApiError, type ShareCardMetadata } from '../src/services/api';
 import { auth } from '../src/config/firebase';
-import { clearPendingInvite, getPendingInvite, resolveInviteTargetTab } from '../src/services/invite';
+import { clearPendingInvite, getPendingInvite, resolveInviteTargetTab, type InvitePayload } from '../src/services/invite';
 import { getOrCreateInstallationId, persistInviteRewardResult } from '../src/services/inviteRewards';
 
 const HomeTab = React.lazy(() => import('./tabs/HomeTab'));
@@ -87,6 +87,57 @@ const INVITE_REWARD_COPY: Record<AppLanguage, {
         reportLabel: '解放: 比較レポート',
         cta: '続ける',
     },
+};
+
+const INVITE_RESTORE_COPY: Record<AppLanguage, {
+    eyebrow: string;
+    title: string;
+    body: string;
+    sharedResult: string;
+    comparisonSummary: string;
+    rewardClaimed: string;
+    rewardDuplicate: string;
+    rewardSelfBlocked: string;
+    cta: string;
+}> = {
+    en: {
+        eyebrow: 'Shared comparison',
+        title: 'We restored the comparison sent to you.',
+        body: 'This is the exact context attached to the invite link so you can continue from the shared result immediately.',
+        sharedResult: 'Shared result',
+        comparisonSummary: 'Comparison summary',
+        rewardClaimed: 'Invite reward added.',
+        rewardDuplicate: 'This invite was already claimed, so no extra reward was added.',
+        rewardSelfBlocked: 'Your own invite link opened correctly, but self-invite rewards stay blocked.',
+        cta: 'Open restored screen',
+    },
+    ko: {
+        eyebrow: '공유된 비교 결과',
+        title: '초대 링크에 담긴 비교 화면을 복원했어요.',
+        body: '상대가 보낸 결과 문맥을 그대로 복원해서, 초대한 화면에서 바로 이어볼 수 있게 했어요.',
+        sharedResult: '공유된 결과',
+        comparisonSummary: '비교 요약',
+        rewardClaimed: '초대 보상도 함께 지급했어요.',
+        rewardDuplicate: '이미 받은 초대라서 보상은 다시 지급하지 않았어요.',
+        rewardSelfBlocked: '내 링크를 다시 연 경우라 화면은 복원되지만 보상은 지급되지 않아요.',
+        cta: '복원된 화면 보기',
+    },
+    ja: {
+        eyebrow: '共有比較結果',
+        title: '招待リンクに含まれていた比較画面を復元しました。',
+        body: '相手が共有した文脈をそのまま戻して、共有された画面からすぐ続けられるようにしました。',
+        sharedResult: '共有された結果',
+        comparisonSummary: '比較サマリー',
+        rewardClaimed: '招待報酬も付与しました。',
+        rewardDuplicate: 'すでに受け取った招待なので、報酬は再付与していません。',
+        rewardSelfBlocked: '自分の招待リンクを開いたため、画面は復元されますが報酬は付与されません。',
+        cta: '復元された画面を開く',
+    },
+};
+
+type RestoredInviteContext = {
+    invite: InvitePayload & Partial<ShareCardMetadata>;
+    claimStatus: 'claimed' | 'duplicate' | 'self_invite_blocked';
 };
 
 const NotificationPermissionModal = ({ isOpen, onClose, onConfirm, language = 'ko' }: any) => {
@@ -206,6 +257,77 @@ const InviteRewardModal = ({ reward, onClose, language = 'ko' }: any) => {
     );
 };
 
+const InviteRestoreModal = ({
+    restore,
+    onClose,
+    language = 'ko',
+}: {
+    restore: RestoredInviteContext | null;
+    onClose: () => void;
+    language?: AppLanguage;
+}) => {
+    const copy = INVITE_RESTORE_COPY[language as AppLanguage] ?? INVITE_RESTORE_COPY.ko;
+
+    if (!restore) return null;
+
+    const statusMessage = restore.claimStatus === 'claimed'
+        ? copy.rewardClaimed
+        : restore.claimStatus === 'self_invite_blocked'
+            ? copy.rewardSelfBlocked
+            : copy.rewardDuplicate;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-[109] flex items-center justify-center px-6 safe-pad-x"
+            >
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                    onClick={onClose}
+                />
+                <motion.div
+                    initial={{ scale: 0.92, y: 24, opacity: 0 }}
+                    animate={{ scale: 1, y: 0, opacity: 1 }}
+                    exit={{ scale: 0.96, y: 8, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+                    className="relative z-10 w-full max-w-sm overflow-hidden rounded-[28px] border border-white/80 bg-white/92 p-8 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.25)]"
+                >
+                    <p className="mb-3 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-500">{copy.eyebrow}</p>
+                    <h3 className="mb-3 text-2xl font-black leading-tight text-slate-900">{copy.title}</h3>
+                    <p className="mb-4 text-sm font-medium leading-relaxed text-slate-500">{copy.body}</p>
+
+                    <div className="space-y-3 rounded-[24px] bg-slate-50 p-4">
+                        <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{copy.sharedResult}</p>
+                            <p className="mt-2 text-base font-black leading-snug text-slate-900">{restore.invite.previewTitle}</p>
+                            <p className="mt-2 text-sm font-medium leading-relaxed text-slate-600">{restore.invite.previewSummary}</p>
+                        </div>
+                        <div className="rounded-2xl bg-slate-900 px-4 py-3">
+                            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-200">{copy.comparisonSummary}</p>
+                            <p className="mt-2 text-sm font-medium leading-relaxed text-white/85">{restore.invite.comparisonSummary}</p>
+                        </div>
+                    </div>
+
+                    <p className="mt-4 text-xs font-bold text-emerald-600">{statusMessage}</p>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="mt-6 w-full rounded-2xl bg-gradient-to-r from-[#84fab0] to-[#8fd3f4] py-4 text-base font-black text-slate-900 shadow-lg shadow-[#84fab0]/30"
+                    >
+                        {copy.cta}
+                    </button>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+};
+
 const OnboardingModal = ({ isOpen, onComplete }: any) => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -246,6 +368,7 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
     const [showNotificationModal, setShowNotificationModal] = useState(false);
     const [showOnboardingModal, setShowOnboardingModal] = useState(false);
     const [inviteRewardState, setInviteRewardState] = useState<any>(null);
+    const [inviteRestoreState, setInviteRestoreState] = useState<RestoredInviteContext | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const { sajuState } = useSajuData();
     const { completeOnboarding, grantPaidCoins } = useSajuActions();
@@ -298,41 +421,68 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
             const pendingInvite = getPendingInvite();
             if (!pendingInvite || !sajuState.isOnboardingComplete) return;
 
+            let resolvedInvite = pendingInvite;
+
+            try {
+                const metadata = await api.shareCards.getMetadata(pendingInvite.inviteId);
+                if (metadata) {
+                    resolvedInvite = {
+                        ...pendingInvite,
+                        ...metadata,
+                        createdAt: metadata.createdAt || pendingInvite.createdAt,
+                    };
+                }
+            } catch (error) {
+                console.warn('Invite metadata restore fallback:', error);
+            }
+
             try {
                 const claimResult = await api.invites.claimReward({
                     installationId: getOrCreateInstallationId(),
                     userId: auth?.currentUser?.uid || undefined,
                     language,
-                    invite: pendingInvite,
+                    invite: resolvedInvite,
                 });
 
-                persistInviteRewardResult(pendingInvite, claimResult);
+                persistInviteRewardResult(resolvedInvite, claimResult);
 
                 if (claimResult.status === 'claimed') {
                     await grantPaidCoins(claimResult.coinReward, 'earned_from_invite');
                     analytics.track('invite_reward_claimed', {
-                        inviteId: pendingInvite.inviteId,
+                        inviteId: resolvedInvite.inviteId,
                         coinReward: claimResult.coinReward,
-                        specialReportId: claimResult.specialReport.id,
+                        specialReportId: claimResult.specialReport?.id,
                     });
                     if (!cancelled) {
                         setInviteRewardState(claimResult);
                     }
+                } else if (claimResult.status === 'self_invite_blocked') {
+                    analytics.track('invite_reward_self_blocked', {
+                        inviteId: resolvedInvite.inviteId,
+                        reason: 'SELF_INVITE_BLOCKED',
+                    });
                 } else {
                     analytics.track('invite_reward_duplicate', {
-                        inviteId: pendingInvite.inviteId,
-                        specialReportId: claimResult.specialReport.id,
+                        inviteId: resolvedInvite.inviteId,
+                        specialReportId: claimResult.specialReport?.id,
+                    });
+                }
+
+                if (!cancelled) {
+                    setInviteRestoreState({
+                        invite: resolvedInvite,
+                        claimStatus: claimResult.status,
                     });
                 }
             } catch (error) {
                 console.error('Invite reward claim failed:', error);
                 analytics.track('invite_reward_claim_failed', {
-                    inviteId: pendingInvite.inviteId,
+                    inviteId: resolvedInvite.inviteId,
                     reason: error instanceof ApiError ? error.code : 'CLAIM_FAILED',
                 });
             }
 
-            const targetTab = resolveInviteTargetTab(pendingInvite);
+            const targetTab = resolveInviteTargetTab(resolvedInvite);
             if (!cancelled) {
                 setActiveTab((prev: string) => (prev === targetTab ? prev : targetTab));
             }
@@ -410,6 +560,11 @@ const MainScreen = ({ activeTab, setActiveTab }: any) => {
             <InviteRewardModal
                 reward={inviteRewardState}
                 onClose={() => setInviteRewardState(null)}
+                language={language}
+            />
+            <InviteRestoreModal
+                restore={inviteRestoreState}
+                onClose={() => setInviteRestoreState(null)}
                 language={language}
             />
             <OnboardingModal isOpen={showOnboardingModal} onComplete={handleOnboardingComplete} />

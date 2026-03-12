@@ -32,8 +32,8 @@ export const inviteClaimRequestSchema = z.object({
 });
 
 export const inviteClaimResponseSchema = z.object({
-  status: z.enum(['claimed', 'duplicate']),
+  status: z.enum(['claimed', 'duplicate', 'self_invite_blocked']),
   coinReward: z.number().int().min(0).max(10),
   claimedAt: z.string().trim().min(1).max(80),
-  specialReport: specialReportSchema,
+  specialReport: specialReportSchema.optional(),
 });
