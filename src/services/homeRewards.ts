@@ -38,18 +38,18 @@ const HOME_REWARD_EVENT = 'sazoo-home-reward-change';
 const DEFAULT_HOME_MODEL_ID = 'hanok';
 
 const ZODIAC_REWARD_MODELS: ZodiacRewardModel[] = [
-  { modelId: 'rat', zodiacKo: 'Áã', zodiacEn: 'Rat', zodiacJa: 'í­' },
-  { modelId: 'ox', zodiacKo: '¼Ò', zodiacEn: 'Ox', zodiacJa: 'õä' },
-  { modelId: 'tiger', zodiacKo: 'È£¶ûÀÌ', zodiacEn: 'Tiger', zodiacJa: 'ìÙ' },
-  { modelId: 'rabbit', zodiacKo: 'Åä³¢', zodiacEn: 'Rabbit', zodiacJa: 'ÙÖ' },
-  { modelId: 'dragon', zodiacKo: '¿ë', zodiacEn: 'Dragon', zodiacJa: 'òã' },
-  { modelId: 'snake', zodiacKo: '¹ì', zodiacEn: 'Snake', zodiacJa: 'ŞÓ' },
-  { modelId: 'horse', zodiacKo: '¸»', zodiacEn: 'Horse', zodiacJa: 'çí' },
-  { modelId: 'sheep', zodiacKo: '¾ç', zodiacEn: 'Sheep', zodiacJa: 'Ú±' },
-  { modelId: 'monkey', zodiacKo: '¿ø¼şÀÌ', zodiacEn: 'Monkey', zodiacJa: 'ãé' },
-  { modelId: 'rooster', zodiacKo: '´ß', zodiacEn: 'Rooster', zodiacJa: 'ë·' },
-  { modelId: 'dog', zodiacKo: '°³', zodiacEn: 'Dog', zodiacJa: 'âù' },
-  { modelId: 'pig', zodiacKo: 'µÅÁö', zodiacEn: 'Pig', zodiacJa: 'ú¤' },
+  { modelId: 'rat', zodiacKo: 'ì¥', zodiacEn: 'Rat', zodiacJa: 'Rat' },
+  { modelId: 'ox', zodiacKo: 'ì†Œ', zodiacEn: 'Ox', zodiacJa: 'Ox' },
+  { modelId: 'tiger', zodiacKo: 'í˜¸ë‘ì´', zodiacEn: 'Tiger', zodiacJa: 'Tiger' },
+  { modelId: 'rabbit', zodiacKo: 'í† ë¼', zodiacEn: 'Rabbit', zodiacJa: 'Rabbit' },
+  { modelId: 'dragon', zodiacKo: 'ìš©', zodiacEn: 'Dragon', zodiacJa: 'Dragon' },
+  { modelId: 'snake', zodiacKo: 'ë±€', zodiacEn: 'Snake', zodiacJa: 'Snake' },
+  { modelId: 'horse', zodiacKo: 'ë§', zodiacEn: 'Horse', zodiacJa: 'Horse' },
+  { modelId: 'sheep', zodiacKo: 'ì–‘', zodiacEn: 'Sheep', zodiacJa: 'Sheep' },
+  { modelId: 'monkey', zodiacKo: 'ì›ìˆ­ì´', zodiacEn: 'Monkey', zodiacJa: 'Monkey' },
+  { modelId: 'rooster', zodiacKo: 'ë‹­', zodiacEn: 'Rooster', zodiacJa: 'Rooster' },
+  { modelId: 'dog', zodiacKo: 'ê°œ', zodiacEn: 'Dog', zodiacJa: 'Dog' },
+  { modelId: 'pig', zodiacKo: 'ë¼ì§€', zodiacEn: 'Pig', zodiacJa: 'Pig' },
 ];
 
 const emitHomeRewardChange = () => {
@@ -114,23 +114,16 @@ const getWelcomeGiftCopy = (
   modelName: string,
   profileName?: string | null,
 ) => {
-  if (language === 'en') {
+  if (language === 'en' || language === 'ja') {
     return {
       title: 'Your welcome gift has arrived.',
       body: `${profileName || 'You'} received the ${zodiacName} zodiac 3D asset "${modelName}".`,
     };
   }
 
-  if (language === 'ja') {
-    return {
-      title: '«¦«§«ë«««à«®«Õ«Èª¬?ª­ªŞª·ª¿¡£',
-      body: `${profileName || 'ª¢ªÊª¿'}ªË${zodiacName}ªÎ3D«¢«»«Ã«È¡¸${modelName}¡¹ªòñüªêªŞª·ª¿¡£`,
-    };
-  }
-
   return {
-    title: 'È¯¿µÀÇ ¼±¹°ÀÌ µµÂøÇß¾î¿ä.',
-    body: `${profileName ? `${profileName}´Ô²² ` : ''}${zodiacName}¶ì 3D ¿¡¼Â ${modelName}À» ¼±¹°Çß¾î¿ä.`,
+    title: 'í™˜ì˜ì˜ ì„ ë¬¼ì´ ë„ì°©í–ˆì–´ìš”.',
+    body: `${profileName ? `${profileName}ë‹˜ê»˜ ` : ''}${zodiacName}ë  3D ì—ì…‹ ${modelName}ì„ ì„ ë¬¼í–ˆì–´ìš”.`,
   };
 };
 
