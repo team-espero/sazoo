@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-03-12T06:21:57.053Z",
+  "versionName": "1.0.2",
+  "versionCode": 3,
+  "applicationId": "com.sazoo.app",
+  "namespace": "com.sazoo.app",
+  "launchMode": "singleTask",
+  "signing": {
+    "keystoreConfigured": true,
+    "note": "Signing uses local keystore.properties and upload keystore when present."
+  },
+  "firebaseAndroidConfig": {
+    "googleServicesPresent": false,
+    "note": "Current Android build relies on Firebase Web SDK config. Add google-services.json when native Firebase SDK services are introduced."
+  },
+  "artifacts": {
+    "debugApk": {
+      "relativePath": "android/app/build/outputs/apk/debug/app-debug.apk",
+      "sizeBytes": 7904324,
+      "sizeLabel": "7.54 MB",
+      "lastModifiedAt": "2026-03-12T06:21:36.814Z",
+      "sha256": "2c9a10f01f74dc513a04cee094e87d2e20f14a0720bf0646ede285824e263a21"
+    },
+    "releaseApk": {
+      "relativePath": "android/app/build/outputs/apk/release/app-release.apk",
+      "sizeBytes": 6669929,
+      "sizeLabel": "6.36 MB",
+      "lastModifiedAt": "2026-03-12T06:21:53.179Z",
+      "sha256": "27a33c3582ee04cfc9e83943b6afbc64e3bb19dfac941df5932d044456007ae5"
+    },
+    "releaseAab": {
+      "relativePath": "android/app/build/outputs/bundle/release/app-release.aab",
+      "sizeBytes": 6467533,
+      "sizeLabel": "6.17 MB",
+      "lastModifiedAt": "2026-03-12T06:21:54.300Z",
+      "sha256": "ed71ad1ffdaf965b865a8c312066454d859ed18f83599b7f7e95c1f9e6f76610"
+    }
+  }
+}
