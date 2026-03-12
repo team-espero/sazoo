@@ -27,23 +27,30 @@ export type WelcomeZodiacGiftReward = {
 type ScopedStringArrayMap = Record<string, string[]>;
 type ScopedNotificationMap = Record<string, HomeNotificationRecord[]>;
 
+type ZodiacRewardModel = {
+  modelId: string;
+  zodiacKo: string;
+  zodiacEn: string;
+  zodiacJa: string;
+};
+
 const HOME_REWARD_EVENT = 'sazoo-home-reward-change';
 const DEFAULT_HOME_MODEL_ID = 'hanok';
 
-const ZODIAC_REWARD_MODELS = [
-  { modelId: 'rat', zodiacName: 'ì¥', modelName: '12 zodiac signs - ì¥' },
-  { modelId: 'ox', zodiacName: 'ì†Œ', modelName: '12 zodiac signs - ì†Œ' },
-  { modelId: 'tiger', zodiacName: 'í˜¸ë‘ì´', modelName: '12 zodiac signs - í˜¸ë‘ì´' },
-  { modelId: 'rabbit', zodiacName: 'í† ë¼', modelName: '12 zodiac signs - í† ë¼' },
-  { modelId: 'dragon', zodiacName: 'ìš©', modelName: '12 zodiac signs - ìš©' },
-  { modelId: 'snake', zodiacName: 'ë±€', modelName: '12 zodiac signs - ë±€' },
-  { modelId: 'horse', zodiacName: 'ë§', modelName: '12 zodiac signs - ë§' },
-  { modelId: 'sheep', zodiacName: 'ì–‘', modelName: '12 zodiac signs - ì–‘' },
-  { modelId: 'monkey', zodiacName: 'ì›ìˆ­ì´', modelName: '12 zodiac signs - ì›ìˆ­ì´' },
-  { modelId: 'rooster', zodiacName: 'ë‹­', modelName: '12 zodiac signs - ë‹­' },
-  { modelId: 'dog', zodiacName: 'ê°œ', modelName: '12 zodiac signs - ê°œ' },
-  { modelId: 'pig', zodiacName: 'ë¼ì§€', modelName: '12 zodiac signs - ë¼ì§€' },
-] as const;
+const ZODIAC_REWARD_MODELS: ZodiacRewardModel[] = [
+  { modelId: 'rat', zodiacKo: 'Áã', zodiacEn: 'Rat', zodiacJa: 'í­' },
+  { modelId: 'ox', zodiacKo: '¼Ò', zodiacEn: 'Ox', zodiacJa: 'õä' },
+  { modelId: 'tiger', zodiacKo: 'È£¶ûÀÌ', zodiacEn: 'Tiger', zodiacJa: 'ìÙ' },
+  { modelId: 'rabbit', zodiacKo: 'Åä³¢', zodiacEn: 'Rabbit', zodiacJa: 'ÙÖ' },
+  { modelId: 'dragon', zodiacKo: '¿ë', zodiacEn: 'Dragon', zodiacJa: 'òã' },
+  { modelId: 'snake', zodiacKo: '¹ì', zodiacEn: 'Snake', zodiacJa: 'ŞÓ' },
+  { modelId: 'horse', zodiacKo: '¸»', zodiacEn: 'Horse', zodiacJa: 'çí' },
+  { modelId: 'sheep', zodiacKo: '¾ç', zodiacEn: 'Sheep', zodiacJa: 'Ú±' },
+  { modelId: 'monkey', zodiacKo: '¿ø¼şÀÌ', zodiacEn: 'Monkey', zodiacJa: 'ãé' },
+  { modelId: 'rooster', zodiacKo: '´ß', zodiacEn: 'Rooster', zodiacJa: 'ë·' },
+  { modelId: 'dog', zodiacKo: '°³', zodiacEn: 'Dog', zodiacJa: 'âù' },
+  { modelId: 'pig', zodiacKo: 'µÅÁö', zodiacEn: 'Pig', zodiacJa: 'ú¤' },
+];
 
 const emitHomeRewardChange = () => {
   if (typeof window === 'undefined') return;
@@ -88,6 +95,19 @@ const setScopedNotifications = (ownerKey: string | null, values: HomeNotificatio
   return values;
 };
 
+const getLocalizedRewardMeta = (reward: ZodiacRewardModel, language: AppLanguage) => {
+  const zodiacName = language === 'en'
+    ? reward.zodiacEn
+    : language === 'ja'
+      ? reward.zodiacJa
+      : reward.zodiacKo;
+
+  return {
+    zodiacName,
+    modelName: `12 zodiac signs - ${reward.zodiacEn}`,
+  };
+};
+
 const getWelcomeGiftCopy = (
   language: AppLanguage,
   zodiacName: string,
@@ -103,14 +123,14 @@ const getWelcomeGiftCopy = (
 
   if (language === 'ja') {
     return {
-      title: 'ã‚¦ã‚§ãƒ«ã‚«ãƒ ã‚®ãƒ•ãƒˆãŒå±Šãã¾ã—ãŸã€‚',
-      body: `${profileName || 'ã‚ãªãŸ'}ã«${zodiacName}ã®3Dã‚¢ã‚»ãƒƒãƒˆã€Œ${modelName}ã€ã‚’è´ˆã‚Šã¾ã—ãŸã€‚`,
+      title: '«¦«§«ë«««à«®«Õ«Èª¬?ª­ªŞª·ª¿¡£',
+      body: `${profileName || 'ª¢ªÊª¿'}ªË${zodiacName}ªÎ3D«¢«»«Ã«È¡¸${modelName}¡¹ªòñüªêªŞª·ª¿¡£`,
     };
   }
 
   return {
-    title: 'í™˜ì˜ì˜ ì„ ë¬¼ì´ ë„ì°©í–ˆì–´ìš”.',
-    body: `${profileName ? `${profileName}ë‹˜ê»˜ ` : ''}${zodiacName}ë  3D ì—ì…‹ ${modelName}ì„ ì„ ë¬¼í–ˆì–´ìš”.`,
+    title: 'È¯¿µÀÇ ¼±¹°ÀÌ µµÂøÇß¾î¿ä.',
+    body: `${profileName ? `${profileName}´Ô²² ` : ''}${zodiacName}¶ì 3D ¿¡¼Â ${modelName}À» ¼±¹°Çß¾î¿ä.`,
   };
 };
 
@@ -191,20 +211,21 @@ export const claimWelcomeZodiacGift = ({
     return null;
   }
 
-  const reward = getZodiacRewardByBirthYear(birthYear);
-  const copy = getWelcomeGiftCopy(language, reward.zodiacName, reward.modelName, profileName);
+  const rewardBase = getZodiacRewardByBirthYear(birthYear);
+  const rewardMeta = getLocalizedRewardMeta(rewardBase, language);
+  const copy = getWelcomeGiftCopy(language, rewardMeta.zodiacName, rewardMeta.modelName, profileName);
   const createdAt = new Date().toISOString();
 
   const notification: HomeNotificationRecord = {
-    id: `${claimId}:${reward.modelId}`,
+    id: `${claimId}:${rewardBase.modelId}`,
     type: 'welcome_zodiac_gift',
     title: copy.title,
     body: copy.body,
     createdAt,
     metadata: {
-      modelId: reward.modelId,
-      modelName: reward.modelName,
-      zodiacName: reward.zodiacName,
+      modelId: rewardBase.modelId,
+      modelName: rewardMeta.modelName,
+      zodiacName: rewardMeta.zodiacName,
     },
   };
 
@@ -212,16 +233,16 @@ export const claimWelcomeZodiacGift = ({
   setScopedStringArray(
     KEYS.HOME_UNLOCKED_MODELS,
     ownerKey,
-    [...getUnlockedHomeModelIds(userId), reward.modelId],
+    [...getUnlockedHomeModelIds(userId), rewardBase.modelId],
   );
   addHomeNotification(notification, userId);
   emitHomeRewardChange();
 
   return {
     claimId,
-    modelId: reward.modelId,
-    modelName: reward.modelName,
-    zodiacName: reward.zodiacName,
+    modelId: rewardBase.modelId,
+    modelName: rewardMeta.modelName,
+    zodiacName: rewardMeta.zodiacName,
     notification,
   };
 };
