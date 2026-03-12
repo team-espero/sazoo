@@ -8,6 +8,7 @@ import ErrorFallback from './screens/ErrorFallback';
 import IntroScreen from './screens/IntroScreen';
 import LandingScreen from './screens/LandingScreen';
 import MainScreen from './screens/MainScreen';
+import DashboardScreen from './screens/DashboardScreen';
 
 import { BackgroundLayout } from './components/BackgroundLayout';
 import AssetPreloader from './components/AssetPreloader';
@@ -21,6 +22,7 @@ const AppContent = () => {
   const [activeTab, setActiveTab] = useState('chat');
   const { themeMode } = useSajuSettings();
   const { sajuState } = useSajuData();
+  const isDashboardRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/dashboard');
 
   useEffect(() => {
     const invitePayload = captureInviteFromLocation();
@@ -91,13 +93,16 @@ const AppContent = () => {
       <div className="app-shell w-full max-w-[480px] h-dvh-screen min-h-0 bg-white relative overflow-hidden shadow-2xl flex flex-col">
         <BackgroundLayout isDarkMode={themeMode === 'dark'}>
           <AnimatePresence mode='wait'>
-            {screen === 'intro' && (
+            {isDashboardRoute && (
+              <DashboardScreen key="dashboard" />
+            )}
+            {!isDashboardRoute && screen === 'intro' && (
               <IntroScreen key="intro" onComplete={handleIntroComplete} />
             )}
-            {screen === 'landing' && (
+            {!isDashboardRoute && screen === 'landing' && (
               <LandingScreen key="landing" onStart={handleStart} />
             )}
-            {screen === 'main' && (
+            {!isDashboardRoute && screen === 'main' && (
               <MainScreen key="main" activeTab={activeTab} setActiveTab={setActiveTab} />
             )}
           </AnimatePresence>
