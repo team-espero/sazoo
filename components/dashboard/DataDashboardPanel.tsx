@@ -3,6 +3,7 @@ import { BarChart3, RefreshCw, TimerReset } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { AppLanguage } from '../../context';
 import type { LaunchAnalyticsReport } from '../../src/services/api';
+import { buildGeminiCostDashboardData } from '../../src/services/geminiCostModel';
 import { Button } from '../../components';
 
 type DashboardCopy = {
@@ -283,6 +284,88 @@ const buildDashboardCopy = (language: AppLanguage): DashboardCopy => {
   };
 };
 
+type GeminiCostCopy = {
+  title: string;
+  description: string;
+  runtimeAnnual: string;
+  legacyAnnual: string;
+  annualSavings: string;
+  modeledMonthly10k: string;
+  pricingTitle: string;
+  lifecycleTitle: string;
+  lifecycleDescription: string;
+  monthlyScaleTitle: string;
+  monthlyScaleDescription: string;
+  pricingSource: string;
+  currentRuntime: string;
+  legacyRuntime: string;
+  monthlySavings: string;
+  monthlySavingsShort: string;
+};
+
+const buildGeminiCostCopy = (language: AppLanguage): GeminiCostCopy => {
+  if (language === 'ko') {
+    return {
+      title: 'Gemini 비용 추정',
+      description: '현재 기본 런타임, 대표 토큰 실측값, 라이프사이클 가정을 바탕으로 1인당 추정 비용을 계산합니다.',
+      runtimeAnnual: '현재 런타임 연간 / 유저',
+      legacyAnnual: '레거시 연간 / 유저',
+      annualSavings: '연간 절감 / 유저',
+      modeledMonthly10k: '월간 추정 @ 1만 DAU',
+      pricingTitle: '공식 모델 단가',
+      lifecycleTitle: '라이프사이클 비용 곡선',
+      lifecycleDescription: 'daily insights가 Flash-Lite를 우선 사용할 때와, 이전처럼 Flash를 먼저 쓸 때를 비교합니다.',
+      monthlyScaleTitle: 'DAU 월간 비용 추정',
+      monthlyScaleDescription: '365일 모델링을 기준으로 1천 / 1만 / 10만 DAU 월 비용을 추정합니다.',
+      pricingSource: '가격 출처',
+      currentRuntime: '현재 런타임',
+      legacyRuntime: '레거시',
+      monthlySavings: '월 절감',
+      monthlySavingsShort: '절감',
+    };
+  }
+
+  if (language === 'ja') {
+    return {
+      title: 'Gemini コスト推定',
+      description: '現在のデフォルト実行構成、代表トークン実測値、ライフサイクル仮定をもとに 1ユーザーあたりの推定費用を計算します。',
+      runtimeAnnual: '現行ランタイム 年間 / ユーザー',
+      legacyAnnual: 'レガシー 年間 / ユーザー',
+      annualSavings: '年間削減 / ユーザー',
+      modeledMonthly10k: '月間推定 @ 1万 DAU',
+      pricingTitle: '公式モデル単価',
+      lifecycleTitle: 'ライフサイクル別コスト曲線',
+      lifecycleDescription: 'daily insights が Flash-Lite を優先する現在の構成と、従来の Flash 優先構成を比較します。',
+      monthlyScaleTitle: 'DAU 月間コスト推定',
+      monthlyScaleDescription: '365日モデルを基準に 1千 / 1万 / 10万 DAU の月間費用を推定します。',
+      pricingSource: '価格ソース',
+      currentRuntime: 'Current Runtime',
+      legacyRuntime: 'Legacy',
+      monthlySavings: '月間削減',
+      monthlySavingsShort: '削減',
+    };
+  }
+
+  return {
+    title: 'Gemini Cost Estimate',
+    description: 'Models 1-user cloud cost from the current default runtime mix, representative token footprints, and lifecycle-stage usage assumptions.',
+    runtimeAnnual: 'Current Runtime / User / Year',
+    legacyAnnual: 'Legacy / User / Year',
+    annualSavings: 'Savings / User / Year',
+    modeledMonthly10k: 'Modeled Monthly @ 10k DAU',
+    pricingTitle: 'Official Model Pricing',
+    lifecycleTitle: 'Lifecycle Cost Curve',
+    lifecycleDescription: 'Compares the optimized daily-insights path against the older insights-on-Flash behavior.',
+    monthlyScaleTitle: 'Monthly Cost by DAU',
+    monthlyScaleDescription: 'Estimated monthly spend at 1k / 10k / 100k DAU using the 365-day lifecycle mix.',
+    pricingSource: 'Pricing Source',
+    currentRuntime: 'Current Runtime',
+    legacyRuntime: 'Legacy',
+    monthlySavings: 'Monthly Savings',
+    monthlySavingsShort: 'Savings',
+  };
+};
+
 const formatUnlockedAt = (value: string, language: AppLanguage) => {
   try {
     return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : language === 'ja' ? 'ja-JP' : 'ko-KR', {
@@ -305,6 +388,14 @@ const formatDurationMs = (value: number, language: AppLanguage) => {
 };
 
 const formatPercent = (value: number, digits = 0) => `${(Math.max(0, value) * 100).toFixed(digits)}%`;
+
+const formatUsd = (value: number, maximumFractionDigits = 4) =>
+  new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: Math.min(2, maximumFractionDigits),
+    maximumFractionDigits,
+  }).format(value);
 
 const formatDayLabel = (dateKey: string, language: AppLanguage) => {
   try {
@@ -355,6 +446,8 @@ export const DataDashboardPanel = ({
   isDark: boolean;
 }) => {
   const copy = buildDashboardCopy(language);
+  const geminiCostCopy = buildGeminiCostCopy(language);
+  const geminiCost = buildGeminiCostDashboardData(language);
 
   const metrics = report
     ? [
@@ -602,6 +695,108 @@ export const DataDashboardPanel = ({
               <p className={`mt-2 text-[11px] font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>{signal.count}</p>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className={`rounded-[28px] border p-5 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-slate-100 bg-slate-50/60'}`}>
+        <div className="mb-4">
+          <p className={`text-[10px] font-extrabold uppercase tracking-[0.18em] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{geminiCostCopy.title}</p>
+          <p className={`mt-1 text-xs font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.description}</p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-emerald-900/40 bg-emerald-950/20' : 'border-emerald-100 bg-emerald-50/80'}`}>
+            <p className={`text-xs font-bold ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{geminiCostCopy.runtimeAnnual}</p>
+            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.runtimeAnnualCostPerUser)}</p>
+          </div>
+          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
+            <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.legacyAnnual}</p>
+            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.legacyAnnualCostPerUser)}</p>
+          </div>
+          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-amber-900/40 bg-amber-950/20' : 'border-amber-100 bg-amber-50/80'}`}>
+            <p className={`text-xs font-bold ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>{geminiCostCopy.annualSavings}</p>
+            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.annualSavingsPerUser)}</p>
+            <p className={`mt-1 text-[11px] font-bold ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>{formatPercent(geminiCost.annualSavingsRate, 1)}</p>
+          </div>
+          <div className={`rounded-[22px] border p-4 ${isDark ? 'border-cyan-900/40 bg-cyan-950/20' : 'border-cyan-100 bg-cyan-50/80'}`}>
+            <p className={`text-xs font-bold ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{geminiCostCopy.modeledMonthly10k}</p>
+            <p className={`mt-2 text-xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(geminiCost.modeledMonthlyCostAt10kDau, 0)}</p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
+          {geminiCost.pricingCards.map((card) => (
+            <div key={card.model} className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
+              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{card.model}</p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className={`text-[11px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Input</span>
+                <span className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(card.inputRateUsdPerMillion, 2)} / 1M</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <span className={`text-[11px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Output</span>
+                <span className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(card.outputRateUsdPerMillion, 2)} / 1M</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/50' : 'border-white/80 bg-white'}`}>
+            <div className="mb-3">
+              <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{geminiCostCopy.lifecycleTitle}</p>
+              <p className={`mt-1 text-[11px] font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.lifecycleDescription}</p>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={geminiCost.stageCostRows}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} vertical={false} />
+                  <XAxis dataKey="label" tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => formatUsd(Number(value), 4)} />
+                  <Tooltip formatter={(value: number) => formatUsd(Number(value), 4)} />
+                  <Bar dataKey="runtimeDailyCost" name={geminiCostCopy.currentRuntime} fill={isDark ? '#34D399' : '#10B981'} radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="legacyDailyCost" name={geminiCostCopy.legacyRuntime} fill={isDark ? '#94A3B8' : '#64748B'} radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className={`rounded-[24px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/50' : 'border-white/80 bg-white'}`}>
+            <div className="mb-3">
+              <p className={`text-xs font-bold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{geminiCostCopy.monthlyScaleTitle}</p>
+              <p className={`mt-1 text-[11px] font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCostCopy.monthlyScaleDescription}</p>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={geminiCost.monthlyScaleRows}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#E2E8F0'} vertical={false} />
+                  <XAxis dataKey="dau" tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => `${value / 1000}k`} />
+                  <YAxis tick={{ fill: isDark ? '#CBD5E1' : '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(value) => formatUsd(Number(value), 0)} />
+                  <Tooltip formatter={(value: number) => formatUsd(Number(value), 0)} />
+                  <Bar dataKey="runtimeMonthlyCost" name={geminiCostCopy.currentRuntime} fill={isDark ? '#22D3EE' : '#0891B2'} radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="legacyMonthlyCost" name={geminiCostCopy.legacyRuntime} fill={isDark ? '#94A3B8' : '#94A3B8'} radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-3">
+          {geminiCost.monthlyScaleRows.map((row) => (
+            <div key={row.dau} className={`rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
+              <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{row.dau.toLocaleString('en-US')} DAU</p>
+              <p className={`mt-2 text-lg font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{formatUsd(row.runtimeMonthlyCost, 0)}</p>
+              <p className={`mt-1 text-[11px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{geminiCostCopy.legacyRuntime}: {formatUsd(row.legacyMonthlyCost, 0)}</p>
+              <p className={`mt-2 text-[11px] font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>{geminiCostCopy.monthlySavingsShort}: {formatUsd(row.monthlySavings, 0)}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className={`mt-4 rounded-[22px] border p-4 ${isDark ? 'border-slate-700 bg-slate-950/60' : 'border-white/80 bg-white'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className={`text-xs font-bold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{geminiCostCopy.pricingSource}</p>
+            <p className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCost.pricingSourceLabel}</p>
+          </div>
+          <p className={`mt-2 text-[11px] font-medium leading-relaxed ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{geminiCost.note}</p>
         </div>
       </div>
 
