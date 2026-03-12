@@ -45,13 +45,18 @@ describe('analytics summary', () => {
         payload: { amount: 1 },
       },
       {
+        name: 'first_reading_success',
+        timestamp: '2026-03-12T01:00:07.500Z',
+        payload: { durationMs: 4200 },
+      },
+      {
         name: 'time_to_first_value',
         timestamp: '2026-03-12T01:00:08.000Z',
         payload: { durationMs: 12345, withinTarget: true },
       },
     ]);
 
-    expect(report.totalEvents).toBe(9);
+    expect(report.totalEvents).toBe(10);
     expect(report.counts.share).toBe(1);
     expect(report.counts.onboarding_step_view).toBe(1);
     expect(report.counts.onboarding_step_complete).toBe(1);
@@ -60,6 +65,7 @@ describe('analytics summary', () => {
     expect(report.counts.mini_app_open).toBe(1);
     expect(report.counts.scene_change).toBe(1);
     expect(report.counts.invite_reward_granted).toBe(1);
+    expect(report.counts.first_reading_success).toBe(1);
     expect(report.timeToFirstValue.averageMs).toBe(12345);
     expect(report.timeToFirstValue.withinTargetRate).toBe(1);
     expect(report.onboarding.viewsByStep.landing_cta).toBe(1);
@@ -68,6 +74,18 @@ describe('analytics summary', () => {
     expect(report.productHealth.adRewardsByPlacement.daily_reward_default).toBe(1);
     expect(report.productHealth.miniAppOpenByApp.dream).toBe(1);
     expect(report.productHealth.sceneChangeByScene.hanok).toBe(1);
+    expect(report.funnel.shareToOpenRate).toBe(0);
+    expect(report.funnel.installToRewardRate).toBe(0);
+    expect(report.quality.firstReadingSuccessRate).toBe(1);
+    expect(report.quality.activeDays).toBe(1);
+    expect(report.quality.averageEventsPerActiveDay).toBe(10);
+    expect(report.trends.eventsByDay).toHaveLength(7);
+    expect(report.topSignals.topCoinSpendContext.key).toBe('miniapp_dream_reading');
+    expect(report.topSignals.topMiniApp.key).toBe('dream');
+    expect(report.topSignals.topScene.key).toBe('hanok');
+    expect(report.topSignals.topOnboardingViewStep.key).toBe('landing_cta');
+    expect(report.topSignals.topOnboardingCompletionStep.key).toBe('birth_input');
+    expect(report.topSignals.hottestDay.key).toBe('2026-03-12');
     expect(report.recentEvents[0]?.name).toBe('time_to_first_value');
   });
 });

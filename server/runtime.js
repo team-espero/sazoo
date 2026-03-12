@@ -72,9 +72,6 @@ export function getRuntime() {
     : createShareMetadataStore(serverEnv.launchDbPath);
   const receiptVerifier = createReceiptVerifier(serverEnv);
   const kakaoAuthService = createKakaoAuthService(serverEnv);
-  const shareMetadataStore = usingDurablePostgres
-    ? createPostgresShareMetadataStore(serverEnv.databaseUrl)
-    : createShareMetadataStore(serverEnv.launchDbPath);
 
   const app = createApp({
     env: {
@@ -90,7 +87,6 @@ export function getRuntime() {
       shareMetadataStore,
       receiptVerifier,
       kakaoAuthService,
-      shareMetadataStore,
     },
     aiProvider,
   });
