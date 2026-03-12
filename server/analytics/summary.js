@@ -1,5 +1,6 @@
 const RECENT_EVENT_LIMIT = 16;
-const TREND_DAY_WINDOW = 7;
+const DEFAULT_TREND_DAY_WINDOW = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 const baseCounts = () => ({
   share: 0,
@@ -21,8 +22,17 @@ const baseCounts = () => ({
   mini_app_open: 0,
 });
 
+const emptyComparison = () => ({
+  enabled: false,
+  previousRange: null,
+  summary: null,
+  deltas: null,
+  trends: [],
+});
+
 export const emptyAnalyticsReport = () => ({
   generatedAt: new Date().toISOString(),
+  range: null,
   totalEvents: 0,
   counts: baseCounts(),
   funnel: {
@@ -68,6 +78,7 @@ export const emptyAnalyticsReport = () => ({
     hottestDay: { key: '', count: 0 },
   },
   recentEvents: [],
+  comparison: emptyComparison(),
 });
 
 const incrementRecord = (record, key) => {
@@ -82,38 +93,105 @@ const getPayloadString = (payload, key) => {
 
 const getRate = (numerator, denominator) => {
   if (!denominator) return 0;
-  return Number((numerator / denominator).toFixed(2));
+  return Number((numerator / denominator).toFixed(4));
+};
+
+const parseTimestamp = (value) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
 };
 
 const getDateKey = (value) => {
-  if (!value) return '';
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toISOString().slice(0, 10);
+  const parsed = parseTimestamp(value);
+  if (!parsed) return '';
+  return parsed.toISOString().slice(0, 10);
 };
 
-const getTrendWindow = (referenceIso) => {
-  const reference = getDateKey(referenceIso) ? new Date(referenceIso) : new Date();
-  const anchor = new Date(Date.UTC(reference.getUTCFullYear(), reference.getUTCMonth(), reference.getUTCDate()));
-  const window = [];
+const startOfUtcDay = (value) => {
+  const parsed = parseTimestamp(value) || new Date();
+  return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate(), 0, 0, 0, 0));
+};
 
-  for (let offset = TREND_DAY_WINDOW - 1; offset >= 0; offset -= 1) {
-    const day = new Date(anchor);
-    day.setUTCDate(anchor.getUTCDate() - offset);
-    window.push(day.toISOString().slice(0, 10));
+const endOfUtcDay = (value) => {
+  const parsed = parseTimestamp(value) || new Date();
+  return new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate(), 23, 59, 59, 999));
+};
+
+const diffDaysInclusive = (fromDate, toDate) => {
+  return Math.max(1, Math.floor((toDate.getTime() - fromDate.getTime()) / DAY_MS) + 1);
+};
+
+const buildRangeLabel = (fromDate, toDate) => {
+  const sameDay = fromDate.toISOString().slice(0, 10) === toDate.toISOString().slice(0, 10);
+  if (sameDay) {
+    return fromDate.toISOString().slice(0, 10);
+  }
+  return `${fromDate.toISOString().slice(0, 10)} to ${toDate.toISOString().slice(0, 10)}`;
+};
+
+const resolveRange = ({ from, to, generatedAt }) => {
+  const referenceEnd = endOfUtcDay(generatedAt || new Date().toISOString());
+  const defaultFrom = new Date(referenceEnd.getTime() - ((DEFAULT_TREND_DAY_WINDOW - 1) * DAY_MS));
+  defaultFrom.setUTCHours(0, 0, 0, 0);
+
+  const fromDate = parseTimestamp(from) ? new Date(from) : defaultFrom;
+  const toDate = parseTimestamp(to) ? new Date(to) : referenceEnd;
+  const normalizedFrom = startOfUtcDay(fromDate);
+  const normalizedTo = endOfUtcDay(toDate);
+
+  if (normalizedFrom.getTime() > normalizedTo.getTime()) {
+    return resolveRange({
+      from: normalizedTo.toISOString(),
+      to: normalizedFrom.toISOString(),
+      generatedAt,
+    });
   }
 
-  return window;
+  return {
+    from: normalizedFrom.toISOString(),
+    to: normalizedTo.toISOString(),
+    days: diffDaysInclusive(normalizedFrom, normalizedTo),
+    label: buildRangeLabel(normalizedFrom, normalizedTo),
+  };
+};
+
+const filterEventsByRange = (events, range) => {
+  const fromTime = parseTimestamp(range.from)?.getTime() ?? 0;
+  const toTime = parseTimestamp(range.to)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+
+  return events.filter((event) => {
+    const timestamp = parseTimestamp(event?.timestamp || event?.receivedAt || '');
+    if (!timestamp) {
+      return false;
+    }
+    const time = timestamp.getTime();
+    return time >= fromTime && time <= toTime;
+  });
+};
+
+const getTrendWindow = (range) => {
+  const start = startOfUtcDay(range.from);
+  const days = Math.max(1, range.days);
+  return Array.from({ length: days }, (_, index) => {
+    const day = new Date(start);
+    day.setUTCDate(start.getUTCDate() + index);
+    return day.toISOString().slice(0, 10);
+  });
 };
 
 const getTopRecordEntry = (record) => {
-  const [key = '', count = 0] = Object.entries(record || {}).sort((a, b) => b[1] - a[1])[0] || [];
+  const [key = '', count = 0] = Object.entries(record || {}).sort((left, right) => right[1] - left[1])[0] || [];
   return { key, count };
 };
 
-export const buildAnalyticsReport = (events) => {
+const buildBaseAnalyticsReport = (events, range, generatedAt) => {
   const report = emptyAnalyticsReport();
-  report.generatedAt = new Date().toISOString();
+  report.generatedAt = generatedAt;
+  report.range = range;
   report.totalEvents = events.length;
 
   let timeToFirstValueTotal = 0;
@@ -178,8 +256,11 @@ export const buildAnalyticsReport = (events) => {
     + report.counts.invite_reward_duplicate
     + report.counts.invite_reward_self_blocked
     + report.counts.invite_reward_claim_failed;
+
   report.quality.activeDays = activeDays.size;
-  report.quality.averageEventsPerActiveDay = activeDays.size > 0 ? Number((events.length / activeDays.size).toFixed(2)) : 0;
+  report.quality.averageEventsPerActiveDay = activeDays.size > 0
+    ? Number((events.length / activeDays.size).toFixed(2))
+    : 0;
   report.quality.firstReadingSuccessRate = getRate(report.counts.first_reading_success, totalFirstReadings);
   report.quality.inviteRewardFailureRate = getRate(
     report.counts.invite_reward_claim_failed + report.counts.invite_reward_self_blocked,
@@ -189,11 +270,11 @@ export const buildAnalyticsReport = (events) => {
   if (report.timeToFirstValue.samples > 0) {
     report.timeToFirstValue.averageMs = Math.round(timeToFirstValueTotal / report.timeToFirstValue.samples);
     report.timeToFirstValue.withinTargetRate = Number(
-      (report.timeToFirstValue.withinTargetCount / report.timeToFirstValue.samples).toFixed(2),
+      (report.timeToFirstValue.withinTargetCount / report.timeToFirstValue.samples).toFixed(4),
     );
   }
 
-  const trendWindow = getTrendWindow(report.generatedAt);
+  const trendWindow = getTrendWindow(range);
   report.trends.eventsByDay = trendWindow.map((dateKey) => ({
     dateKey,
     count: eventCountsByDay[dateKey] || 0,
@@ -214,6 +295,87 @@ export const buildAnalyticsReport = (events) => {
       timestamp: event.timestamp || event.receivedAt || '',
       payload: event.payload || {},
     }));
+
+  return report;
+};
+
+const buildPreviousRange = (range) => {
+  const currentFrom = parseTimestamp(range.from) || new Date();
+  const currentTo = parseTimestamp(range.to) || new Date();
+  const durationMs = Math.max(DAY_MS, currentTo.getTime() - currentFrom.getTime() + 1);
+  const previousTo = new Date(currentFrom.getTime() - 1);
+  const previousFrom = new Date(previousTo.getTime() - durationMs + 1);
+
+  return resolveRange({
+    from: previousFrom.toISOString(),
+    to: previousTo.toISOString(),
+    generatedAt: currentTo.toISOString(),
+  });
+};
+
+const toDelta = (currentValue, previousValue, digits = 4) => {
+  return Number((currentValue - previousValue).toFixed(digits));
+};
+
+const buildComparison = (currentReport, previousReport) => {
+  const trendLength = Math.max(
+    currentReport.trends.eventsByDay.length,
+    previousReport.trends.eventsByDay.length,
+  );
+
+  return {
+    enabled: true,
+    previousRange: previousReport.range,
+    summary: {
+      totalEvents: previousReport.totalEvents,
+      averageMs: previousReport.timeToFirstValue.averageMs,
+      withinTargetRate: previousReport.timeToFirstValue.withinTargetRate,
+      firstReadingSuccessRate: previousReport.quality.firstReadingSuccessRate,
+      shareToOpenRate: previousReport.funnel.shareToOpenRate,
+      openToInstallRate: previousReport.funnel.openToInstallRate,
+      installToRewardRate: previousReport.funnel.installToRewardRate,
+      coinSpent: previousReport.counts.coin_spent,
+      miniAppOpen: previousReport.counts.mini_app_open,
+      sceneChange: previousReport.counts.scene_change,
+    },
+    deltas: {
+      totalEvents: toDelta(currentReport.totalEvents, previousReport.totalEvents, 2),
+      averageMs: toDelta(currentReport.timeToFirstValue.averageMs, previousReport.timeToFirstValue.averageMs, 0),
+      withinTargetRate: toDelta(currentReport.timeToFirstValue.withinTargetRate, previousReport.timeToFirstValue.withinTargetRate),
+      firstReadingSuccessRate: toDelta(currentReport.quality.firstReadingSuccessRate, previousReport.quality.firstReadingSuccessRate),
+      shareToOpenRate: toDelta(currentReport.funnel.shareToOpenRate, previousReport.funnel.shareToOpenRate),
+      openToInstallRate: toDelta(currentReport.funnel.openToInstallRate, previousReport.funnel.openToInstallRate),
+      installToRewardRate: toDelta(currentReport.funnel.installToRewardRate, previousReport.funnel.installToRewardRate),
+      coinSpent: toDelta(currentReport.counts.coin_spent, previousReport.counts.coin_spent, 2),
+      miniAppOpen: toDelta(currentReport.counts.mini_app_open, previousReport.counts.mini_app_open, 2),
+      sceneChange: toDelta(currentReport.counts.scene_change, previousReport.counts.scene_change, 2),
+    },
+    trends: Array.from({ length: trendLength }, (_, index) => ({
+      currentDateKey: currentReport.trends.eventsByDay[index]?.dateKey || '',
+      previousDateKey: previousReport.trends.eventsByDay[index]?.dateKey || '',
+      currentCount: currentReport.trends.eventsByDay[index]?.count || 0,
+      previousCount: previousReport.trends.eventsByDay[index]?.count || 0,
+    })),
+  };
+};
+
+export const buildAnalyticsReport = (events, options = {}) => {
+  const generatedAt = new Date().toISOString();
+  const range = resolveRange({
+    from: options.from,
+    to: options.to,
+    generatedAt,
+  });
+
+  const filteredEvents = filterEventsByRange(events, range);
+  const report = buildBaseAnalyticsReport(filteredEvents, range, generatedAt);
+
+  if (options.comparePrevious) {
+    const previousRange = buildPreviousRange(range);
+    const previousEvents = filterEventsByRange(events, previousRange);
+    const previousReport = buildBaseAnalyticsReport(previousEvents, previousRange, generatedAt);
+    report.comparison = buildComparison(report, previousReport);
+  }
 
   return report;
 };

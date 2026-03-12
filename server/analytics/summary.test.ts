@@ -88,4 +88,74 @@ describe('analytics summary', () => {
     expect(report.topSignals.hottestDay.key).toBe('2026-03-12');
     expect(report.recentEvents[0]?.name).toBe('time_to_first_value');
   });
+
+  it('filters by a requested range and builds previous-period comparison data', () => {
+    const report = buildAnalyticsReport([
+      {
+        name: 'share',
+        timestamp: '2026-03-09T08:00:00.000Z',
+        payload: { source: 'invite_card' },
+      },
+      {
+        name: 'invite_open',
+        timestamp: '2026-03-10T08:00:00.000Z',
+        payload: { source: 'invite_link' },
+      },
+      {
+        name: 'share',
+        timestamp: '2026-03-11T08:00:00.000Z',
+        payload: { source: 'invite_card' },
+      },
+      {
+        name: 'invite_open',
+        timestamp: '2026-03-11T08:10:00.000Z',
+        payload: { source: 'invite_link' },
+      },
+      {
+        name: 'install_from_invite',
+        timestamp: '2026-03-12T08:15:00.000Z',
+        payload: { source: 'invite_link' },
+      },
+      {
+        name: 'time_to_first_value',
+        timestamp: '2026-03-12T08:16:00.000Z',
+        payload: { durationMs: 9000, withinTarget: true },
+      },
+    ], {
+      from: '2026-03-11T00:00:00.000Z',
+      to: '2026-03-12T23:59:59.999Z',
+      comparePrevious: true,
+    });
+
+    expect(report.range?.label).toBe('2026-03-11 to 2026-03-12');
+    expect(report.totalEvents).toBe(4);
+    expect(report.counts.share).toBe(1);
+    expect(report.counts.invite_open).toBe(1);
+    expect(report.counts.install_from_invite).toBe(1);
+    expect(report.trends.eventsByDay).toEqual([
+      { dateKey: '2026-03-11', count: 2 },
+      { dateKey: '2026-03-12', count: 2 },
+    ]);
+
+    expect(report.comparison.enabled).toBe(true);
+    expect(report.comparison.previousRange?.label).toBe('2026-03-09 to 2026-03-10');
+    expect(report.comparison.summary?.totalEvents).toBe(2);
+    expect(report.comparison.summary?.shareToOpenRate).toBe(1);
+    expect(report.comparison.deltas?.totalEvents).toBe(2);
+    expect(report.comparison.deltas?.installToRewardRate).toBe(0);
+    expect(report.comparison.trends).toEqual([
+      {
+        currentDateKey: '2026-03-11',
+        previousDateKey: '2026-03-09',
+        currentCount: 2,
+        previousCount: 1,
+      },
+      {
+        currentDateKey: '2026-03-12',
+        previousDateKey: '2026-03-10',
+        currentCount: 2,
+        previousCount: 1,
+      },
+    ]);
+  });
 });
