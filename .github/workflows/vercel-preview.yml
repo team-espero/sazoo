@@ -13,12 +13,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: vercel-preview-${{ github.event.pull_request.number }}
+  group: vercel-preview-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   deploy-preview:
-    if: ${{ github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false }}
+    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,6 +26,8 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_NAME: sazoo
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,17 +40,36 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      - name: Validate Vercel Configuration
+        shell: bash
+        run: |
+          test -n "$VERCEL_TOKEN" || { echo "Missing VERCEL_TOKEN secret"; exit 1; }
+          test -n "$VERCEL_ORG_ID" || { echo "Missing VERCEL_ORG_ID variable"; exit 1; }
+          test -n "$VERCEL_PROJECT_ID" || { echo "Missing VERCEL_PROJECT_ID variable"; exit 1; }
+
+      - name: Write Vercel Project Metadata
+        shell: bash
+        run: |
+          mkdir -p .vercel
+          cat > .vercel/project.json <<EOF
+          {
+            "projectId": "${VERCEL_PROJECT_ID}",
+            "orgId": "${VERCEL_ORG_ID}",
+            "projectName": "${VERCEL_PROJECT_NAME}"
+          }
+          EOF
+
       - name: Pull Vercel Preview Environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
 
       - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --token="$VERCEL_TOKEN"
 
       - name: Deploy Preview
         id: deploy
         shell: bash
         run: |
-          url="$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})"
+          url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       - name: Comment Preview URL
